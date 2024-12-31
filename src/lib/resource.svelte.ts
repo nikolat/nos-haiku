@@ -443,6 +443,12 @@ const nextOnSubscribeEventStore = (event: NostrEvent | null, kindToDelete?: numb
 						{ kinds: isEnabledSkipKind1 ? [42] : [1, 6, 42] },
 						{ kinds: [16], '#k': ['42'] }
 					])
+				).filter(
+					(ev) =>
+						ev.kind !== 42 ||
+						(ev.kind === 42 &&
+							ev.tags.filter((tag) => tag.length >= 4 && tag[0] === 'e' && tag[3] === 'root')
+								.length === 1)
 				)
 			);
 			break;

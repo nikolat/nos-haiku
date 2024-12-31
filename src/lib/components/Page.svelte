@@ -119,16 +119,7 @@
 	const timelineAll: NostrEvent[] = $derived.by(() => {
 		let tl: NostrEvent[];
 		if (isAntenna) {
-			tl = eventsTimeline.filter(
-				(ev) =>
-					followingPubkeys.includes(ev.pubkey) ||
-					(ev.kind === 42 &&
-						followingChannelIds.includes(
-							ev.tags
-								.find((tag) => tag.length >= 4 && tag[0] === 'e' && tag[3] === 'root')
-								?.at(1) ?? ''
-						))
-			);
+			tl = eventsTimeline.filter((ev) => followingPubkeys.includes(ev.pubkey));
 		} else if (currentNoteId !== undefined) {
 			const entry = getEventById(currentNoteId);
 			tl = entry !== undefined ? [entry] : [];

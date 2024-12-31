@@ -431,8 +431,19 @@ const nextOnSubscribeEventStore = (event: NostrEvent | null, kindToDelete?: numb
 		case 6:
 		case 16:
 		case 42: {
+			if (
+				kind === 16 &&
+				event?.tags.find((tag) => tag.length >= 2 && tag[0] === 'k')?.at(1) !== '42'
+			) {
+				break;
+			}
 			eventsTimeline = sortEvents(
-				Array.from(eventStore.getAll([{ kinds: isEnabledSkipKind1 ? [16, 42] : [1, 6, 16, 42] }]))
+				Array.from(
+					eventStore.getAll([
+						{ kinds: isEnabledSkipKind1 ? [42] : [1, 6, 42] },
+						{ kinds: [16], '#k': ['42'] }
+					])
+				)
 			);
 			break;
 		}
@@ -708,6 +719,12 @@ const _subTimeline = eventStore
 			}
 			case 6:
 			case 16: {
+				if (
+					event.kind === 16 &&
+					event.tags.find((tag) => tag.length >= 2 && tag[0] === 'k')?.at(1) !== '42'
+				) {
+					break;
+				}
 				if (!profileMap.has(event.pubkey)) {
 					rxReqB0.emit({ kinds: [0], authors: [event.pubkey], until: unixNow() });
 				}
@@ -899,10 +916,7 @@ export const fetchEventsMention = (until: number, completeCustom: () => void): v
 			{ kinds: [7, 16], '#p': [loginPubkey], '#k': ['42'], limit: 10, until }
 		];
 	} else {
-		filters = [
-			{ kinds: [1, 6, 7, 42, 9735], '#p': [loginPubkey], limit: 10, until },
-			{ kinds: [16], '#p': [loginPubkey], '#k': ['42'], limit: 10, until }
-		];
+		filters = [{ kinds: [1, 6, 7, 16, 42, 9735], '#p': [loginPubkey], limit: 10, until }];
 	}
 	const rxReqBFirst = createRxBackwardReq();
 	rxNostr.use(rxReqBFirst).pipe(uniq(flushes$), completeOnTimeout(secOnCompleteTimeout)).subscribe({
@@ -973,8 +987,7 @@ export const getEventsFirst = (
 		eventFollowList?.tags.filter((tag) => tag.length >= 2 && tag[0] === 'p').map((tag) => tag[1]) ??
 		[];
 	if (currentNoteId === undefined && currentPubkey !== undefined) {
-		filters.push({ kinds: [1, 6, 42], authors: [currentPubkey] });
-		filters.push({ kinds: [16], '#k': ['42'], authors: [currentPubkey] });
+		filters.push({ kinds: [1, 6, 16, 42], authors: [currentPubkey] });
 	} else if (currentChannelId !== undefined) {
 		filters.push({ kinds: [42], '#e': [currentChannelId] });
 		filters.push({ kinds: [16], '#k': ['42'] });
@@ -987,21 +1000,18 @@ export const getEventsFirst = (
 		filters.push({ kinds: [40, 41], search: query });
 	} else if (isAntenna) {
 		if (pubkeysFollowing.length > 0) {
-			filters.push({ kinds: [1, 6, 42], authors: pubkeysFollowing });
-			filters.push({ kinds: [16], '#k': ['42'], authors: pubkeysFollowing });
+			filters.push({ kinds: [1, 6, 16, 42], authors: pubkeysFollowing });
 			//ブックマークしているチャンネルの投稿も取得したいが、limitで混ぜるのは難しいので考え中
 		}
 	} else if (isTopPage) {
-		filters.push({ kinds: [42] });
-		filters.push({ kinds: [16], '#k': ['42'] });
+		filters.push({ kinds: [16, 42] });
 	}
 	if (isFirstFetch && loginPubkey !== undefined) {
 		if (isEnabledSkipKind1) {
 			filters.push({ kinds: [42, 9735], '#p': [loginPubkey] });
 			filters.push({ kinds: [7, 16], '#p': [loginPubkey], '#k': ['42'] });
 		} else {
-			filters.push({ kinds: [1, 6, 7, 42, 9735], '#p': [loginPubkey] });
-			filters.push({ kinds: [16], '#p': [loginPubkey], '#k': ['42'] });
+			filters.push({ kinds: [1, 6, 7, 16, 42, 9735], '#p': [loginPubkey] });
 		}
 	}
 	if (isEnabledSkipKind1) {
@@ -1025,7 +1035,7 @@ export const getEventsFirst = (
 		});
 	rxReqBFirst.emit(filters);
 	rxReqBFirst.over();
-	if (currentPubkey !== undefined) {
+	if (currentPubkey !== undefined && isFirstFetch) {
 		const rxReqBBookmark = createRxBackwardReq();
 		rxNostr
 			.use(rxReqBBookmark)
@@ -1039,7 +1049,7 @@ export const getEventsFirst = (
 			});
 		rxReqBBookmark.emit({ kinds: [10005], authors: [currentPubkey], until });
 		rxReqBBookmark.over();
-		filters.push({ kinds: [10005], authors: [currentPubkey] });
+		filters.find((f) => f.authors?.join(':') === currentPubkey)?.kinds?.push(10005);
 	}
 	//無限スクロール用Reqはここまでで終了
 	if (!isFirstFetch) {
@@ -1052,16 +1062,22 @@ export const getEventsFirst = (
 			authors: [loginPubkey]
 		});
 	}
-	if (isAntenna && eventFollowList !== undefined) {
-		const pubkeys =
-			eventFollowList.tags
-				.filter((tag) => tag.length >= 2 && tag[0] === 'p')
-				.map((tag) => tag[1]) ?? [];
-		filters.push({ kinds: [0], authors: pubkeys });
+	if (isAntenna && pubkeysFollowing.length > 0) {
+		filters.find((f) => f.authors?.join(':') === pubkeysFollowing.join(':'))?.kinds?.unshift(0);
 		if (isEnabledSkipKind1) {
-			filters.push({ kinds: [7], '#p': pubkeys, '#k': ['42'] });
+			filters.push({ kinds: [7], '#p': pubkeysFollowing, '#k': ['42'] });
 		} else {
-			filters.push({ kinds: [7], '#p': pubkeys });
+			filters.push({ kinds: [7], '#p': pubkeysFollowing });
+		}
+	}
+	//kind:16はkind:42が対象のものだけを受信する
+	for (const f of [...filters]) {
+		if (f.kinds?.includes(16) && !f['#k']?.includes('42')) {
+			const fcopy: LazyFilter = { ...f };
+			f.kinds = f.kinds.filter((kind) => kind !== 16);
+			fcopy.kinds = [16];
+			fcopy['#k'] = ['42'];
+			filters.push(fcopy);
 		}
 	}
 	for (const f of filters) {

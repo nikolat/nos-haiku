@@ -1,0 +1,287 @@
+<script lang="ts">
+	import { defaultAccountUri, getRoboHashURL } from '$lib/config';
+	import { uploadFile } from '$lib/nip96';
+	import { getChannelEventMap, getEventEmojiSet, sendNote } from '$lib/resource.svelte';
+	import type { EventTemplate, NostrEvent } from 'nostr-tools/pure';
+	import * as nip19 from 'nostr-tools/nip19';
+	import { readServerConfig, type OptionalFormDataFields } from 'nostr-tools/nip96';
+	import { getToken } from 'nostr-tools/nip98';
+	import type { ProfileContent } from 'applesauce-core/helpers';
+	import data from '@emoji-mart/data';
+	// @ts-expect-error なんもわからんかも
+	import type { BaseEmoji } from '@types/emoji-mart';
+
+	interface MyBaseEmoji extends BaseEmoji {
+		shortcodes: string;
+	}
+
+	let {
+		loginPubkey,
+		currentPubkey,
+		currentChannelId,
+		currentNoteId,
+		eventToReply,
+		profileMap,
+		uploaderSelected,
+		showForm = $bindable()
+	}: {
+		loginPubkey: string | undefined;
+		currentPubkey?: string | undefined;
+		currentChannelId?: string | undefined;
+		currentNoteId?: string | undefined;
+		eventToReply?: NostrEvent;
+		profileMap: Map<string, ProfileContent>;
+		uploaderSelected: string;
+		showForm: boolean;
+	} = $props();
+
+	let filesToUpload: FileList | undefined = $state();
+	let inputFile: HTMLInputElement;
+	let textArea: HTMLTextAreaElement;
+
+	const channelEventMap: Map<string, NostrEvent> = $derived(getChannelEventMap());
+	const eventEmojiSet: NostrEvent[] = $derived(getEventEmojiSet());
+	const emojiMap: Map<string, string> = $derived.by(() => {
+		const r = new Map<string, string>();
+		for (const ev of eventEmojiSet) {
+			const emojiTags: string[][] = ev.tags.filter(
+				(tag) =>
+					tag.length >= 3 && tag[0] === 'emoji' && /^\w+$/.test(tag[1]) && URL.canParse(tag[2])
+			);
+			for (const emojiTag of emojiTags) {
+				r.set(emojiTag[1], emojiTag[2]);
+			}
+		}
+		return r;
+	});
+
+	let emojiPickerContainer: HTMLElement | undefined = $state();
+	const callGetEmoji = async () => {
+		if (emojiPickerContainer === undefined) {
+			return;
+		}
+		if (emojiPickerContainer.children.length > 0) {
+			return;
+		}
+		const close = () => {
+			emojiPickerContainer?.firstChild?.remove();
+		};
+		const onEmojiSelect = (emoji: MyBaseEmoji) => {
+			close();
+			const emojiStr = emoji.native ?? emoji.shortcodes;
+			insertText(emojiStr);
+		};
+		const onClickOutside = () => {
+			close();
+		};
+		const { Picker } = await import('emoji-mart');
+		const picker = new Picker({
+			data,
+			custom: [
+				{
+					id: 'custom-emoji',
+					name: 'Custom Emojis',
+					emojis: Array.from($state.snapshot(emojiMap).entries()).map(([shortcode, url]) => {
+						return {
+							id: shortcode,
+							name: shortcode,
+							keywords: [shortcode],
+							skins: [{ shortcodes: `:${shortcode}:`, src: url }]
+						};
+					})
+				}
+			],
+			onEmojiSelect,
+			onClickOutside
+		});
+		/* eslint @typescript-eslint/no-explicit-any: 0 */
+		emojiPickerContainer.appendChild(picker as any);
+	};
+
+	let isInProcess: boolean = $state(false);
+
+	const uploadFileExec = async () => {
+		if (filesToUpload === undefined || filesToUpload.length === 0) {
+			return;
+		}
+		const nostr = window.nostr;
+		if (nostr === undefined) {
+			return;
+		}
+		isInProcess = true;
+		const f = (e: EventTemplate) => nostr.signEvent(e);
+		const c = await readServerConfig(uploaderSelected);
+		const s = await getToken(c.api_url, 'POST', f, true);
+		let file: File | undefined;
+		for (const f of filesToUpload ?? []) {
+			file = f;
+		}
+		if (file === undefined) {
+			isInProcess = false;
+			return;
+		}
+		const option: OptionalFormDataFields = {
+			size: String(file.size),
+			content_type: file.type
+		};
+		const fileUploadResponse = await uploadFile(file, c.api_url, s, option);
+		isInProcess = false;
+		const uploadedFileUrl = fileUploadResponse.nip94_event?.tags
+			.find((tag) => tag[0] === 'url')
+			?.at(1);
+		if (uploadedFileUrl === undefined) {
+			return;
+		}
+		insertText(uploadedFileUrl);
+	};
+
+	const insertText = (word: string): void => {
+		let sentence = textArea.value;
+		const len = sentence.length;
+		const pos = textArea.selectionStart;
+		const before = sentence.slice(0, pos);
+		const after = sentence.slice(pos, pos + len);
+		sentence = before + word + after;
+		textArea.value = sentence;
+		textArea.focus();
+		textArea.selectionStart = pos + word.length;
+		textArea.selectionEnd = pos + word.length;
+		contentToSend = sentence;
+	};
+
+	let channelNameToCreate: string = $state('');
+	let contentToSend: string = $state('');
+
+	const callSendNote = () => {
+		const targetEventToReply =
+			eventToReply ??
+			(currentChannelId !== undefined ? channelEventMap.get(currentChannelId) : undefined);
+		sendNote(contentToSend, channelNameToCreate, targetEventToReply, emojiMap).then(() => {
+			contentToSend = '';
+			channelNameToCreate = '';
+			showForm = false;
+		});
+	};
+</script>
+
+<div class="CreateEntry">
+	<a
+		href="/{loginPubkey === undefined ? '' : nip19.npubEncode(loginPubkey)}"
+		class="CreateEntry__profile"
+		><img
+			src={loginPubkey === undefined
+				? defaultAccountUri
+				: (profileMap.get(loginPubkey)?.picture ?? getRoboHashURL(nip19.npubEncode(loginPubkey)))}
+			class="Avatar"
+			alt=""
+		/></a
+	>
+	<div class="CreateEntry__main">
+		<div class="InputGroup">
+			{#if currentNoteId === undefined && currentPubkey === undefined && currentChannelId === undefined && eventToReply === undefined}
+				<div class="vue-simple-suggest Input CreateEntry__keyword">
+					<div
+						aria-haspopup="listbox"
+						aria-owns="19-suggestions"
+						aria-expanded="false"
+						class="input-wrapper"
+					>
+						<input
+							placeholder="キーワードを新規作成 (オプション)"
+							class="default-input Input"
+							aria-autocomplete="list"
+							aria-controls="19-suggestions"
+							bind:value={channelNameToCreate}
+						/>
+					</div>
+				</div>
+			{/if}
+			<div
+				class="RichTextEditor CreateEntry__text"
+				data-is-active="true"
+				data-is-guest-preview-mode="true"
+			>
+				<div class="RichTextEditor__toolbar ql-toolbar" style="">
+					<span class="ql-formats">
+						<span class="ql-formats"
+							><button
+								aria-label="画像を追加"
+								title="画像を追加"
+								class="ToolbarItem ql-image"
+								onclick={() => inputFile.click()}
+								disabled={isInProcess}
+								type="button"><i class="fa-fw far fa-camera"></i></button
+							>
+							<input
+								class="select-upload-file"
+								type="file"
+								accept="image/*,video/*,audio/*"
+								bind:this={inputFile}
+								bind:files={filesToUpload}
+								onchange={uploadFileExec}
+							/>
+							<button
+								aria-label="絵文字を追加"
+								title="絵文字を追加"
+								class="ToolbarItem ql-emoji"
+								type="button"
+								onclick={() => {
+									callGetEmoji();
+								}}><i class="fa-fw far fa-smile-plus"></i></button
+							></span
+						>
+					</span>
+					<div class="emoji-picker-container" bind:this={emojiPickerContainer}></div>
+				</div>
+				<div translate="no" class="RichTextEditor__editor notranslate ql-container">
+					<textarea
+						class="ql-editor ql-blank"
+						bind:this={textArea}
+						bind:value={contentToSend}
+						onkeydown={(e: KeyboardEvent) => {
+							if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+								callSendNote();
+							}
+						}}
+					></textarea>
+					<div class="ql-clipboard" contenteditable="true" tabindex="-1"></div>
+				</div>
+				<input type="file" style="display: none;" />
+			</div>
+		</div>
+		<div class="CreateEntry__actions">
+			<button class="Button" disabled={contentToSend.length === 0} onclick={callSendNote}
+				><span>投稿</span></button
+			>
+			{#if eventToReply !== undefined}
+				<button
+					class="Button Button--cancel"
+					onclick={() => {
+						showForm = false;
+					}}><span> キャンセル </span></button
+				>
+			{/if}
+		</div>
+	</div>
+</div>
+
+<style>
+	textarea {
+		appearance: none;
+		background: transparent;
+		border: none;
+		border-radius: 0;
+		font: inherit;
+		outline: none;
+		width: 100%;
+		resize: none;
+	}
+	.select-upload-file {
+		display: none;
+	}
+	.emoji-picker-container {
+		position: absolute;
+		top: 2em;
+		left: -3em;
+	}
+</style>

@@ -558,7 +558,9 @@ eventStore
 const getDeletedEventIdSet = (eventsDeletion: NostrEvent[]): Set<string> => {
 	const deletedEventIdSet = new Set<string>();
 	for (const ev of eventsDeletion) {
-		const ids: string[] = ev.tags.filter((tag) => tag.length >= 2 && tag[0] === 'e').at(1) ?? [];
+		const ids: string[] = ev.tags
+			.filter((tag) => tag.length >= 2 && tag[0] === 'e')
+			.map((tag) => tag[1]);
 		for (const id of ids) {
 			deletedEventIdSet.add(id);
 		}

@@ -361,6 +361,7 @@ export const getEmoji = async (
 					})
 				}
 			],
+			autoFocus: true,
 			onEmojiSelect,
 			onClickOutside
 		});

@@ -1066,12 +1066,17 @@ export const getEventsFirst = (
 	//ここから先はForwardReq用追加分(受信しっぱなし)
 	if (loginPubkey !== undefined) {
 		filters.push({
-			kinds: [3, 10000, 10002, 10005, 10030],
+			kinds: [0, 1, 3, 5, 6, 7, 16, 40, 41, 42, 9735, 10000, 10002, 10005, 10030],
 			authors: [loginPubkey]
 		});
 	}
 	if (isAntenna && pubkeysFollowing.length > 0) {
-		filters.find((f) => f.authors?.join(':') === pubkeysFollowing.join(':'))?.kinds?.unshift(0);
+		const f = filters.find((f) => f.authors?.join(':') === pubkeysFollowing.join(':'));
+		if (f !== undefined) {
+			for (const k of [0, 7, 40, 41]) {
+				f.kinds?.unshift(k);
+			}
+		}
 		if (isEnabledSkipKind1) {
 			filters.push({ kinds: [7], '#p': pubkeysFollowing, '#k': ['42'] });
 		} else {

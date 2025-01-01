@@ -1,18 +1,10 @@
 <script lang="ts">
 	import { expansionThreshold } from '$lib/config';
-	import { isValidEmoji } from '$lib/utils';
+	import { getEmoji, isValidEmoji } from '$lib/utils';
 	import { getEventEmojiSet, sendReaction } from '$lib/resource.svelte';
 	import Reaction from '$lib/components/Reaction.svelte';
 	import type { NostrEvent } from 'nostr-tools/pure';
 	import type { ProfileContent } from 'applesauce-core/helpers';
-	import data from '@emoji-mart/data';
-	// @ts-expect-error なんもわからんかも
-	import type { BaseEmoji } from '@types/emoji-mart';
-
-	interface MyBaseEmoji extends BaseEmoji {
-		shortcodes: string;
-		src: string | undefined;
-	}
 
 	const {
 		event,
@@ -54,43 +46,11 @@
 		if (emojiPickerContainer === undefined) {
 			return;
 		}
-		if (emojiPickerContainer.children.length > 0) {
+		const r = await getEmoji(emojiPickerContainer, $state.snapshot(emojiMap));
+		if (r === null) {
 			return;
 		}
-		const close = () => {
-			emojiPickerContainer?.firstChild?.remove();
-		};
-		const onEmojiSelect = (emoji: MyBaseEmoji) => {
-			close();
-			const emojiStr = emoji.native ?? emoji.shortcodes;
-			const emojiUrl = emoji.src;
-			sendReaction(event, emojiStr, emojiUrl);
-		};
-		const onClickOutside = () => {
-			close();
-		};
-		const { Picker } = await import('emoji-mart');
-		const picker = new Picker({
-			data,
-			custom: [
-				{
-					id: 'custom-emoji',
-					name: 'Custom Emojis',
-					emojis: Array.from($state.snapshot(emojiMap).entries()).map(([shortcode, url]) => {
-						return {
-							id: shortcode,
-							name: shortcode,
-							keywords: [shortcode],
-							skins: [{ shortcodes: `:${shortcode}:`, src: url }]
-						};
-					})
-				}
-			],
-			onEmojiSelect,
-			onClickOutside
-		});
-		// eslint-disable-next-line @typescript-eslint/no-explicit-any
-		emojiPickerContainer.appendChild(picker as any);
+		sendReaction(event, r.emojiStr, r.emojiUrl);
 	};
 </script>
 

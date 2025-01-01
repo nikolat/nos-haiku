@@ -4,6 +4,9 @@ import { normalizeURL } from 'nostr-tools/utils';
 import * as nip19 from 'nostr-tools/nip19';
 import { defaultRelays } from '$lib/config';
 import type { ProfileContent } from 'applesauce-core/helpers';
+import data from '@emoji-mart/data';
+// @ts-expect-error なんもわからんかも
+import type { BaseEmoji } from '@types/emoji-mart';
 
 export interface ProfileContentEvent extends ProfileContent {
 	event: NostrEvent;
@@ -27,6 +30,11 @@ export type UrlParams = {
 	isSettings?: boolean;
 	isAntenna?: boolean;
 };
+
+interface MyBaseEmoji extends BaseEmoji {
+	shortcodes: string;
+	src: string | undefined;
+}
 
 export const getRelativetime = (nowRealtime: number, unixTime: number): string => {
 	const diff = (nowRealtime - unixTime) / 1000;
@@ -312,4 +320,51 @@ export const zap = async (npub: string, id: string, relays: string[]): Promise<v
 	elm.dataset.relays = relays.join(',');
 	initTarget(elm);
 	elm.dispatchEvent(new Event('click'));
+};
+
+export const getEmoji = async (
+	emojiPickerContainer: HTMLElement,
+	emojiMap: Map<string, string>
+): Promise<{ emojiStr: string; emojiUrl: string | undefined } | null> => {
+	const { Picker } = await import('emoji-mart');
+	return new Promise((resolve) => {
+		if (emojiPickerContainer.children.length > 0) {
+			resolve(null);
+			return;
+		}
+		const close = () => {
+			emojiPickerContainer.firstChild?.remove();
+		};
+		const onEmojiSelect = (emoji: MyBaseEmoji) => {
+			close();
+			const emojiStr = emoji.native ?? emoji.shortcodes;
+			const emojiUrl = emoji.src;
+			resolve({ emojiStr, emojiUrl });
+		};
+		const onClickOutside = () => {
+			close();
+			resolve(null);
+		};
+		const picker = new Picker({
+			data,
+			custom: [
+				{
+					id: 'custom-emoji',
+					name: 'Custom Emojis',
+					emojis: Array.from(emojiMap.entries()).map(([shortcode, url]) => {
+						return {
+							id: shortcode,
+							name: shortcode,
+							keywords: [shortcode],
+							skins: [{ shortcodes: `:${shortcode}:`, src: url }]
+						};
+					})
+				}
+			],
+			onEmojiSelect,
+			onClickOutside
+		});
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
+		emojiPickerContainer.appendChild(picker as any);
+	});
 };

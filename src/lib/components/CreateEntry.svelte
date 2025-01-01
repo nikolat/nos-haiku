@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { defaultAccountUri, getRoboHashURL } from '$lib/config';
+	import { getEmoji } from '$lib/utils';
 	import { uploadFile } from '$lib/nip96';
 	import { getChannelEventMap, getEventEmojiSet, sendNote } from '$lib/resource.svelte';
 	import type { EventTemplate, NostrEvent } from 'nostr-tools/pure';
@@ -7,13 +8,6 @@
 	import { readServerConfig, type OptionalFormDataFields } from 'nostr-tools/nip96';
 	import { getToken } from 'nostr-tools/nip98';
 	import type { ProfileContent } from 'applesauce-core/helpers';
-	import data from '@emoji-mart/data';
-	// @ts-expect-error なんもわからんかも
-	import type { BaseEmoji } from '@types/emoji-mart';
-
-	interface MyBaseEmoji extends BaseEmoji {
-		shortcodes: string;
-	}
 
 	let {
 		loginPubkey,
@@ -60,42 +54,11 @@
 		if (emojiPickerContainer === undefined) {
 			return;
 		}
-		if (emojiPickerContainer.children.length > 0) {
+		const r = await getEmoji(emojiPickerContainer, $state.snapshot(emojiMap));
+		if (r === null) {
 			return;
 		}
-		const close = () => {
-			emojiPickerContainer?.firstChild?.remove();
-		};
-		const onEmojiSelect = (emoji: MyBaseEmoji) => {
-			close();
-			const emojiStr = emoji.native ?? emoji.shortcodes;
-			insertText(emojiStr);
-		};
-		const onClickOutside = () => {
-			close();
-		};
-		const { Picker } = await import('emoji-mart');
-		const picker = new Picker({
-			data,
-			custom: [
-				{
-					id: 'custom-emoji',
-					name: 'Custom Emojis',
-					emojis: Array.from($state.snapshot(emojiMap).entries()).map(([shortcode, url]) => {
-						return {
-							id: shortcode,
-							name: shortcode,
-							keywords: [shortcode],
-							skins: [{ shortcodes: `:${shortcode}:`, src: url }]
-						};
-					})
-				}
-			],
-			onEmojiSelect,
-			onClickOutside
-		});
-		// eslint-disable-next-line @typescript-eslint/no-explicit-any
-		emojiPickerContainer.appendChild(picker as any);
+		insertText(r.emojiStr);
 	};
 
 	let isInProcess: boolean = $state(false);

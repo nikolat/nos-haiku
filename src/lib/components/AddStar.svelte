@@ -89,7 +89,7 @@
 			onEmojiSelect,
 			onClickOutside
 		});
-		/* eslint @typescript-eslint/no-explicit-any: 0 */
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
 		emojiPickerContainer.appendChild(picker as any);
 	};
 </script>

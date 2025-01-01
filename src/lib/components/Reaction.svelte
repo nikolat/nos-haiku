@@ -119,7 +119,7 @@
 	}
 	span.reactionstar-reaction > span.reactionstar-content > img {
 		height: 16px;
-		vertical-align: bottom;
+		vertical-align: top;
 	}
 	span.reactionstar-reaction > a.reactionstar-link > img {
 		width: 16px;

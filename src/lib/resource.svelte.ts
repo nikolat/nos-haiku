@@ -1065,17 +1065,19 @@ export const getEventsFirst = (
 	}
 	//ここから先はForwardReq用追加分(受信しっぱなし)
 	if (loginPubkey !== undefined) {
+		let kinds = [0, 1, 3, 5, 6, 7, 40, 41, 42, 9735, 10000, 10002, 10005, 10030];
+		if (!pubkeysFollowing.includes(loginPubkey)) {
+			kinds = kinds.concat(16).toSorted((a, b) => a - b);
+		}
 		filters.push({
-			kinds: [0, 1, 3, 5, 6, 7, 16, 40, 41, 42, 9735, 10000, 10002, 10005, 10030],
+			kinds,
 			authors: [loginPubkey]
 		});
 	}
 	if (isAntenna && pubkeysFollowing.length > 0) {
 		const f = filters.find((f) => f.authors?.join(':') === pubkeysFollowing.join(':'));
-		if (f !== undefined) {
-			for (const k of [0, 7, 40, 41]) {
-				f.kinds?.unshift(k);
-			}
+		if (f?.kinds !== undefined) {
+			f.kinds = f.kinds.concat(0, 7, 40, 41).toSorted((a, b) => a - b);
 		}
 		if (isEnabledSkipKind1) {
 			filters.push({ kinds: [7], '#p': pubkeysFollowing, '#k': ['42'] });

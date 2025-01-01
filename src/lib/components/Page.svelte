@@ -147,8 +147,9 @@
 		} else {
 			tl = eventsTimeline.filter(
 				(ev) =>
-					ev.kind === 42 &&
-					ev.tags.some((tag) => tag.length >= 4 && tag[0] === 'e' && tag[3] === 'root')
+					ev.kind === 42 ||
+					(ev.kind === 16 &&
+						ev.tags.some((tag) => tag.length >= 2 && tag[0] === 'k' && tag[1].includes('42')))
 			);
 		}
 		return tl;

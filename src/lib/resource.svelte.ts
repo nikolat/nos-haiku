@@ -543,8 +543,8 @@ const nextOnSubscribeEventStore = (event: NostrEvent | null, kindToDelete?: numb
 				return { baseEvent: ev, targetEvent };
 			}
 		);
-		eventsAll = Array.from(eventStore.getAll([{ until: unixNow() }]));
 	}
+	eventsAll = Array.from(eventStore.getAll([{ until: unixNow() }]));
 };
 
 eventStore

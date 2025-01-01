@@ -87,13 +87,13 @@
 {plainTexts.shift()}{#each Array.from(matchesIterator) as match}
 	{#if /^https?:\/\/\S+/.test(match[1]) && URL.canParse(match[1])}
 		{@const url = match[1]}
-		{@const ytb1 = url.match(/^https?:\/\/www\.youtube\.com\/watch\?v=([\w-]+)/i)}
+		{@const ytb1 = url.match(/^https?:\/\/(www|m)\.youtube\.com\/watch\?v=([\w-]+)/i)}
 		{@const ytb2 = url.match(/^https?:\/\/youtu\.be\/([\w-]+)(\?\w+)?/i)}
 		{@const ytb3 = url.match(/^https?:\/\/youtube\.com\/shorts\/([\w-]+)(\?\w+)?/i)}
 		{#if !enableAutoLink}
 			{url}
 		{:else if ytb1 ?? ytb2 ?? ytb3}
-			{@const video_id = ytb1?.at(1) ?? ytb2?.at(1) ?? ytb3?.at(1)}
+			{@const video_id = ytb1?.at(2) ?? ytb2?.at(1) ?? ytb3?.at(1)}
 			{#if video_id !== undefined}
 				<iframe
 					class="youtube"

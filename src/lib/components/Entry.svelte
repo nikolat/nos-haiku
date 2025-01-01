@@ -198,29 +198,6 @@
 							{`unsupported kind:${event.kind} event`}
 						{/if}
 					</h3>
-					{#if (profileMap.get(event.pubkey)?.lud16 ?? profileMap.get(event.pubkey)?.lud06) !== undefined}
-						<span class="zap">
-							<button
-								aria-label="Zap Button"
-								class="zap"
-								title="zap"
-								disabled={loginPubkey === undefined}
-								onclick={() => {
-									const relaysToWrite: string[] = Object.entries(getRelaysToUse())
-										.filter((v) => v[1].write)
-										.map((v) => v[0]);
-									zap(nip19.npubEncode(event.pubkey), nip19.noteEncode(event.id), relaysToWrite);
-								}}
-							>
-								<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
-									<path
-										fill-rule="evenodd"
-										d="M9,15 L3.91937515,15 L15,1.14921894 L15,9 L20.0806248,9 L9,22.8507811 L9,15 Z M8.08062485,13 L11,13 L11,17.1492189 L15.9193752,11 L13,11 L13,6.85078106 L8.08062485,13 Z"
-									/>
-								</svg>
-							</button>
-						</span>
-					{/if}
 					<AddStar {event} {loginPubkey} {profileMap} {eventsReactionToTheEvent} />
 				</div>
 				<div class="Entry__body">
@@ -418,6 +395,39 @@
 									}}><i class="far fa-times-circle"></i></span
 								>
 							{/if}
+							{#if (profileMap.get(event.pubkey)?.lud16 ?? profileMap.get(event.pubkey)?.lud06) !== undefined}
+								<span class="Separator">·</span>
+								<span class="zap">
+									<button
+										aria-label="Zap Button"
+										class="zap"
+										title="zap"
+										disabled={loginPubkey === undefined}
+										onclick={() => {
+											const relaysToWrite: string[] = Object.entries(getRelaysToUse())
+												.filter((v) => v[1].write)
+												.map((v) => v[0]);
+											zap(
+												nip19.npubEncode(event.pubkey),
+												nip19.noteEncode(event.id),
+												relaysToWrite
+											);
+										}}
+									>
+										<svg
+											xmlns="http://www.w3.org/2000/svg"
+											width="24"
+											height="24"
+											viewBox="0 0 24 24"
+										>
+											<path
+												fill-rule="evenodd"
+												d="M9,15 L3.91937515,15 L15,1.14921894 L15,9 L20.0806248,9 L9,22.8507811 L9,15 Z M8.08062485,13 L11,13 L11,17.1492189 L15.9193752,11 L13,11 L13,6.85078106 L8.08062485,13 Z"
+											/>
+										</svg>
+									</button>
+								</span>
+							{/if}
 							<!-- svelte-ignore a11y_click_events_have_key_events -->
 							<!-- svelte-ignore a11y_no_static_element_interactions -->
 							<span
@@ -531,6 +541,7 @@
 		margin: 0;
 		background-color: rgba(127, 127, 127, 0.2);
 		border-radius: 10%;
+		vertical-align: bottom;
 	}
 	span.zap > button:disabled {
 		cursor: not-allowed;

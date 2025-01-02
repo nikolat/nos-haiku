@@ -161,6 +161,31 @@
 							aria-controls="19-suggestions"
 							bind:value={channelNameToCreate}
 						/>
+						{#if channelNameToCreate.length > 0}
+							<span class="channel-clear">
+								<button
+									class="channel-clear"
+									title="clear the channel"
+									onclick={() => {
+										channelToPost = undefined;
+										channelNameToCreate = '';
+									}}
+									aria-label="clear the channel"
+								>
+									<svg
+										xmlns="http://www.w3.org/2000/svg"
+										width="16"
+										height="16"
+										viewBox="0 0 16 16"
+									>
+										<path
+											fill-rule="evenodd"
+											d="M8,16 C3.581722,16 0,12.418278 0,8 C0,3.581722 3.581722,0 8,0 C12.418278,0 16,3.581722 16,8 C16,12.418278 12.418278,16 8,16 Z M8,14 C11.3137085,14 14,11.3137085 14,8 C14,4.6862915 11.3137085,2 8,2 C4.6862915,2 2,4.6862915 2,8 C2,11.3137085 4.6862915,14 8,14 Z M8,9.41421356 L5.70710678,11.7071068 L4.29289322,10.2928932 L6.58578644,8 L4.29289322,5.70710678 L5.70710678,4.29289322 L8,6.58578644 L10.2928932,4.29289322 L11.7071068,5.70710678 L9.41421356,8 L11.7071068,10.2928932 L10.2928932,11.7071068 L8,9.41421356 Z"
+										/>
+									</svg>
+								</button>
+							</span>
+						{/if}
 					</div>
 				</div>
 			{/if}
@@ -251,5 +276,33 @@
 		position: absolute;
 		top: 2em;
 		left: -3em;
+	}
+	span.channel-clear {
+		position: absolute;
+		right: 10px;
+		top: 3px;
+	}
+	span.channel-clear > button {
+		border: none;
+		outline: none;
+		padding: 0;
+		height: 16px;
+		cursor: pointer;
+		margin: 0;
+	}
+	span.channel-clear > button:disabled {
+		cursor: not-allowed;
+	}
+	span.channel-clear > button.channel-clear {
+		background-color: rgba(127, 127, 127, 0);
+		border-radius: 10%;
+	}
+	span.channel-clear > button.channel-clear > svg {
+		width: 16px;
+		height: 16px;
+		fill: gray;
+	}
+	span.channel-clear > button.channel-clear:active > svg {
+		fill: yellow;
 	}
 </style>

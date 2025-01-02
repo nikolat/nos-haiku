@@ -1,7 +1,13 @@
 <script lang="ts">
 	import { getRoboHashURL } from '$lib/config';
 	import { getRelativetime, zap, type ChannelContent, type ProfileContentEvent } from '$lib/utils';
-	import { getEventById, getProfileName, getRelaysToUse, sendDeletion } from '$lib/resource.svelte';
+	import {
+		getEventById,
+		getProfileName,
+		getRelaysToUse,
+		sendDeletion,
+		sendRepost
+	} from '$lib/resource.svelte';
 	import Reaction from '$lib/components/Reaction.svelte';
 	import AddStar from '$lib/components/AddStar.svelte';
 	import Content from '$lib/components/Content.svelte';
@@ -395,6 +401,29 @@
 									}}><i class="far fa-times-circle"></i></span
 								>
 							{/if}
+							<span class="Separator">·</span>
+							<span class="repost">
+								<button
+									aria-label="Repost Button"
+									class="repost"
+									title="repost"
+									onclick={() => {
+										sendRepost(event);
+									}}
+								>
+									<svg
+										xmlns="http://www.w3.org/2000/svg"
+										width="24"
+										height="24"
+										viewBox="0 0 24 24"
+									>
+										<path
+											fill-rule="evenodd"
+											d="M17.8069373,7 C16.4464601,5.07869636 14.3936238,4 12,4 C7.581722,4 4,7.581722 4,12 L2,12 C2,6.4771525 6.4771525,2 12,2 C14.8042336,2 17.274893,3.18251178 19,5.27034886 L19,2 L21,2 L21,9 L14,9 L14,7 L17.8069373,7 Z M6.19306266,17 C7.55353989,18.9213036 9.60637619,20 12,20 C16.418278,20 20,16.418278 20,12 L22,12 C22,17.5228475 17.5228475,22 12,22 C9.19576641,22 6.72510698,20.8174882 5,18.7296511 L5,22 L3,22 L3,15 L10,15 L10,17 L6.19306266,17 Z"
+										/>
+									</svg>
+								</button>
+							</span>
 							{#if (profileMap.get(event.pubkey)?.lud16 ?? profileMap.get(event.pubkey)?.lud06) !== undefined}
 								<span class="Separator">·</span>
 								<span class="zap">
@@ -402,7 +431,6 @@
 										aria-label="Zap Button"
 										class="zap"
 										title="zap"
-										disabled={loginPubkey === undefined}
 										onclick={() => {
 											const relaysToWrite: string[] = Object.entries(getRelaysToUse())
 												.filter((v) => v[1].write)

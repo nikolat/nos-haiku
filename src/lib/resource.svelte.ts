@@ -1396,6 +1396,32 @@ export const unbookmarkChannel = async (channelId: string, loginPubkey: string):
 	sendEvent(eventToSend, options);
 };
 
+export const sendRepost = async (targetEvent: NostrEvent): Promise<void> => {
+	if (window.nostr === undefined) {
+		return;
+	}
+	let kind: number = 6;
+	const content: string = ''; //魚拓リポストはしない
+	const recommendedRelay: string = ''; //TODO リレーヒントはMUST
+	const tags: string[][] = [
+		['e', targetEvent.id, recommendedRelay],
+		['p', targetEvent.pubkey]
+	];
+	if (targetEvent.kind !== 1) {
+		kind = 16;
+		tags.push(['k', String(targetEvent.kind)]);
+	}
+	const eventTemplate: EventTemplate = $state.snapshot({
+		kind,
+		tags,
+		content,
+		created_at: unixNow()
+	});
+	const eventToSend = await window.nostr.signEvent(eventTemplate);
+	const options: Partial<RxNostrSendOptions> = { on: { relays: relaysToWrite } };
+	sendEvent(eventToSend, options);
+};
+
 export const sendReaction = async (
 	targetEvent: NostrEvent,
 	content: string = defaultReactionToAdd,

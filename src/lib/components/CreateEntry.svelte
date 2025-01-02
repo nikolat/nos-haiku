@@ -11,9 +11,7 @@
 
 	let {
 		loginPubkey,
-		currentPubkey,
 		currentChannelId,
-		currentNoteId,
 		eventToReply,
 		profileMap,
 		uploaderSelected,
@@ -21,9 +19,7 @@
 		showForm = $bindable()
 	}: {
 		loginPubkey: string | undefined;
-		currentPubkey?: string | undefined;
 		currentChannelId?: string | undefined;
-		currentNoteId?: string | undefined;
 		eventToReply?: NostrEvent;
 		profileMap: Map<string, ProfileContent>;
 		uploaderSelected: string;
@@ -149,7 +145,7 @@
 	>
 	<div class="CreateEntry__main">
 		<div class="InputGroup">
-			{#if currentNoteId === undefined && currentPubkey === undefined && currentChannelId === undefined && eventToReply === undefined}
+			{#if currentChannelId === undefined && eventToReply === undefined}
 				<div class="vue-simple-suggest Input CreateEntry__keyword">
 					<div
 						aria-haspopup="listbox"

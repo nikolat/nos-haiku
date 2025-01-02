@@ -477,9 +477,7 @@
 					{/if}
 					<CreateEntry
 						{loginPubkey}
-						{currentPubkey}
 						{currentChannelId}
-						{currentNoteId}
 						{profileMap}
 						{uploaderSelected}
 						{channelToPost}

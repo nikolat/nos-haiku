@@ -556,10 +556,12 @@
 		height: 16px;
 		vertical-align: top;
 	}
+	span.repost,
 	span.zap {
 		font-size: 12px;
 		margin-right: 3px;
 	}
+	span.repost > button,
 	span.zap > button {
 		border: none;
 		outline: none;
@@ -571,14 +573,17 @@
 		border-radius: 10%;
 		vertical-align: bottom;
 	}
+	span.repost > button:disabled,
 	span.zap > button:disabled {
 		cursor: not-allowed;
 	}
+	span.repost > button > svg,
 	span.zap > button > svg {
 		width: 16px;
 		height: 16px;
 		fill: gray;
 	}
+	span.repost > button:active > svg,
 	span.zap > button:active > svg {
 		fill: yellow;
 	}

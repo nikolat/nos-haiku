@@ -199,6 +199,8 @@
 					{eventsTimeline}
 					{eventsReaction}
 					uploaderSelected={''}
+					channelToPost={undefined}
+					currentChannelId={undefined}
 					nowRealtime={0}
 					level={0}
 				/>

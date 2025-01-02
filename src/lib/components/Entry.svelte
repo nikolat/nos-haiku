@@ -16,7 +16,7 @@
 	import type { NostrEvent } from 'nostr-tools/pure';
 	import * as nip19 from 'nostr-tools/nip19';
 
-	const {
+	let {
 		event,
 		channelMap,
 		profileMap,
@@ -27,6 +27,8 @@
 		eventsTimeline,
 		eventsReaction,
 		uploaderSelected,
+		channelToPost = $bindable(),
+		currentChannelId,
 		nowRealtime,
 		level
 	}: {
@@ -40,6 +42,8 @@
 		eventsTimeline: NostrEvent[];
 		eventsReaction: NostrEvent[];
 		uploaderSelected: string;
+		channelToPost: ChannelContent | undefined;
+		currentChannelId: string | undefined;
 		nowRealtime: number;
 		level: number;
 	} = $props();
@@ -176,6 +180,34 @@
 								{'invalid channel'}
 							{:else if channel?.id !== undefined}
 								<a href="/keyword/{nip19.neventEncode(channel)}">{channel.name ?? 'unknown'}</a>
+								{#if currentChannelId === undefined}
+									<span class="post-channel">
+										<button
+											aria-label="Post to this keyword"
+											class="post-chennel"
+											title="Post to this keyword"
+											onclick={() => {
+												channelToPost = channel;
+												window.scroll({
+													top: 0,
+													behavior: 'smooth'
+												});
+											}}
+										>
+											<svg
+												xmlns="http://www.w3.org/2000/svg"
+												width="24"
+												height="24"
+												viewBox="0 0 24 24"
+											>
+												<path
+													fill-rule="evenodd"
+													d="M12,21.2037682 L1.48140774,12 L12,2.79623177 L12,8.02302014 C18.5486628,8.33140969 22,11.7344566 22,18 L22,20.4142136 L20.2928932,18.7071068 C18.0460687,16.4602823 15.3097943,15.5189215 12,15.8718462 L12,21.2037682 Z M10,7.20376823 L4.51859226,12 L10,16.7962318 L10,14.1528729 L10.835601,14.0136061 C14.2501827,13.4445091 17.255572,14.0145027 19.7987459,15.7165365 C19.0504666,11.8510227 16.2006399,10 11,10 L10,10 L10,7.20376823 Z"
+												/>
+											</svg>
+										</button>
+									</span>
+								{/if}
 							{:else}
 								<a href="/keyword/{nip19.neventEncode({ id: channelId })}">unknown</a>
 							{/if}
@@ -247,6 +279,8 @@
 											{eventsTimeline}
 											{eventsReaction}
 											{uploaderSelected}
+											{channelToPost}
+											{currentChannelId}
 											{nowRealtime}
 											level={level + 1}
 										/>
@@ -275,6 +309,8 @@
 										{eventsTimeline}
 										{eventsReaction}
 										{uploaderSelected}
+										{channelToPost}
+										{currentChannelId}
 										{nowRealtime}
 										level={level + 1}
 									/>
@@ -295,6 +331,8 @@
 										{eventsTimeline}
 										{eventsReaction}
 										{uploaderSelected}
+										{channelToPost}
+										{currentChannelId}
 										{nowRealtime}
 										{level}
 									/>
@@ -479,6 +517,7 @@
 						eventToReply={event}
 						{profileMap}
 						{uploaderSelected}
+						channelToPost={undefined}
 						bind:showForm
 					/>
 				{/if}
@@ -556,13 +595,11 @@
 		height: 16px;
 		vertical-align: top;
 	}
-	span.repost,
-	span.zap {
+	.Post span {
 		font-size: 12px;
 		margin-right: 3px;
 	}
-	span.repost > button,
-	span.zap > button {
+	.Post span > button {
 		border: none;
 		outline: none;
 		padding: 0;
@@ -573,18 +610,15 @@
 		border-radius: 10%;
 		vertical-align: bottom;
 	}
-	span.repost > button:disabled,
-	span.zap > button:disabled {
+	.Post span > button:disabled {
 		cursor: not-allowed;
 	}
-	span.repost > button > svg,
-	span.zap > button > svg {
+	.Post span > button > svg {
 		width: 16px;
 		height: 16px;
 		fill: gray;
 	}
-	span.repost > button:active > svg,
-	span.zap > button:active > svg {
+	.Post span > button:active > svg {
 		fill: yellow;
 	}
 </style>

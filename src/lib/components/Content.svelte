@@ -19,6 +19,8 @@
 		eventsTimeline = [],
 		eventsReaction = [],
 		uploaderSelected = '',
+		channelToPost,
+		currentChannelId,
 		level = 0,
 		isAbout = false,
 		enableAutoLink = true,
@@ -35,6 +37,8 @@
 		eventsTimeline?: NostrEvent[];
 		eventsReaction?: NostrEvent[];
 		uploaderSelected?: string;
+		channelToPost?: ChannelContent;
+		currentChannelId?: string;
 		level?: number;
 		isAbout?: boolean;
 		enableAutoLink?: boolean;
@@ -173,6 +177,8 @@
 					{eventsTimeline}
 					{eventsReaction}
 					{uploaderSelected}
+					{channelToPost}
+					{currentChannelId}
 					{nowRealtime}
 					level={level + 1}
 				/>
@@ -201,6 +207,8 @@
 					{eventsTimeline}
 					{eventsReaction}
 					{uploaderSelected}
+					{channelToPost}
+					{currentChannelId}
 					{nowRealtime}
 					level={level + 1}
 				/>
@@ -225,6 +233,8 @@
 					{eventsTimeline}
 					{eventsReaction}
 					{uploaderSelected}
+					{channelToPost}
+					{currentChannelId}
 					{nowRealtime}
 					level={level + 1}
 				/>

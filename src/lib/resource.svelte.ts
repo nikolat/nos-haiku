@@ -173,6 +173,7 @@ const channelMap = $derived.by(() => {
 			console.warn(error);
 			continue;
 		}
+		channel.eventkind40 = ev;
 		channel.id = ev.id;
 		channel.kind = ev.kind;
 		channel.pubkey = ev.pubkey;
@@ -196,6 +197,7 @@ const channelMap = $derived.by(() => {
 					console.warn(error);
 					continue;
 				}
+				channel.eventkind40 = c.eventkind40;
 				channel.id = c.id;
 				channel.kind = c.kind;
 				channel.pubkey = c.pubkey;
@@ -1517,7 +1519,7 @@ export const sendNote = async (
 	}
 	//チャンネル作成
 	let eventChannelToSend: NostrEvent | undefined;
-	if (channelNameToCreate.length > 0) {
+	if (targetEventToReply === undefined && channelNameToCreate.length > 0) {
 		const eventTemplateChannel: EventTemplate = $state.snapshot({
 			content: JSON.stringify({
 				name: channelNameToCreate,

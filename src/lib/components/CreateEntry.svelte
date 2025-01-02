@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { defaultAccountUri, getRoboHashURL } from '$lib/config';
-	import { getEmoji } from '$lib/utils';
+	import { getEmoji, type ChannelContent } from '$lib/utils';
 	import { uploadFile } from '$lib/nip96';
 	import { getChannelEventMap, getEventEmojiSet, sendNote } from '$lib/resource.svelte';
 	import type { EventTemplate, NostrEvent } from 'nostr-tools/pure';
@@ -17,6 +17,7 @@
 		eventToReply,
 		profileMap,
 		uploaderSelected,
+		channelToPost,
 		showForm = $bindable()
 	}: {
 		loginPubkey: string | undefined;
@@ -26,6 +27,7 @@
 		eventToReply?: NostrEvent;
 		profileMap: Map<string, ProfileContent>;
 		uploaderSelected: string;
+		channelToPost: ChannelContent | undefined;
 		showForm: boolean;
 	} = $props();
 
@@ -114,9 +116,15 @@
 
 	let channelNameToCreate: string = $state('');
 	let contentToSend: string = $state('');
+	$effect(() => {
+		if (channelToPost !== undefined) {
+			channelNameToCreate = channelToPost.name;
+		}
+	});
 
 	const callSendNote = () => {
 		const targetEventToReply =
+			channelToPost?.eventkind40 ??
 			eventToReply ??
 			(currentChannelId !== undefined ? channelEventMap.get(currentChannelId) : undefined);
 		sendNote(contentToSend, channelNameToCreate, targetEventToReply, emojiMap).then(() => {
@@ -151,6 +159,7 @@
 					>
 						<input
 							placeholder="キーワードを新規作成 (オプション)"
+							disabled={channelToPost !== undefined}
 							class="default-input Input"
 							aria-autocomplete="list"
 							aria-controls="19-suggestions"

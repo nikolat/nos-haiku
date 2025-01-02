@@ -228,6 +228,8 @@
 		}
 	};
 
+	let channelToPost: ChannelContent | undefined = $state();
+
 	beforeNavigate(() => {
 		document.removeEventListener('click', handlerSetting);
 		document.removeEventListener('scroll', handlerScroll);
@@ -480,6 +482,7 @@
 						{currentNoteId}
 						{profileMap}
 						{uploaderSelected}
+						{channelToPost}
 						showForm={true}
 					/>
 				</div>
@@ -496,6 +499,8 @@
 							{eventsTimeline}
 							{eventsReaction}
 							{uploaderSelected}
+							bind:channelToPost
+							{currentChannelId}
 							{nowRealtime}
 							level={0}
 						/>
@@ -523,6 +528,32 @@
 												<a href="/keyword/{nip19.neventEncode(channel)}" class="KeywordItem__title"
 													>{channel.name}</a
 												>
+												<span class="post-channel">
+													<button
+														aria-label="Post to this keyword"
+														class="post-chennel"
+														title="Post to this keyword"
+														onclick={() => {
+															channelToPost = channel;
+															window.scroll({
+																top: 0,
+																behavior: 'smooth'
+															});
+														}}
+													>
+														<svg
+															xmlns="http://www.w3.org/2000/svg"
+															width="24"
+															height="24"
+															viewBox="0 0 24 24"
+														>
+															<path
+																fill-rule="evenodd"
+																d="M12,21.2037682 L1.48140774,12 L12,2.79623177 L12,8.02302014 C18.5486628,8.33140969 22,11.7344566 22,18 L22,20.4142136 L20.2928932,18.7071068 C18.0460687,16.4602823 15.3097943,15.5189215 12,15.8718462 L12,21.2037682 Z M10,7.20376823 L4.51859226,12 L10,16.7962318 L10,14.1528729 L10.835601,14.0136061 C14.2501827,13.4445091 17.255572,14.0145027 19.7987459,15.7165365 C19.0504666,11.8510227 16.2006399,10 11,10 L10,10 L10,7.20376823 Z"
+															/>
+														</svg>
+													</button>
+												</span>
 											</li>
 										{/if}
 									{/each}
@@ -569,6 +600,32 @@
 											<a href="/keyword/{nip19.neventEncode(channel)}" class="KeywordItem__title"
 												>{channel.name}</a
 											>
+											<span class="post-channel">
+												<button
+													aria-label="Post to this keyword"
+													class="post-chennel"
+													title="Post to this keyword"
+													onclick={() => {
+														channelToPost = channel;
+														window.scroll({
+															top: 0,
+															behavior: 'smooth'
+														});
+													}}
+												>
+													<svg
+														xmlns="http://www.w3.org/2000/svg"
+														width="24"
+														height="24"
+														viewBox="0 0 24 24"
+													>
+														<path
+															fill-rule="evenodd"
+															d="M12,21.2037682 L1.48140774,12 L12,2.79623177 L12,8.02302014 C18.5486628,8.33140969 22,11.7344566 22,18 L22,20.4142136 L20.2928932,18.7071068 C18.0460687,16.4602823 15.3097943,15.5189215 12,15.8718462 L12,21.2037682 Z M10,7.20376823 L4.51859226,12 L10,16.7962318 L10,14.1528729 L10.835601,14.0136061 C14.2501827,13.4445091 17.255572,14.0145027 19.7987459,15.7165365 C19.0504666,11.8510227 16.2006399,10 11,10 L10,10 L10,7.20376823 Z"
+														/>
+													</svg>
+												</button>
+											</span>
 										</li>
 									{/if}
 								{/each}
@@ -587,5 +644,31 @@
 	}
 	.Card--kofi button {
 		width: 100%;
+	}
+	.KeywordItem span {
+		font-size: 12px;
+		margin-right: 3px;
+	}
+	.KeywordItem span > button {
+		border: none;
+		outline: none;
+		padding: 0;
+		height: 16px;
+		cursor: pointer;
+		margin: 0;
+		background-color: rgba(127, 127, 127, 0.2);
+		border-radius: 10%;
+		vertical-align: bottom;
+	}
+	.KeywordItem span > button:disabled {
+		cursor: not-allowed;
+	}
+	.KeywordItem span > button > svg {
+		width: 16px;
+		height: 16px;
+		fill: gray;
+	}
+	.KeywordItem span > button:active > svg {
+		fill: yellow;
 	}
 </style>

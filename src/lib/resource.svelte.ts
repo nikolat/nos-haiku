@@ -624,14 +624,21 @@ const mergeFilter41: MergeFilter = (a: LazyFilter[], b: LazyFilter[]) => {
 const mergeFilter30030: MergeFilter = (a: LazyFilter[], b: LazyFilter[]) => {
 	const margedFilters = [...a, ...b];
 	const newFilters: LazyFilter[] = [];
-	const aTagStringSet: Set<string> = new Set<string>();
+	const filterMap: Map<string, Set<string>> = new Map<string, Set<string>>();
 	for (const filter of margedFilters) {
-		const aTagString = `${filter.kinds?.at(0)}:${filter.authors?.at(0)}:${filter['#d']?.at(0)}}`;
-		if (aTagStringSet.has(aTagString)) {
-			continue;
+		const author: string = filter.authors?.at(0) ?? '';
+		const dTags: string[] = filter['#d'] ?? [];
+		if (filterMap.has(author)) {
+			for (const dTag of dTags) {
+				filterMap.set(author, filterMap.get(author)!.add(dTag));
+			}
+		} else {
+			filterMap.set(author, new Set<string>(dTags));
 		}
+	}
+	for (const [author, dTagSet] of filterMap) {
+		const filter = { kinds: [30030], authors: [author], '#d': Array.from(dTagSet) };
 		newFilters.push(filter);
-		aTagStringSet.add(aTagString);
 	}
 	return newFilters;
 };
@@ -689,9 +696,8 @@ rxNostr
 		next,
 		complete
 	});
-const batchedReq30030 = rxReqB30030.pipe(bufferTime(secBufferTime), batch(mergeFilter30030));
 rxNostr
-	.use(batchedReq30030)
+	.use(rxReqB30030)
 	.pipe(
 		uniq(flushes$),
 		latestEach(({ event }) => event.pubkey)
@@ -894,14 +900,27 @@ const _subTimeline = eventStore
 				if (atags.length > 0) {
 					for (const atag of atags) {
 						const ary = atag.split(':');
-						filterForGetEmoji.push({
+						const filter: LazyFilter = {
 							kinds: [parseInt(ary[0])],
 							authors: [ary[1]],
 							'#d': [ary[2]],
 							until: unixNow()
-						});
+						};
+						filterForGetEmoji.push(filter);
 					}
-					rxReqB30030.emit(filterForGetEmoji);
+					let margedFilters: LazyFilter[] = [];
+					for (const filter of filterForGetEmoji) {
+						margedFilters = mergeFilter30030(margedFilters, [filter]);
+					}
+					const sliceByNumber = (array: LazyFilter[], number: number) => {
+						const length = Math.ceil(array.length / number);
+						return new Array(length)
+							.fill(undefined)
+							.map((_, i) => array.slice(i * number, (i + 1) * number));
+					};
+					for (const filters of sliceByNumber(margedFilters, 10)) {
+						rxReqB30030.emit(filters);
+					}
 				}
 				break;
 			}

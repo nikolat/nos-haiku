@@ -15,16 +15,18 @@
 	import * as nip19 from 'nostr-tools/nip19';
 	import { unixNow } from 'applesauce-core/helpers';
 
-	const {
+	let {
 		loginPubkey,
 		profileMap,
 		mutedPubkeys,
-		nowRealtime
+		nowRealtime,
+		isEnabledScrollInfinitely = $bindable()
 	}: {
 		loginPubkey: string | undefined;
 		profileMap: Map<string, ProfileContentEvent>;
 		mutedPubkeys: string[];
 		nowRealtime: number;
+		isEnabledScrollInfinitely: boolean;
 	} = $props();
 
 	const eventsMention: { baseEvent: NostrEvent; targetEvent: NostrEvent | undefined }[] =
@@ -216,6 +218,14 @@
 				{/if}
 			</ul>
 		</nav>
+		<div class="Settings__section">
+			<div class="Control">
+				<label class="SliderSwitch">
+					<input name="ui_theme" type="checkbox" bind:checked={isEnabledScrollInfinitely} />
+					<span class="Slider Round"></span>
+				</label>
+			</div>
+		</div>
 		<div class="GlobalHeader__notices">
 			<!-- svelte-ignore a11y_click_events_have_key_events -->
 			<!-- svelte-ignore a11y_no_static_element_interactions -->
@@ -329,5 +339,15 @@
 <style>
 	.hide {
 		display: none;
+	}
+	.Settings__section {
+		position: absolute;
+		top: -13px;
+		right: 25px;
+	}
+	@media screen and (min-width: 1078px) {
+		.Settings__section {
+			display: none;
+		}
 	}
 </style>

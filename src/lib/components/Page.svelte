@@ -196,7 +196,7 @@
 		const pageMostBottom = scrollHeight - window.innerHeight;
 		const scrollTop = window.scrollY || document.documentElement.scrollTop;
 		if (scrollTop > pageMostBottom - scrollThreshold) {
-			if (!isScrolledBottom && !isLoading) {
+			if (isEnabledScrollInfinitely && !isScrolledBottom && !isLoading) {
 				console.log('[Loading Start]');
 				isScrolledBottom = true;
 				isLoading = true;
@@ -229,6 +229,7 @@
 	};
 
 	let channelToPost: ChannelContent | undefined = $state();
+	let isEnabledScrollInfinitely: boolean = $state(true);
 
 	beforeNavigate(() => {
 		document.removeEventListener('click', handlerSetting);
@@ -245,7 +246,7 @@
 	});
 </script>
 
-<Header {loginPubkey} {profileMap} {mutedPubkeys} {nowRealtime} />
+<Header {loginPubkey} {profileMap} {mutedPubkeys} {nowRealtime} bind:isEnabledScrollInfinitely />
 <main class="Homepage View">
 	<div class="Layout">
 		<div class="Column Column--left Column--nomobile">

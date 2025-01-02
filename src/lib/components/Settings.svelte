@@ -55,7 +55,7 @@
 	);
 </script>
 
-<Header {loginPubkey} {profileMap} {mutedPubkeys} {nowRealtime} />
+<Header {loginPubkey} {profileMap} {mutedPubkeys} {nowRealtime} isEnabledScrollInfinitely={false} />
 <main class="SettingsView View">
 	<div class="Layout">
 		<div class="Column Column--left">

@@ -29,7 +29,7 @@
 	});
 </script>
 
-<Header {loginPubkey} {profileMap} {mutedPubkeys} {nowRealtime} />
+<Header {loginPubkey} {profileMap} {mutedPubkeys} {nowRealtime} isEnabledScrollInfinitely={false} />
 <main class="SearchView View">
 	<div class="Layout">
 		<div class="Column Column--main">

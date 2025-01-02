@@ -696,16 +696,10 @@ rxNostr
 		next,
 		complete
 	});
-rxNostr
-	.use(rxReqB30030)
-	.pipe(
-		uniq(flushes$),
-		latestEach(({ event }) => event.pubkey)
-	)
-	.subscribe({
-		next,
-		complete
-	});
+rxNostr.use(rxReqB30030).pipe(uniq(flushes$)).subscribe({
+	next,
+	complete
+});
 const batchedReqId = rxReqBId.pipe(bufferTime(secBufferTime), batch(mergeFilterId));
 rxNostr.use(batchedReqId).pipe(uniq(flushes$)).subscribe({
 	next,

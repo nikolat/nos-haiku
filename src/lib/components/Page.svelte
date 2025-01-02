@@ -532,6 +532,7 @@
 													<button
 														aria-label="Post to this keyword"
 														class="post-chennel"
+														disabled={loginPubkey === undefined}
 														title="Post to this keyword"
 														onclick={() => {
 															channelToPost = channel;
@@ -604,6 +605,7 @@
 												<button
 													aria-label="Post to this keyword"
 													class="post-chennel"
+													disabled={loginPubkey === undefined}
 													title="Post to this keyword"
 													onclick={() => {
 														channelToPost = channel;

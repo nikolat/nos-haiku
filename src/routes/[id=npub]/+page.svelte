@@ -1,7 +1,8 @@
 <script lang="ts">
 	import type { PageData } from './$types';
-	import { afterNavigate } from '$app/navigation';
+	import { afterNavigate, beforeNavigate } from '$app/navigation';
 	import App from '$lib/components/App.svelte';
+	import { getLoginPubkey } from '$lib/resource.svelte';
 	import { nip19 } from 'nostr-tools';
 
 	let { data }: { data: PageData } = $props();
@@ -19,6 +20,12 @@
 		}
 	};
 
+	beforeNavigate(() => {
+		const elToSend: HTMLTextAreaElement | null = document.querySelector('.Feed__composer textarea');
+		if (elToSend !== null) {
+			elToSend.value = '';
+		}
+	});
 	afterNavigate(() => {
 		currentPubkey = getPubkey(data.params.id);
 		//メンションの雛形を投稿欄に入力
@@ -27,7 +34,10 @@
 				'.Feed__composer textarea'
 			);
 			if (elToSend !== null) {
-				elToSend.value = `nostr:${nip19.npubEncode(currentPubkey)} `;
+				const loginPubkey: string | undefined = getLoginPubkey();
+				if (loginPubkey !== currentPubkey) {
+					elToSend.value = `nostr:${nip19.npubEncode(currentPubkey)} `;
+				}
 			}
 		}
 	});

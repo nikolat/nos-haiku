@@ -657,9 +657,9 @@
 		height: 16px;
 		cursor: pointer;
 		margin: 0;
-		background-color: rgba(127, 127, 127, 0.2);
+		background-color: rgba(127, 127, 127, 0.0);
 		border-radius: 10%;
-		vertical-align: bottom;
+		vertical-align: text-bottom;
 	}
 	.KeywordItem span > button:disabled {
 		cursor: not-allowed;
@@ -667,7 +667,7 @@
 	.KeywordItem span > button > svg {
 		width: 16px;
 		height: 16px;
-		fill: gray;
+		fill: var(--secondary-text-color);
 	}
 	.KeywordItem span > button:active > svg {
 		fill: yellow;

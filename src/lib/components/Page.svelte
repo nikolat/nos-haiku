@@ -672,4 +672,8 @@
 	.KeywordItem span > button:active > svg {
 		fill: yellow;
 	}
+	/* ミュートされた投稿が多すぎてスクロールできず追加読み込みができない場合への備え */
+	.Homepage {
+		min-height: calc(100vh + 300px);
+	}
 </style>

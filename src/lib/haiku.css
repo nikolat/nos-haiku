@@ -3389,7 +3389,7 @@ main > .Spinner {
 	position: relative;
 }
 .GlobalHeader__login > span:first-child,
-.GlobalHeader__notices > span:first-child {
+.GlobalHeader__notices > span {
 	cursor: pointer;
 	display: inline-block;
 	padding: 0 10px;

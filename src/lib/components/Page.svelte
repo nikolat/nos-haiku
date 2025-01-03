@@ -657,7 +657,7 @@
 		height: 16px;
 		cursor: pointer;
 		margin: 0;
-		background-color: rgba(127, 127, 127, 0.0);
+		background-color: rgba(127, 127, 127, 0);
 		border-radius: 10%;
 		vertical-align: text-bottom;
 	}

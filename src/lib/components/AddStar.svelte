@@ -128,13 +128,13 @@
 		cursor: not-allowed;
 	}
 	span.reactionstar-container > button.reactionstar-send {
-		background-color: rgba(127, 127, 127, 0.2);
+		background-color: rgba(127, 127, 127, 0);
 		border-radius: 10%;
 	}
 	span.reactionstar-container > button.reactionstar-send > svg {
 		width: 16px;
 		height: 16px;
-		fill: gray;
+		fill: var(--secondary-text-color);
 	}
 	span.reactionstar-container > button.reactionstar-send:active > svg {
 		fill: yellow;

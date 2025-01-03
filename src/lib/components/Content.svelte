@@ -7,7 +7,7 @@
 	import type { NostrEvent } from 'nostr-tools/pure';
 	import * as nip19 from 'nostr-tools/nip19';
 
-	const {
+	let {
 		content,
 		tags,
 		channelMap = new Map<string, ChannelContent>(),
@@ -19,7 +19,7 @@
 		eventsTimeline = [],
 		eventsReaction = [],
 		uploaderSelected = '',
-		channelToPost,
+		channelToPost = $bindable(),
 		currentChannelId,
 		level = 0,
 		isAbout = false,
@@ -177,7 +177,7 @@
 					{eventsTimeline}
 					{eventsReaction}
 					{uploaderSelected}
-					{channelToPost}
+					bind:channelToPost
 					{currentChannelId}
 					{nowRealtime}
 					level={level + 1}
@@ -207,7 +207,7 @@
 					{eventsTimeline}
 					{eventsReaction}
 					{uploaderSelected}
-					{channelToPost}
+					bind:channelToPost
 					{currentChannelId}
 					{nowRealtime}
 					level={level + 1}
@@ -233,7 +233,7 @@
 					{eventsTimeline}
 					{eventsReaction}
 					{uploaderSelected}
-					{channelToPost}
+					bind:channelToPost
 					{currentChannelId}
 					{nowRealtime}
 					level={level + 1}

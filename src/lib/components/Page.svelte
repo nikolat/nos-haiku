@@ -481,7 +481,7 @@
 						{currentChannelId}
 						{profileMap}
 						{uploaderSelected}
-						{channelToPost}
+						bind:channelToPost
 						showForm={true}
 					/>
 				</div>

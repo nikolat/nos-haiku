@@ -15,7 +15,7 @@
 		eventToReply,
 		profileMap,
 		uploaderSelected,
-		channelToPost,
+		channelToPost = $bindable(),
 		showForm = $bindable()
 	}: {
 		loginPubkey: string | undefined;
@@ -115,6 +115,8 @@
 	$effect(() => {
 		if (channelToPost !== undefined) {
 			channelNameToCreate = channelToPost.name;
+		} else {
+			channelNameToCreate = '';
 		}
 	});
 
@@ -125,7 +127,7 @@
 			(currentChannelId !== undefined ? channelEventMap.get(currentChannelId) : undefined);
 		sendNote(contentToSend, channelNameToCreate, targetEventToReply, emojiMap).then(() => {
 			contentToSend = '';
-			channelNameToCreate = '';
+			channelToPost = undefined;
 			showForm = false;
 		});
 	};
@@ -168,7 +170,6 @@
 									title="clear the channel"
 									onclick={() => {
 										channelToPost = undefined;
-										channelNameToCreate = '';
 									}}
 									aria-label="clear the channel"
 								>

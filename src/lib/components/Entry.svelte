@@ -280,7 +280,7 @@
 											{eventsTimeline}
 											{eventsReaction}
 											{uploaderSelected}
-											{channelToPost}
+											bind:channelToPost
 											{currentChannelId}
 											{nowRealtime}
 											level={level + 1}
@@ -310,7 +310,7 @@
 										{eventsTimeline}
 										{eventsReaction}
 										{uploaderSelected}
-										{channelToPost}
+										bind:channelToPost
 										{currentChannelId}
 										{nowRealtime}
 										level={level + 1}
@@ -332,7 +332,7 @@
 										{eventsTimeline}
 										{eventsReaction}
 										{uploaderSelected}
-										{channelToPost}
+										bind:channelToPost
 										{currentChannelId}
 										{nowRealtime}
 										{level}

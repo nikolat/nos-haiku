@@ -12,6 +12,7 @@
 	import { onMount } from 'svelte';
 	import { afterNavigate, beforeNavigate } from '$app/navigation';
 	import type { NostrEvent } from 'nostr-tools/pure';
+	import * as nip05 from 'nostr-tools/nip05';
 	import * as nip19 from 'nostr-tools/nip19';
 
 	const {
@@ -186,6 +187,20 @@
 					<h2>id:{prof?.name ?? 'none'}</h2></a
 				>
 			</div>
+			{#if prof !== undefined}
+				{#if nip05.isNip05(prof.nip05)}
+					{#await nip05.isValid(currentPubkey, prof.nip05)}
+						<p>❔{prof.nip05}</p>
+					{:then isValid}
+						<p>{isValid ? '✅' : '❌'}{prof.nip05}</p>
+					{:catch _error}
+						<p>❌{prof.nip05}</p>
+					{/await}
+				{/if}
+				{#if URL.canParse(prof.website ?? '')}
+					<p class="website">🔗<a href={prof.website}>{prof.website}</a></p>
+				{/if}
+			{/if}
 			<p>
 				<Content
 					content={prof?.about ?? ''}

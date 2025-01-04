@@ -366,7 +366,10 @@ export const getEmoji = async (
 			onEmojiSelect,
 			onClickOutside
 		});
-		// eslint-disable-next-line @typescript-eslint/no-explicit-any
-		emojiPickerContainer.appendChild(picker as any);
+		//スマホで1回目に生成したインスタンスがonClickOutsideを呼び続けるので回避するためタイマーを仕掛ける
+		setTimeout(() => {
+			// eslint-disable-next-line @typescript-eslint/no-explicit-any
+			emojiPickerContainer.appendChild(picker as any);
+		}, 10);
 	});
 };

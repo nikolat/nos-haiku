@@ -17,6 +17,7 @@ export const expansionThreshold = 5;
 export const defaultReactionToShow = '⭐';
 export const defaultReactionToAdd = '+';
 export const zapNpub = 'npub1dv9xpnlnajj69vjstn9n7ufnmppzq3wtaaq085kxrz0mpw2jul2qjy6uhz';
+export const zapNoteId = 'note1n5wkmwdg7tvl2xxrjuln3j05pheqhxptjlwqtf93z23c8uurjqkqtrdm3f';
 const relaysToWrite = Object.entries(defaultRelays)
 	.filter((v) => v[1].write)
 	.map((v) => v[0]);

@@ -3,6 +3,7 @@
 		getRoboHashURL,
 		serviceLogoImageUri,
 		zapImageUri,
+		zapNoteId,
 		zapNpub,
 		zapRelays
 	} from '$lib/config';
@@ -578,6 +579,7 @@
 						class="Button"
 						disabled={loginPubkey === undefined}
 						data-npub={zapNpub}
+						data-note-id={zapNoteId}
 						data-relays={zapRelays.join(',')}
 					>
 						<img alt="Zap" src={zapImageUri} />

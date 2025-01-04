@@ -42,6 +42,7 @@
 	} = $props();
 
 	const prof = $derived(profileMap.get(currentPubkey));
+	const nip05string: string | undefined = $derived(prof?.nip05);
 
 	let showSetting: boolean = $state(false);
 	const handlerSetting = (ev: MouseEvent): void => {
@@ -188,9 +189,9 @@
 				>
 			</div>
 			{#if prof !== undefined}
-				{#if nip05.isNip05(prof.nip05)}
-					{@const abbreviatedNip05 = prof.nip05.replace(/^_@/, '')}
-					{#await nip05.isValid(currentPubkey, prof.nip05)}
+				{#if nip05.isNip05(nip05string)}
+					{@const abbreviatedNip05 = nip05string.replace(/^_@/, '')}
+					{#await nip05.isValid(currentPubkey, nip05string)}
 						<p>❔{abbreviatedNip05}</p>
 					{:then isValid}
 						<p>{isValid ? '✅' : '❌'}{abbreviatedNip05}</p>

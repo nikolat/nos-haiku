@@ -120,7 +120,7 @@ let countThread: Map<string, number> = new Map<string, number>();
 const countThreadLimit = 5;
 
 const eventStore = new EventStore();
-const rxNostr = createRxNostr({ verifier });
+const rxNostr = createRxNostr({ verifier, authenticator: 'auto' });
 let subF: Subscription;
 
 let eventsMention: { baseEvent: NostrEvent; targetEvent: NostrEvent | undefined }[] = $state([]);

@@ -175,6 +175,8 @@
 		event.tags.findLast((tag) => tag.length >= 2 && tag[0] === 'e')?.at(1)
 	);
 	const repostedEvent: NostrEvent | undefined = $derived(getEventById(repostedEventId ?? ''));
+
+	let zapWindowContainer: HTMLElement | undefined = $state();
 </script>
 
 <article class={classNames.join(' ')}>
@@ -502,7 +504,8 @@
 												zap(
 													nip19.npubEncode(event.pubkey),
 													nip19.noteEncode(event.id),
-													relaysToWrite
+													relaysToWrite,
+													zapWindowContainer
 												);
 											}}
 										>
@@ -519,6 +522,7 @@
 											</svg>
 										</button>
 									</span>
+									<div class="zap-window-container" bind:this={zapWindowContainer}></div>
 								{/if}
 								<!-- svelte-ignore a11y_click_events_have_key_events -->
 								<!-- svelte-ignore a11y_no_static_element_interactions -->

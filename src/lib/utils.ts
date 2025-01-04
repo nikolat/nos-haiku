@@ -312,13 +312,27 @@ export const isValidEmoji = (event: NostrEvent): boolean => {
 	return isCustomEmoji(event) || inputCount(event.content) <= 1;
 };
 
-export const zap = async (npub: string, id: string, relays: string[]): Promise<void> => {
+export const zap = async (
+	npub: string,
+	id: string,
+	relays: string[],
+	zapWindowContainer: HTMLElement | undefined
+): Promise<void> => {
+	if (zapWindowContainer === undefined) {
+		return;
+	} else if (zapWindowContainer.children.length > 0) {
+		const elm = zapWindowContainer.children[0];
+		elm.dispatchEvent(new Event('click'));
+		return;
+	}
 	// @ts-expect-error 型なんて定義されてないよ
 	const { initTarget } = await import('nostr-zap/src/view');
 	const elm: HTMLButtonElement = document.createElement('button');
+	elm.style.display = 'none';
 	elm.dataset.npub = npub;
 	elm.dataset.noteId = id;
 	elm.dataset.relays = relays.join(',');
+	zapWindowContainer.append(elm);
 	initTarget(elm);
 	elm.dispatchEvent(new Event('click'));
 };

@@ -7,6 +7,7 @@
 		getFollowList,
 		getIsEnabledDarkMode,
 		getIsEnabledSkipKind1,
+		getIsEnabledUseClientTag,
 		getMutedChannelIds,
 		getMutedPubkeys,
 		getMutedWords,
@@ -40,6 +41,7 @@
 	const loginPubkey: string | undefined = $derived(getLoginPubkey());
 	const isEnabledDarkMode: boolean = $derived(getIsEnabledDarkMode());
 	const isEnabledSkipKind1: boolean = $derived(getIsEnabledSkipKind1());
+	const isEnabledUseClientTag: boolean = $derived(getIsEnabledUseClientTag());
 	const relaysSelected: string = $derived(getRelaysSelected());
 	const uploaderSelected: string = $derived(getUploaderSelected());
 	const profileMap: Map<string, ProfileContentEvent> = $derived(getProfileMap());
@@ -131,6 +133,7 @@
 			{loginPubkey}
 			{isEnabledDarkMode}
 			{isEnabledSkipKind1}
+			{isEnabledUseClientTag}
 			{relaysSelected}
 			{uploaderSelected}
 			{profileMap}

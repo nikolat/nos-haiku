@@ -22,6 +22,7 @@ import * as nip19 from 'nostr-tools/nip19';
 import type { RelayRecord } from 'nostr-tools/relay';
 import type { WindowNostr } from 'nostr-tools/nip07';
 import {
+	clientTag,
 	defaultReactionToAdd,
 	defaultRelays,
 	profileRelays,
@@ -45,6 +46,7 @@ import {
 let loginPubkey: string | undefined = $state();
 let isEnabledDarkMode: boolean = $state(true);
 let isEnabledSkipKind1: boolean = $state(false);
+let isEnabledUseClientTag: boolean = $state(false);
 let relaysSelected: string = $state('default');
 let uploaderSelected: string = $state(uploaderURLs[0]);
 let relaysToUse: RelayRecord = $state(defaultRelays);
@@ -71,6 +73,7 @@ preferences.subscribe(
 		loginPubkey: string | undefined;
 		isEnabledDarkMode: boolean;
 		isEnabledSkipKind1: boolean;
+		isEnabledUseClientTag: boolean;
 		relaysSelected: string;
 		uploaderSelected: string;
 		relaysToUse: RelayRecord;
@@ -83,6 +86,9 @@ preferences.subscribe(
 		}
 		if (isEnabledSkipKind1 !== value.isEnabledSkipKind1) {
 			isEnabledSkipKind1 = value.isEnabledSkipKind1;
+		}
+		if (isEnabledUseClientTag !== value.isEnabledUseClientTag) {
+			isEnabledUseClientTag = value.isEnabledUseClientTag;
 		}
 		if (relaysSelected !== value.relaysSelected) {
 			relaysSelected = value.relaysSelected;
@@ -100,6 +106,7 @@ const savelocalStorage = () => {
 		loginPubkey,
 		isEnabledDarkMode,
 		isEnabledSkipKind1,
+		isEnabledUseClientTag,
 		relaysSelected,
 		uploaderSelected,
 		relaysToUse
@@ -278,6 +285,15 @@ export const getIsEnabledSkipKind1 = (): boolean => {
 
 export const setIsEnabledSkipKind1 = (value: boolean): void => {
 	isEnabledSkipKind1 = value;
+	savelocalStorage();
+};
+
+export const getIsEnabledUseClientTag = (): boolean => {
+	return isEnabledUseClientTag;
+};
+
+export const setIsEnabledUseClientTag = (value: boolean): void => {
+	isEnabledUseClientTag = value;
 	savelocalStorage();
 };
 
@@ -1426,6 +1442,9 @@ export const sendRepost = async (targetEvent: NostrEvent): Promise<void> => {
 		kind = 16;
 		tags.push(['k', String(targetEvent.kind)]);
 	}
+	if (isEnabledUseClientTag) {
+		tags.push(clientTag);
+	}
 	const eventTemplate: EventTemplate = $state.snapshot({
 		kind,
 		tags,
@@ -1456,6 +1475,9 @@ export const sendReaction = async (
 	];
 	if (emojiurl !== undefined && URL.canParse(emojiurl)) {
 		tags.push(['emoji', content.replaceAll(':', ''), emojiurl]);
+	}
+	if (isEnabledUseClientTag) {
+		tags.push(clientTag);
 	}
 	const eventTemplate: EventTemplate = $state.snapshot({
 		kind: 7,
@@ -1528,7 +1550,7 @@ export const sendNote = async (
 				relays: relaysToWrite
 			}),
 			kind: 40,
-			tags: [],
+			tags: isEnabledUseClientTag ? [clientTag] : [],
 			created_at: unixNow()
 		});
 		eventChannelToSend = await window.nostr.signEvent(eventTemplateChannel);
@@ -1644,6 +1666,9 @@ export const sendNote = async (
 				? ['content-warning']
 				: ['content-warning', contentWarningReason]
 		);
+	}
+	if (isEnabledUseClientTag) {
+		tags.push(clientTag);
 	}
 	const eventTemplate: EventTemplate = $state.snapshot({
 		content,

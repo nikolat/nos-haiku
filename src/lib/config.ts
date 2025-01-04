@@ -18,6 +18,13 @@ export const defaultReactionToShow = '⭐';
 export const defaultReactionToAdd = '+';
 export const zapNpub = 'npub1dv9xpnlnajj69vjstn9n7ufnmppzq3wtaaq085kxrz0mpw2jul2qjy6uhz';
 export const zapNoteId = 'note1n5wkmwdg7tvl2xxrjuln3j05pheqhxptjlwqtf93z23c8uurjqkqtrdm3f';
+// kind:1, 6, 7, 16, 40, 42 を対象に入れる
+export const clientTag = [
+	'client',
+	'Nos Haiku',
+	'31990:6b0a60cff3eca5a2b2505ccb3f7133d8422045cbef40f3d2c6189fb0b952e7d4:1735964023115',
+	'wss://nrelay.c-stellar.net/'
+];
 const relaysToWrite = Object.entries(defaultRelays)
 	.filter((v) => v[1].write)
 	.map((v) => v[0]);

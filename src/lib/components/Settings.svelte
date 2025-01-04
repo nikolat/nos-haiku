@@ -6,6 +6,7 @@
 		getRelaysToUse,
 		setIsEnabledDarkMode,
 		setIsEnabledSkipKind1,
+		setIsEnabledUseClientTag,
 		setRelaysSelected,
 		setRelaysToUseSelected,
 		setUploaderSelected,
@@ -24,6 +25,7 @@
 		loginPubkey,
 		isEnabledDarkMode,
 		isEnabledSkipKind1,
+		isEnabledUseClientTag,
 		relaysSelected,
 		uploaderSelected,
 		profileMap,
@@ -37,6 +39,7 @@
 		loginPubkey: string | undefined;
 		isEnabledDarkMode: boolean;
 		isEnabledSkipKind1: boolean;
+		isEnabledUseClientTag: boolean;
 		relaysSelected: string;
 		uploaderSelected: string;
 		profileMap: Map<string, ProfileContentEvent>;
@@ -145,6 +148,22 @@
 											setIsEnabledSkipKind1(isEnabledSkipKind1);
 											clearCache();
 											goto(location.href);
+										}}
+									/><span class="Slider Round"></span></label
+								>
+							</div>
+						</div>
+						<div class="Settings__section">
+							<div class="Label"><span>clientタグ</span></div>
+							<div class="Control">
+								<label class="SliderSwitch"
+									><input
+										name="ui_theme"
+										type="checkbox"
+										disabled={loginPubkey === undefined}
+										bind:checked={isEnabledUseClientTag}
+										onchange={() => {
+											setIsEnabledUseClientTag(isEnabledUseClientTag);
 										}}
 									/><span class="Slider Round"></span></label
 								>

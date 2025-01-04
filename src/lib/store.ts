@@ -7,6 +7,7 @@ export const preferences = persisted<
 		loginPubkey: string | undefined;
 		isEnabledDarkMode: boolean;
 		isEnabledSkipKind1: boolean;
+		isEnabledUseClientTag: boolean;
 		relaysSelected: string;
 		uploaderSelected: string;
 		relaysToUse: RelayRecord;
@@ -15,6 +16,7 @@ export const preferences = persisted<
 		loginPubkey: string | undefined;
 		isEnabledDarkMode: boolean;
 		isEnabledSkipKind1: boolean;
+		isEnabledUseClientTag: boolean;
 		relaysSelected: string;
 		uploaderSelected: string;
 		relaysToUse: RelayRecord;
@@ -23,6 +25,7 @@ export const preferences = persisted<
 	loginPubkey: undefined,
 	isEnabledDarkMode: true,
 	isEnabledSkipKind1: false,
+	isEnabledUseClientTag: false,
 	relaysSelected: 'default',
 	uploaderSelected: uploaderURLs[0],
 	relaysToUse: defaultRelays

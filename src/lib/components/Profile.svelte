@@ -189,12 +189,13 @@
 			</div>
 			{#if prof !== undefined}
 				{#if nip05.isNip05(prof.nip05)}
+					{@const abbreviatedNip05 = prof.nip05.replace(/^_@/, '')}
 					{#await nip05.isValid(currentPubkey, prof.nip05)}
-						<p>❔{prof.nip05}</p>
+						<p>❔{abbreviatedNip05}</p>
 					{:then isValid}
-						<p>{isValid ? '✅' : '❌'}{prof.nip05}</p>
+						<p>{isValid ? '✅' : '❌'}{abbreviatedNip05}</p>
 					{:catch _error}
-						<p>❌{prof.nip05}</p>
+						<p>❌{abbreviatedNip05}</p>
 					{/await}
 				{/if}
 				{#if URL.canParse(prof.website ?? '')}

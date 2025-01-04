@@ -39,6 +39,7 @@ export const uploaderURLs = [
 ];
 export const getUrlToLinkProfile = (npub: string) => `https://yabu.me/${npub}`;
 export const getRoboHashURL = (str: string) => `https://robohash.org/${str}?set=set4`;
+export const getClientURL = (naddr: string) => `https://nostrapp.link/a/${naddr}/reviews`;
 export const defaultAccountUri = getRoboHashURL(
 	nip19.npubEncode(getPublicKey(generateSecretKey()))
 );

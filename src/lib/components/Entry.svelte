@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { getRoboHashURL } from '$lib/config';
+	import { getClientURL, getRoboHashURL } from '$lib/config';
 	import { getRelativetime, zap, type ChannelContent, type ProfileContentEvent } from '$lib/utils';
 	import {
 		getEventById,
@@ -89,6 +89,25 @@
 			.find((tag) => tag.length >= 3 && tag[0] === 'proxy' && tag[2] === 'activitypub')
 			?.at(1)
 	);
+	const clientInfo: { name: string; url: string } | undefined = $derived.by(() => {
+		const tag = event.tags.find((tag) => tag.length >= 3 && tag[0] === 'client');
+		if (tag === undefined || tag[2] === undefined) {
+			return undefined;
+		}
+		const sp = tag[2].split(':');
+		if (sp.length < 3 || !/^\d+$/.test(sp[0])) {
+			return undefined;
+		}
+		const ap: nip19.AddressPointer = { identifier: sp[2], pubkey: sp[1], kind: parseInt(sp[0]) };
+		const relayHint = URL.canParse(tag.at(3) ?? '') ? tag[3] : null;
+		if (relayHint !== null) {
+			ap.relays = [relayHint];
+		}
+		const naddr = nip19.naddrEncode(ap);
+		const url = getClientURL(naddr);
+		const name = tag[1];
+		return { name, url };
+	});
 	const contentWarningReason: string | null = $derived.by(() => {
 		const cwTag: string[] | undefined = event.tags.find((tag) => tag[0] === 'content-warning');
 		if (cwTag === undefined) {
@@ -423,6 +442,14 @@
 							<span class="proxy"
 								>via <a href={urlViaAP} target="_blank" rel="noopener noreferrer"
 									><img src="/ActivityPub-logo-symbol.svg" alt="ActivityPub-logo-symbol" /></a
+								></span
+							>
+						{/if}
+						{#if clientInfo !== undefined}
+							<span class="Separator">·</span>
+							<span class="via"
+								>via <a href={clientInfo.url} target="_blank" rel="noopener noreferrer"
+									>{clientInfo.name}</a
 								></span
 							>
 						{/if}

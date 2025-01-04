@@ -38,7 +38,9 @@
 			return 0;
 		}
 		let r: number = 0;
-		for (const ev of eventsMention) {
+		for (const ev of eventsMention.filter(
+			({ baseEvent }) => !mutedPubkeys.includes(baseEvent.pubkey)
+		)) {
 			if (readTimeOfNotification < ev.baseEvent.created_at) {
 				r++;
 			} else {

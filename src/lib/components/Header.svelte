@@ -365,7 +365,6 @@
 		margin: 0;
 		background-color: rgba(127, 127, 127, 0);
 		border-radius: 10%;
-		vertical-align: bottom;
 	}
 	.GlobalHeader__body span.scroll > button:disabled {
 		cursor: not-allowed;

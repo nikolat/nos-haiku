@@ -24,6 +24,7 @@
 		level = 0,
 		isAbout = false,
 		enableAutoLink = true,
+		isEnabledRelativeTime = true,
 		nowRealtime = 0
 	}: {
 		content: string;
@@ -42,6 +43,7 @@
 		level?: number;
 		isAbout?: boolean;
 		enableAutoLink?: boolean;
+		isEnabledRelativeTime?: boolean;
 		nowRealtime?: number;
 	} = $props();
 
@@ -179,6 +181,7 @@
 					{uploaderSelected}
 					bind:channelToPost
 					{currentChannelId}
+					{isEnabledRelativeTime}
 					{nowRealtime}
 					level={level + 1}
 				/>
@@ -209,6 +212,7 @@
 					{uploaderSelected}
 					bind:channelToPost
 					{currentChannelId}
+					{isEnabledRelativeTime}
 					{nowRealtime}
 					level={level + 1}
 				/>
@@ -235,6 +239,7 @@
 					{uploaderSelected}
 					bind:channelToPost
 					{currentChannelId}
+					{isEnabledRelativeTime}
 					{nowRealtime}
 					level={level + 1}
 				/>

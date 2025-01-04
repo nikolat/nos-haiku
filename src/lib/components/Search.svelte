@@ -9,6 +9,7 @@
 		profileMap,
 		channelMap,
 		mutedPubkeys,
+		isEnabledRelativeTime,
 		nowRealtime
 	}: {
 		loginPubkey: string | undefined;
@@ -16,6 +17,7 @@
 		profileMap: Map<string, ProfileContentEvent>;
 		channelMap: Map<string, ChannelContent>;
 		mutedPubkeys: string[];
+		isEnabledRelativeTime: boolean;
 		nowRealtime: number;
 	} = $props();
 	const channelMapSearched: Map<string, ChannelContent> = $derived.by(() => {
@@ -29,7 +31,14 @@
 	});
 </script>
 
-<Header {loginPubkey} {profileMap} {mutedPubkeys} {nowRealtime} isEnabledScrollInfinitely={false} />
+<Header
+	{loginPubkey}
+	{profileMap}
+	{mutedPubkeys}
+	{isEnabledRelativeTime}
+	{nowRealtime}
+	isEnabledScrollInfinitely={false}
+/>
 <main class="SearchView View">
 	<div class="Layout">
 		<div class="Column Column--main">

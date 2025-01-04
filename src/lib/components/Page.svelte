@@ -50,6 +50,7 @@
 		mutedWords,
 		followingPubkeys,
 		uploaderSelected,
+		isEnabledRelativeTime,
 		nowRealtime
 	}: {
 		loginPubkey: string | undefined;
@@ -65,6 +66,7 @@
 		mutedWords: string[];
 		followingPubkeys: string[];
 		uploaderSelected: string;
+		isEnabledRelativeTime: boolean;
 		nowRealtime: number;
 	} = $props();
 	const eventsTimeline: NostrEvent[] = $derived(getEventsTimelineTop());
@@ -247,7 +249,14 @@
 	});
 </script>
 
-<Header {loginPubkey} {profileMap} {mutedPubkeys} {nowRealtime} bind:isEnabledScrollInfinitely />
+<Header
+	{loginPubkey}
+	{profileMap}
+	{mutedPubkeys}
+	{isEnabledRelativeTime}
+	{nowRealtime}
+	bind:isEnabledScrollInfinitely
+/>
 <main class="Homepage View">
 	<div class="Layout">
 		<div class="Column Column--left Column--nomobile">
@@ -501,6 +510,7 @@
 							{uploaderSelected}
 							bind:channelToPost
 							{currentChannelId}
+							{isEnabledRelativeTime}
 							{nowRealtime}
 							level={0}
 						/>

@@ -6,6 +6,7 @@
 		getEventsFirst,
 		getFollowList,
 		getIsEnabledDarkMode,
+		getIsEnabledRelativeTime,
 		getIsEnabledSkipKind1,
 		getIsEnabledUseClientTag,
 		getMutedChannelIds,
@@ -40,6 +41,7 @@
 	}: UrlParams = $derived(urlParams);
 	const loginPubkey: string | undefined = $derived(getLoginPubkey());
 	const isEnabledDarkMode: boolean = $derived(getIsEnabledDarkMode());
+	const isEnabledRelativeTime: boolean = $derived(getIsEnabledRelativeTime());
 	const isEnabledSkipKind1: boolean = $derived(getIsEnabledSkipKind1());
 	const isEnabledUseClientTag: boolean = $derived(getIsEnabledUseClientTag());
 	const relaysSelected: string = $derived(getRelaysSelected());
@@ -132,6 +134,7 @@
 		<Settings
 			{loginPubkey}
 			{isEnabledDarkMode}
+			{isEnabledRelativeTime}
 			{isEnabledSkipKind1}
 			{isEnabledUseClientTag}
 			{relaysSelected}
@@ -145,7 +148,15 @@
 			{nowRealtime}
 		/>
 	{:else if query !== undefined}
-		<Search {loginPubkey} {query} {profileMap} {channelMap} {mutedPubkeys} {nowRealtime} />
+		<Search
+			{loginPubkey}
+			{query}
+			{profileMap}
+			{channelMap}
+			{mutedPubkeys}
+			{isEnabledRelativeTime}
+			{nowRealtime}
+		/>
 	{:else}
 		<Page
 			{loginPubkey}
@@ -161,6 +172,7 @@
 			{mutedWords}
 			{followingPubkeys}
 			{uploaderSelected}
+			{isEnabledRelativeTime}
 			{nowRealtime}
 		/>
 	{/if}

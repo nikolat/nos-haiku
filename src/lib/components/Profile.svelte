@@ -218,6 +218,7 @@
 					uploaderSelected={''}
 					channelToPost={undefined}
 					currentChannelId={undefined}
+					isEnabledRelativeTime={true}
 					nowRealtime={0}
 					level={0}
 				/>

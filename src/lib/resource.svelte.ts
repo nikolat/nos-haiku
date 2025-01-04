@@ -45,6 +45,7 @@ import {
 
 let loginPubkey: string | undefined = $state();
 let isEnabledDarkMode: boolean = $state(true);
+let isEnabledRelativeTime: boolean = $state(true);
 let isEnabledSkipKind1: boolean = $state(false);
 let isEnabledUseClientTag: boolean = $state(false);
 let relaysSelected: string = $state('default');
@@ -72,6 +73,7 @@ preferences.subscribe(
 	(value: {
 		loginPubkey: string | undefined;
 		isEnabledDarkMode: boolean;
+		isEnabledRelativeTime: boolean;
 		isEnabledSkipKind1: boolean;
 		isEnabledUseClientTag: boolean;
 		relaysSelected: string;
@@ -83,6 +85,9 @@ preferences.subscribe(
 		}
 		if (isEnabledDarkMode !== value.isEnabledDarkMode) {
 			isEnabledDarkMode = value.isEnabledDarkMode;
+		}
+		if (isEnabledRelativeTime !== value.isEnabledRelativeTime) {
+			isEnabledRelativeTime = value.isEnabledRelativeTime;
 		}
 		if (isEnabledSkipKind1 !== value.isEnabledSkipKind1) {
 			isEnabledSkipKind1 = value.isEnabledSkipKind1;
@@ -105,6 +110,7 @@ const savelocalStorage = () => {
 	preferences.set({
 		loginPubkey,
 		isEnabledDarkMode,
+		isEnabledRelativeTime,
 		isEnabledSkipKind1,
 		isEnabledUseClientTag,
 		relaysSelected,
@@ -276,6 +282,15 @@ export const getIsEnabledDarkMode = (): boolean => {
 
 export const setIsEnabledDarkMode = (value: boolean): void => {
 	isEnabledDarkMode = value;
+	savelocalStorage();
+};
+
+export const getIsEnabledRelativeTime = (): boolean => {
+	return isEnabledRelativeTime;
+};
+
+export const setIsEnabledRelativeTime = (value: boolean): void => {
+	isEnabledRelativeTime = value;
 	savelocalStorage();
 };
 

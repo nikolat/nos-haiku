@@ -1,6 +1,12 @@
 <script lang="ts">
 	import { getClientURL, getRoboHashURL } from '$lib/config';
-	import { getRelativetime, zap, type ChannelContent, type ProfileContentEvent } from '$lib/utils';
+	import {
+		getAbsoluteTime,
+		getRelativeTime,
+		zap,
+		type ChannelContent,
+		type ProfileContentEvent
+	} from '$lib/utils';
 	import {
 		getEventById,
 		getProfileName,
@@ -29,6 +35,7 @@
 		uploaderSelected,
 		channelToPost = $bindable(),
 		currentChannelId,
+		isEnabledRelativeTime,
 		nowRealtime,
 		level
 	}: {
@@ -44,6 +51,7 @@
 		uploaderSelected: string;
 		channelToPost: ChannelContent | undefined;
 		currentChannelId: string | undefined;
+		isEnabledRelativeTime: boolean;
 		nowRealtime: number;
 		level: number;
 	} = $props();
@@ -301,6 +309,7 @@
 												{uploaderSelected}
 												bind:channelToPost
 												{currentChannelId}
+												{isEnabledRelativeTime}
 												{nowRealtime}
 												level={level + 1}
 											/>
@@ -331,6 +340,7 @@
 											{uploaderSelected}
 											bind:channelToPost
 											{currentChannelId}
+											{isEnabledRelativeTime}
 											{nowRealtime}
 											level={level + 1}
 										/>
@@ -353,6 +363,7 @@
 											{uploaderSelected}
 											bind:channelToPost
 											{currentChannelId}
+											{isEnabledRelativeTime}
 											{nowRealtime}
 											{level}
 										/>
@@ -433,7 +444,9 @@
 										datetime={new Date(1000 * event.created_at).toISOString()}
 										title={new Date(1000 * event.created_at).toLocaleString()}
 										class="NoticeItem__time"
-										>{getRelativetime(nowRealtime, 1000 * event.created_at)}</time
+										>{isEnabledRelativeTime
+											? getRelativeTime(nowRealtime, 1000 * event.created_at)
+											: getAbsoluteTime(1000 * event.created_at)}</time
 									>
 								</a>
 							</span>

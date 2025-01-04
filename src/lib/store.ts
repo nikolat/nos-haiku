@@ -6,6 +6,7 @@ export const preferences = persisted<
 	{
 		loginPubkey: string | undefined;
 		isEnabledDarkMode: boolean;
+		isEnabledRelativeTime: boolean;
 		isEnabledSkipKind1: boolean;
 		isEnabledUseClientTag: boolean;
 		relaysSelected: string;
@@ -15,6 +16,7 @@ export const preferences = persisted<
 	{
 		loginPubkey: string | undefined;
 		isEnabledDarkMode: boolean;
+		isEnabledRelativeTime: boolean;
 		isEnabledSkipKind1: boolean;
 		isEnabledUseClientTag: boolean;
 		relaysSelected: string;
@@ -24,6 +26,7 @@ export const preferences = persisted<
 >('preferences', {
 	loginPubkey: undefined,
 	isEnabledDarkMode: true,
+	isEnabledRelativeTime: true,
 	isEnabledSkipKind1: false,
 	isEnabledUseClientTag: false,
 	relaysSelected: 'default',

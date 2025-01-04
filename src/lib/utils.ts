@@ -37,7 +37,11 @@ interface MyBaseEmoji extends BaseEmoji {
 	src: string | undefined;
 }
 
-export const getRelativetime = (nowRealtime: number, unixTime: number): string => {
+export const getAbsoluteTime = (unixTime: number): string => {
+	return new Date(unixTime).toLocaleString();
+};
+
+export const getRelativeTime = (nowRealtime: number, unixTime: number): string => {
 	const diff = (nowRealtime - unixTime) / 1000;
 	if (diff <= 0) {
 		return '今';

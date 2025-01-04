@@ -5,6 +5,7 @@
 		clearCache,
 		getRelaysToUse,
 		setIsEnabledDarkMode,
+		setIsEnabledRelativeTime,
 		setIsEnabledSkipKind1,
 		setIsEnabledUseClientTag,
 		setRelaysSelected,
@@ -24,6 +25,7 @@
 	let {
 		loginPubkey,
 		isEnabledDarkMode,
+		isEnabledRelativeTime,
 		isEnabledSkipKind1,
 		isEnabledUseClientTag,
 		relaysSelected,
@@ -38,6 +40,7 @@
 	}: {
 		loginPubkey: string | undefined;
 		isEnabledDarkMode: boolean;
+		isEnabledRelativeTime: boolean;
 		isEnabledSkipKind1: boolean;
 		isEnabledUseClientTag: boolean;
 		relaysSelected: string;
@@ -58,7 +61,14 @@
 	);
 </script>
 
-<Header {loginPubkey} {profileMap} {mutedPubkeys} {nowRealtime} isEnabledScrollInfinitely={false} />
+<Header
+	{loginPubkey}
+	{profileMap}
+	{mutedPubkeys}
+	{isEnabledRelativeTime}
+	{nowRealtime}
+	isEnabledScrollInfinitely={false}
+/>
 <main class="SettingsView View">
 	<div class="Layout">
 		<div class="Column Column--left">
@@ -130,6 +140,22 @@
 										bind:checked={isEnabledDarkMode}
 										onchange={() => {
 											setIsEnabledDarkMode(isEnabledDarkMode);
+										}}
+									/><span class="Slider Round"></span></label
+								>
+							</div>
+						</div>
+						<div class="Settings__section">
+							<div class="Label"><span>相対時刻表示</span></div>
+							<div class="Control">
+								<label class="SliderSwitch"
+									><input
+										name="ui_theme"
+										type="checkbox"
+										disabled={loginPubkey === undefined}
+										bind:checked={isEnabledRelativeTime}
+										onchange={() => {
+											setIsEnabledRelativeTime(isEnabledRelativeTime);
 										}}
 									/><span class="Slider Round"></span></label
 								>

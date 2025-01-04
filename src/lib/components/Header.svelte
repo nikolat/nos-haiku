@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { faviconImageUri, getRoboHashURL, titleLogoImageUri } from '$lib/config';
-	import { getRelativetime, type ProfileContentEvent } from '$lib/utils';
+	import { getAbsoluteTime, getRelativeTime, type ProfileContentEvent } from '$lib/utils';
 	import {
 		fetchEventsMention,
 		getEventsMention,
@@ -19,12 +19,14 @@
 		loginPubkey,
 		profileMap,
 		mutedPubkeys,
+		isEnabledRelativeTime,
 		nowRealtime,
 		isEnabledScrollInfinitely = $bindable()
 	}: {
 		loginPubkey: string | undefined;
 		profileMap: Map<string, ProfileContentEvent>;
 		mutedPubkeys: string[];
+		isEnabledRelativeTime: boolean;
 		nowRealtime: number;
 		isEnabledScrollInfinitely: boolean;
 	} = $props();
@@ -339,7 +341,9 @@
 										datetime={new Date(1000 * ev.created_at).toISOString()}
 										title={new Date(1000 * ev.created_at).toLocaleString()}
 										class="NoticeItem__time"
-										>{getRelativetime(nowRealtime, 1000 * ev.created_at)}</time
+										>{isEnabledRelativeTime
+											? getRelativeTime(nowRealtime, 1000 * ev.created_at)
+											: getAbsoluteTime(1000 * ev.created_at)}</time
 									></span
 								>
 							</div>

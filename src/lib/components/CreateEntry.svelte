@@ -128,6 +128,7 @@
 		sendNote(contentToSend, channelNameToCreate, targetEventToReply, emojiMap).then(() => {
 			contentToSend = '';
 			channelToPost = undefined;
+			channelNameToCreate = '';
 			showForm = false;
 		});
 	};

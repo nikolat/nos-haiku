@@ -414,6 +414,22 @@
 								>
 							{/if}
 						</div>
+						<dvi class="via">
+							{#if urlViaAP !== undefined && URL.canParse(urlViaAP)}
+								<span class="proxy"
+									>via <a href={urlViaAP} target="_blank" rel="noopener noreferrer"
+										><img src="/ActivityPub-logo-symbol.svg" alt="ActivityPub-logo-symbol" /></a
+									></span
+								>
+							{/if}
+							{#if clientInfo !== undefined}
+								<span class="via"
+									>via <a href={clientInfo.url} target="_blank" rel="noopener noreferrer"
+										>{clientInfo.name}</a
+									></span
+								>
+							{/if}
+						</dvi>
 					</div>
 					<div class="Entry__foot">
 						<div class="EntryMeta">
@@ -450,22 +466,6 @@
 									>
 								</a>
 							</span>
-							{#if urlViaAP !== undefined && URL.canParse(urlViaAP)}
-								<span class="Separator">·</span>
-								<span class="proxy"
-									>via <a href={urlViaAP} target="_blank" rel="noopener noreferrer"
-										><img src="/ActivityPub-logo-symbol.svg" alt="ActivityPub-logo-symbol" /></a
-									></span
-								>
-							{/if}
-							{#if clientInfo !== undefined}
-								<span class="Separator">·</span>
-								<span class="via"
-									>via <a href={clientInfo.url} target="_blank" rel="noopener noreferrer"
-										>{clientInfo.name}</a
-									></span
-								>
-							{/if}
 							{#if loginPubkey !== undefined}
 								{#if loginPubkey === event.pubkey}
 									<span class="Separator">·</span>
@@ -633,6 +633,16 @@
 	}
 	.mentioning {
 		background-color: rgba(255, 255, 0, 0.2);
+	}
+	.Entry__body {
+		position: relative;
+	}
+	.via {
+		position: absolute;
+		bottom: -5px;
+		right: 0px;
+		width: 100%;
+		text-align: right;
 	}
 	.proxy img {
 		width: 16px;

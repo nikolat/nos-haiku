@@ -706,7 +706,7 @@
 	.Actions .channel-delete > svg {
 		width: 32px;
 		height: 32px;
-		fill: var(--secondary-text-color);
+		fill: rgba(255, 0, 0, 0.8);
 	}
 	.KeywordItem span > button > svg {
 		width: 16px;

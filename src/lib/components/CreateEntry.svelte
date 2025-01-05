@@ -164,12 +164,25 @@
 							bind:value={channelNameToCreate}
 						/>
 						{#if channelNameToCreate.length > 0}
+							{#if channelToPost !== undefined}
+								{@const channel = channelToPost}
+								<img
+									class="channel-to-post"
+									alt=""
+									src={URL.canParse(channel.picture ?? '')
+										? channel.picture
+										: getRoboHashURL(nip19.neventEncode({ id: channel.id }))}
+								/>
+							{:else}
+								<span class="channel-to-post">⚠️新規作成</span>
+							{/if}
 							<span class="channel-clear">
 								<button
 									class="channel-clear"
 									title="clear the channel"
 									onclick={() => {
 										channelToPost = undefined;
+										channelNameToCreate = '';
 									}}
 									aria-label="clear the channel"
 								>
@@ -219,9 +232,7 @@
 								title="絵文字を追加"
 								class="ToolbarItem ql-emoji"
 								type="button"
-								onclick={() => {
-									callGetEmoji();
-								}}><i class="fa-fw far fa-smile-plus"></i></button
+								onclick={callGetEmoji}><i class="fa-fw far fa-smile-plus"></i></button
 							></span
 						>
 					</span>
@@ -260,6 +271,20 @@
 </div>
 
 <style>
+	img.channel-to-post {
+		position: absolute;
+		top: 8px;
+		right: 32px;
+		width: auto;
+		height: 24px;
+		object-fit: cover;
+		border-radius: 10%;
+	}
+	span.channel-to-post {
+		position: absolute;
+		top: 0px;
+		right: 32px;
+	}
 	textarea {
 		appearance: none;
 		background: transparent;

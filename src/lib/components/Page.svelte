@@ -20,6 +20,7 @@
 		getProfileName,
 		muteChannel,
 		muteUser,
+		sendDeletion,
 		unbookmarkChannel,
 		unfollowUser,
 		unmuteChannel,
@@ -460,6 +461,30 @@
 												{/if}
 											</div>
 										</div>
+										{#if channel.pubkey === loginPubkey}
+											<button
+												class="channel-delete"
+												title="delete the channel"
+												onclick={async () => {
+													if (confirm('このチャンネルを削除しますか？')) {
+														await sendDeletion(channel.eventkind40);
+													}
+												}}
+												aria-label="delete the reaction"
+											>
+												<svg
+													xmlns="http://www.w3.org/2000/svg"
+													width="16"
+													height="16"
+													viewBox="0 0 16 16"
+												>
+													<path
+														fill-rule="evenodd"
+														d="M8,16 C3.581722,16 0,12.418278 0,8 C0,3.581722 3.581722,0 8,0 C12.418278,0 16,3.581722 16,8 C16,12.418278 12.418278,16 8,16 Z M8,14 C11.3137085,14 14,11.3137085 14,8 C14,4.6862915 11.3137085,2 8,2 C4.6862915,2 2,4.6862915 2,8 C2,11.3137085 4.6862915,14 8,14 Z M8,9.41421356 L5.70710678,11.7071068 L4.29289322,10.2928932 L6.58578644,8 L4.29289322,5.70710678 L5.70710678,4.29289322 L8,6.58578644 L10.2928932,4.29289322 L11.7071068,5.70710678 L9.41421356,8 L11.7071068,10.2928932 L10.2928932,11.7071068 L8,9.41421356 Z"
+													/>
+												</svg>
+											</button>
+										{/if}
 									</div>
 								{/if}
 							{/if}
@@ -662,6 +687,7 @@
 		font-size: 12px;
 		margin-right: 3px;
 	}
+	.Actions .channel-delete,
 	.KeywordItem span > button {
 		border: none;
 		outline: none;
@@ -673,14 +699,21 @@
 		border-radius: 10%;
 		vertical-align: text-bottom;
 	}
+	.Actions .channel-delete:disabled,
 	.KeywordItem span > button:disabled {
 		cursor: not-allowed;
+	}
+	.Actions .channel-delete > svg {
+		width: 32px;
+		height: 32px;
+		fill: var(--secondary-text-color);
 	}
 	.KeywordItem span > button > svg {
 		width: 16px;
 		height: 16px;
 		fill: var(--secondary-text-color);
 	}
+	.Actions .channel-delete:active > svg,
 	.KeywordItem span > button:active > svg {
 		fill: yellow;
 	}

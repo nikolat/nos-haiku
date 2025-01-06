@@ -26,6 +26,7 @@ export type UrlParams = {
 	currentPubkey?: string;
 	currentChannelId?: string;
 	currentNoteId?: string;
+	currentAddressPointer?: nip19.AddressPointer;
 	hashtag?: string;
 	query?: string;
 	isSettings?: boolean;

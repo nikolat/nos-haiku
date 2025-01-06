@@ -34,6 +34,7 @@
 		currentPubkey,
 		currentChannelId,
 		currentNoteId,
+		currentAddressPointer,
 		hashtag,
 		query,
 		isSettings,
@@ -101,7 +102,7 @@
 			title = 'お題を探す';
 		} else if (isAntenna) {
 			title = 'アンテナ';
-		} else if (currentNoteId !== undefined) {
+		} else if (currentNoteId !== undefined || currentAddressPointer !== undefined) {
 			title = 'Entry';
 		} else if (currentPubkey !== undefined) {
 			const prof = profileMap.get(currentPubkey);
@@ -164,6 +165,7 @@
 			{currentPubkey}
 			{currentChannelId}
 			{currentNoteId}
+			{currentAddressPointer}
 			{hashtag}
 			{profileMap}
 			{channelMap}

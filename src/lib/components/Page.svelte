@@ -12,6 +12,7 @@
 		bookmarkChannel,
 		followUser,
 		getChannelBookmarkMap,
+		getEventByAddressPointer,
 		getEventById,
 		getEventsFirst,
 		getEventsReaction,
@@ -43,6 +44,7 @@
 		currentPubkey,
 		currentChannelId,
 		currentNoteId,
+		currentAddressPointer,
 		hashtag,
 		profileMap,
 		channelMap,
@@ -59,6 +61,7 @@
 		currentPubkey: string | undefined;
 		currentChannelId: string | undefined;
 		currentNoteId: string | undefined;
+		currentAddressPointer: nip19.AddressPointer | undefined;
 		hashtag: string | undefined;
 		profileMap: Map<string, ProfileContentEvent>;
 		channelMap: Map<string, ChannelContent>;
@@ -127,6 +130,9 @@
 		} else if (currentNoteId !== undefined) {
 			const entry = getEventById(currentNoteId);
 			tl = entry !== undefined ? [entry] : [];
+		} else if (currentAddressPointer !== undefined) {
+			const entry = getEventByAddressPointer(currentAddressPointer);
+			tl = entry !== undefined ? [entry] : [];
 		} else if (currentPubkey !== undefined) {
 			tl = eventsTimeline.filter((ev) => ev.pubkey === currentPubkey);
 		} else if (currentChannelId !== undefined) {
@@ -185,6 +191,7 @@
 		currentPubkey,
 		currentChannelId,
 		currentNoteId,
+		currentAddressPointer,
 		isAntenna
 	});
 

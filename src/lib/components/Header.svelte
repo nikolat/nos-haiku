@@ -325,7 +325,12 @@
 									さんが
 									<br />
 									{#if evTo !== undefined}
-										<a href="/entry/{nip19.neventEncode({ ...evTo, author: evTo.pubkey })}">
+										{@const d = evTo.tags.find((tag) => tag.length >= 2 && tag[0] === 'd')?.at(1)}
+										{@const link =
+											d !== undefined
+												? `/entry/${nip19.naddrEncode({ identifier: d, pubkey: evTo.pubkey, kind: evTo.kind })}`
+												: `/entry/${nip19.neventEncode({ ...evTo, author: evTo.pubkey })}`}
+										<a href={link}>
 											<Content
 												content={evTo.content.length > 20
 													? `${evTo.content.slice(0, 20)}...`

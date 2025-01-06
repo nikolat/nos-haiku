@@ -186,6 +186,28 @@
 	const repostedEvent: NostrEvent | undefined = $derived(getEventById(repostedEventId ?? ''));
 
 	let zapWindowContainer: HTMLElement | undefined = $state();
+
+	type HandlerInformation = {
+		name?: string;
+		display_name?: string;
+		nip05?: string;
+		picture?: string;
+		banner?: string;
+		about?: string;
+		lud16?: string;
+		website?: string;
+	};
+
+	const getHandlerInformation = (content: string): HandlerInformation | null => {
+		let obj: HandlerInformation;
+		try {
+			obj = JSON.parse(content);
+		} catch (error) {
+			console.warn(error);
+			return null;
+		}
+		return obj;
+	};
 </script>
 
 <article class={classNames.join(' ')}>
@@ -264,6 +286,8 @@
 								Channel
 							{:else if event.kind === 30030}
 								Emoji set
+							{:else if event.kind === 31990}
+								Handler information
 							{:else}
 								{`unsupported kind:${event.kind} event`}
 							{/if}
@@ -380,6 +404,36 @@
 											/>
 										{/each}
 									</div>
+								{:else if event.kind === 31990}
+									{@const obj = getHandlerInformation(event.content)}
+									{#if obj === null}
+										{event.content}
+									{:else}
+										{@const name = obj.name ?? obj.display_name ?? 'unknown'}
+										<div class="handler-information">
+											{#if URL.canParse(obj.banner ?? '')}
+												<img src={obj.banner} alt="banner" class="banner" />
+											{/if}
+											<p>
+												{#if URL.canParse(obj.website ?? '')}
+													<a href={obj.website}>
+														{#if URL.canParse(obj.picture ?? '')}
+															<!-- svelte-ignore a11y_img_redundant_alt -->
+															<img src={obj.picture} alt="picture" class="picture" />
+														{/if}
+														{name}
+													</a>
+												{:else}
+													{#if URL.canParse(obj.picture ?? '')}
+														<!-- svelte-ignore a11y_img_redundant_alt -->
+														<img src={obj.picture} alt="picture" class="picture" />
+													{/if}
+													{name}
+												{/if}
+											</p>
+											<p>{obj.about}</p>
+										</div>
+									{/if}
 								{:else}
 									<p>
 										<Content
@@ -711,5 +765,11 @@
 	.emoji {
 		height: 32px;
 		vertical-align: top;
+	}
+	.handler-information img.banner {
+		max-height: 100px;
+	}
+	.handler-information img.picture {
+		max-height: 32px;
 	}
 </style>

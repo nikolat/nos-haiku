@@ -1047,8 +1047,16 @@ export const getEventsFirst = (
 	completeCustom: () => void = complete,
 	isFirstFetch: boolean = true
 ): void => {
-	const { currentPubkey, currentChannelId, currentNoteId, query, hashtag, isAntenna, isSettings } =
-		urlParams;
+	const {
+		currentPubkey,
+		currentChannelId,
+		currentNoteId,
+		currentAddressPointer,
+		query,
+		hashtag,
+		isAntenna,
+		isSettings
+	} = urlParams;
 	rxNostr.setDefaultRelays(relaysToUse);
 	const filters: LazyFilter[] = [];
 	let options: Partial<RxNostrUseOptions> | undefined;
@@ -1062,7 +1070,7 @@ export const getEventsFirst = (
 		return;
 	}
 	const isTopPage =
-		[currentNoteId, currentPubkey, currentChannelId, hashtag, query].every(
+		[currentNoteId, currentPubkey, currentChannelId, currentAddressPointer, hashtag, query].every(
 			(q) => q === undefined
 		) &&
 		!isAntenna &&
@@ -1077,6 +1085,12 @@ export const getEventsFirst = (
 		filters.push({ kinds: [16], '#k': ['42'] });
 	} else if (currentNoteId !== undefined) {
 		filters.push({ ids: [currentNoteId] });
+	} else if (currentAddressPointer !== undefined) {
+		filters.push({
+			kinds: [currentAddressPointer.kind],
+			authors: [currentAddressPointer.pubkey],
+			'#d': [currentAddressPointer.identifier]
+		});
 	} else if (hashtag !== undefined) {
 		filters.push({ kinds: [1, 42], '#t': [hashtag.toLowerCase()] });
 	} else if (query !== undefined) {
@@ -1160,6 +1174,13 @@ export const getEventsFirst = (
 		filters.push({ kinds: [7], '#e': [currentChannelId] });
 	} else if (currentNoteId !== undefined) {
 		filters.push({ kinds: [7], '#e': [currentNoteId] });
+	} else if (currentAddressPointer !== undefined) {
+		filters.push({
+			kinds: [7],
+			'#k': [String(currentAddressPointer.kind)],
+			'#p': [currentAddressPointer.pubkey],
+			'#d': [currentAddressPointer.identifier]
+		});
 	} else if (isAntenna && pubkeysFollowing.length > 0) {
 		const f = filters.find((f) => f.authors?.join(':') === pubkeysFollowing.join(':'));
 		if (f?.kinds !== undefined) {

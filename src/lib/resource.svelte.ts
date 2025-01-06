@@ -1120,7 +1120,17 @@ export const getEventsFirst = (
 			authors: [loginPubkey]
 		});
 	}
-	if (isAntenna && pubkeysFollowing.length > 0) {
+	if (currentNoteId === undefined && currentPubkey !== undefined) {
+		if (isEnabledSkipKind1) {
+			filters.push({ kinds: [7], '#p': [currentPubkey], '#k': ['42'] });
+		} else {
+			filters.push({ kinds: [7], '#p': [currentPubkey] });
+		}
+	} else if (currentChannelId !== undefined) {
+		filters.push({ kinds: [7], '#e': [currentChannelId] });
+	} else if (currentNoteId !== undefined) {
+		filters.push({ kinds: [7], '#e': [currentNoteId] });
+	} else if (isAntenna && pubkeysFollowing.length > 0) {
 		const f = filters.find((f) => f.authors?.join(':') === pubkeysFollowing.join(':'));
 		if (f?.kinds !== undefined) {
 			f.kinds = f.kinds.concat(0, 7, 40, 41).toSorted((a, b) => a - b);
@@ -1130,6 +1140,8 @@ export const getEventsFirst = (
 		} else {
 			filters.push({ kinds: [7], '#p': pubkeysFollowing });
 		}
+	} else if (isTopPage) {
+		filters.push({ kinds: [7], '#k': ['42'] });
 	}
 	//kind:16はkind:42が対象のものだけを受信する
 	for (const f of [...filters]) {

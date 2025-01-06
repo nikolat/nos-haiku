@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { getRoboHashURL } from '$lib/config';
 	import type { ChannelContent, ProfileContentEvent } from '$lib/utils';
-	import { getEventById, getEventByIdAddressPointer, getProfileName } from '$lib/resource.svelte';
+	import { getEventById, getEventByAddressPointer, getProfileName } from '$lib/resource.svelte';
 	import Entry from '$lib/components/Entry.svelte';
 	import ChannelMeta from '$lib/components/ChannelMeta.svelte';
 	import type { NostrEvent } from 'nostr-tools/pure';
@@ -224,7 +224,7 @@
 		{@const matchedText = match[6]}
 		{@const d = nip19decode(matchedText.replace(/nostr:/, ''))}
 		{#if d?.type === 'naddr'}
-			{@const event = getEventByIdAddressPointer(d.data)}
+			{@const event = getEventByAddressPointer(d.data)}
 			{#if event !== undefined}
 				<Entry
 					{event}

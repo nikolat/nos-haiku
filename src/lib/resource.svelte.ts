@@ -394,7 +394,7 @@ export const getEventById = (id: string): NostrEvent | undefined => {
 	return eventsAll.find((ev) => ev.id === id);
 };
 
-export const getEventByIdAddressPointer = (data: nip19.AddressPointer): NostrEvent | undefined => {
+export const getEventByAddressPointer = (data: nip19.AddressPointer): NostrEvent | undefined => {
 	return eventsAll.find(
 		(ev) =>
 			ev.tags.find((tag) => tag.length >= 2 && tag[0] === 'd')?.at(1) === data.identifier &&

@@ -558,21 +558,32 @@ const nextOnSubscribeEventStore = (event: NostrEvent | null, kindToDelete?: numb
 		);
 		eventsMention = eventsMentionKey.map(
 			(ev: NostrEvent): { baseEvent: NostrEvent; targetEvent: NostrEvent | undefined } => {
-				const targetEvent = eventStore.getEvent(
-					(
-						ev.tags.find(
-							(tag) =>
-								tag.length >= 4 && tag[0] === 'e' && tag[3] === 'reply' && [1, 42].includes(ev.kind)
-						) ??
-						ev.tags.find(
-							(tag) => tag.length >= 4 && tag[0] === 'e' && tag[3] === 'root' && ev.kind === 1
-						) ??
-						ev.tags.find(
-							(tag) => tag.length >= 2 && tag[0] === 'e' && [6, 16, 9734].includes(ev.kind)
-						) ??
-						ev.tags.findLast((tag) => tag.length >= 2 && tag[0] === 'e' && ev.kind === 7)
-					)?.at(1) ?? ''
-				);
+				const id = (
+					ev.tags.find(
+						(tag) =>
+							tag.length >= 4 && tag[0] === 'e' && tag[3] === 'reply' && [1, 42].includes(ev.kind)
+					) ??
+					ev.tags.find(
+						(tag) => tag.length >= 4 && tag[0] === 'e' && tag[3] === 'root' && ev.kind === 1
+					) ??
+					ev.tags.find(
+						(tag) => tag.length >= 2 && tag[0] === 'e' && [6, 16, 9734].includes(ev.kind)
+					) ??
+					ev.tags.findLast((tag) => tag.length >= 2 && tag[0] === 'e' && ev.kind === 7)
+				)?.at(1);
+				const a = ev.tags.findLast((tag) => tag.length >= 2 && tag[0] === 'a')?.at(1);
+				let targetEvent: NostrEvent | undefined;
+				if (id !== undefined) {
+					targetEvent = eventStore.getEvent(id ?? '');
+				} else if (a !== undefined && [7, 16].includes(ev.kind)) {
+					const ary = a.split(':');
+					const ap: nip19.AddressPointer = {
+						identifier: ary[2],
+						pubkey: ary[1],
+						kind: parseInt(ary[0])
+					};
+					targetEvent = eventStore.getReplaceable(ap.kind, ap.pubkey, ap.identifier);
+				}
 				return { baseEvent: ev, targetEvent };
 			}
 		);
@@ -690,7 +701,6 @@ const rxReqB1_42 = createRxBackwardReq();
 const rxReqB7 = createRxBackwardReq();
 const rxReqB40 = createRxBackwardReq();
 const rxReqB41 = createRxBackwardReq();
-const rxReqB30030 = createRxBackwardReq();
 const rxReqBId = createRxBackwardReq();
 const rxReqBRp = createRxBackwardReq();
 const batchedReq0 = rxReqB0.pipe(bufferTime(secBufferTime), batch(mergeFilter0));
@@ -729,10 +739,6 @@ rxNostr
 		next,
 		complete
 	});
-rxNostr.use(rxReqB30030).pipe(uniq(flushes$)).subscribe({
-	next,
-	complete
-});
 const batchedReqId = rxReqBId.pipe(bufferTime(secBufferTime), batch(mergeFilterId));
 rxNostr.use(batchedReqId).pipe(uniq(flushes$)).subscribe({
 	next,
@@ -786,6 +792,24 @@ const _subTimeline = eventStore
 					const id = event.tags.findLast((tag) => tag.length >= 2 && tag[0] === 'e')?.at(1);
 					if (id !== undefined && !eventStore.hasEvent(id)) {
 						rxReqBId.emit({ ids: [id], until: unixNow() });
+					}
+					const a = event.tags.findLast((tag) => tag.length >= 2 && tag[0] === 'a')?.at(1);
+					if (a !== undefined) {
+						const ary = a.split(':');
+						const ap: nip19.AddressPointer = {
+							identifier: ary[2],
+							pubkey: ary[1],
+							kind: parseInt(ary[0])
+						};
+						if (!eventStore.hasReplaceable(ap.kind, ap.pubkey, ap.identifier)) {
+							const filter: LazyFilter = {
+								kinds: [ap.kind],
+								authors: [ap.pubkey],
+								'#d': [ap.identifier],
+								until: unixNow()
+							};
+							rxReqBRp.emit(filter);
+						}
 					}
 				}
 				break;
@@ -946,7 +970,7 @@ const _subTimeline = eventStore
 							.map((_, i) => array.slice(i * number, (i + 1) * number));
 					};
 					for (const filters of sliceByNumber(margedFilters, 10)) {
-						rxReqB30030.emit(filters);
+						rxReqBRp.emit(filters);
 					}
 				}
 				break;

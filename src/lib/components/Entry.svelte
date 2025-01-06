@@ -259,6 +259,8 @@
 								{/if}
 							{:else if event.kind === 7}
 								<Reaction reactionEvent={event} profile={undefined} isAuthor={false} />7
+							{:else if event.kind === 30030}
+								Emoji set
 							{:else}
 								{`unsupported kind:${event.kind} event`}
 							{/if}
@@ -347,6 +349,27 @@
 									{:else if reactedEventId !== undefined}
 										{`nostr:${nip19.neventEncode({ id: reactedEventId })}`}
 									{/if}
+								{:else if event.kind === 30030}
+									{@const dTagName =
+										event.tags.find((tag) => tag.length >= 2 && tag[0] === 'd')?.at(1) ?? ''}
+									{@const emojiTags = event.tags.filter(
+										(tag) =>
+											tag.length >= 3 &&
+											tag[0] === 'emoji' &&
+											/^\w+$/.test(tag[1]) &&
+											URL.canParse(tag[2])
+									)}
+									<div class="emoji-set">
+										<p>{dTagName}</p>
+										{#each emojiTags as emojiTag}
+											<img
+												class="emoji"
+												src={emojiTag[2]}
+												alt={`:${emojiTag[1]}:`}
+												title={`:${emojiTag[1]}:`}
+											/>
+										{/each}
+									</div>
 								{:else}
 									<p>
 										<Content
@@ -674,5 +697,9 @@
 	}
 	.Post span > button:active > svg {
 		fill: yellow;
+	}
+	.emoji {
+		height: 32px;
+		vertical-align: top;
 	}
 </style>

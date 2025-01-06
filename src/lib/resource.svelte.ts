@@ -744,7 +744,7 @@ rxNostr.use(rxReqBRp).pipe(uniq(flushes$)).subscribe({
 });
 
 const _subTimeline = eventStore
-	.stream([{ kinds: [0, 1, 6, 7, 16, 40, 41, 42, 9734, 9735, 10000, 10005, 10030] }])
+	.stream([{ kinds: [0, 1, 6, 7, 16, 40, 41, 42, 9734, 9735, 10000, 10005, 10030, 30030] }])
 	.subscribe(async (event) => {
 		switch (event.kind) {
 			case 0: {
@@ -948,6 +948,12 @@ const _subTimeline = eventStore
 					for (const filters of sliceByNumber(margedFilters, 10)) {
 						rxReqB30030.emit(filters);
 					}
+				}
+				break;
+			}
+			case 30030: {
+				if (!profileMap.has(event.pubkey)) {
+					rxReqB0.emit({ kinds: [0], authors: [event.pubkey], until: unixNow() });
 				}
 				break;
 			}

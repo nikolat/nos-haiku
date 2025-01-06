@@ -355,7 +355,7 @@
 								{:else if event.kind === 40}
 									{@const channel = channelMap.get(event.id)}
 									{#if channel !== undefined}
-										<ChannelMeta {channel} level={level + 1} />
+										<ChannelMeta {channel} />
 									{:else}
 										unknown channel
 									{/if}

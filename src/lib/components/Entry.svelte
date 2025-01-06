@@ -222,6 +222,11 @@
 		{#if event.kind === 42 && (channelId === undefined || channel?.id === undefined || channel.name === undefined)}
 			kind:42 event of unknown channel
 		{:else}
+			{@const d = event.tags.find((tag) => tag.length >= 2 && tag[0] === 'd')?.at(1)}
+			{@const link =
+				d !== undefined
+					? `/entry/${nip19.naddrEncode({ identifier: d, pubkey: event.pubkey, kind: event.kind })}`
+					: `/entry/${nip19.neventEncode({ ...event, author: event.pubkey })}`}
 			<div class="Entry__main">
 				<div class="Entry__profile">
 					<div>
@@ -543,13 +548,7 @@
 							</span>
 							<span class="Separator">·</span>
 							<span class="Time">
-								<a
-									href="/entry/{nip19.neventEncode({
-										id: event.id,
-										author: event.pubkey,
-										kind: event.kind
-									})}"
-								>
+								<a href={link}>
 									<time
 										datetime={new Date(1000 * event.created_at).toISOString()}
 										title={new Date(1000 * event.created_at).toLocaleString()}

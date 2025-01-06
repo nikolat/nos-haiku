@@ -428,7 +428,7 @@
 											{/if}
 											<p>
 												{#if URL.canParse(obj.website ?? '')}
-													<a href={obj.website}>
+													<a href={obj.website} target="_blank" rel="noopener noreferrer">
 														{#if URL.canParse(obj.picture ?? '')}
 															<!-- svelte-ignore a11y_img_redundant_alt -->
 															<img src={obj.picture} alt="picture" class="picture" />

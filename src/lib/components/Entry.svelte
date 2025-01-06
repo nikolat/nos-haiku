@@ -16,6 +16,7 @@
 	} from '$lib/resource.svelte';
 	import Reaction from '$lib/components/Reaction.svelte';
 	import AddStar from '$lib/components/AddStar.svelte';
+	import ChannelMeta from '$lib/components/ChannelMeta.svelte';
 	import Content from '$lib/components/Content.svelte';
 	import Entry from '$lib/components/Entry.svelte';
 	import CreateEntry from '$lib/components/CreateEntry.svelte';
@@ -259,6 +260,8 @@
 								{/if}
 							{:else if event.kind === 7}
 								<Reaction reactionEvent={event} profile={undefined} isAuthor={false} />7
+							{:else if event.kind === 40}
+								Channel
 							{:else if event.kind === 30030}
 								Emoji set
 							{:else}
@@ -348,6 +351,13 @@
 										/>
 									{:else if reactedEventId !== undefined}
 										{`nostr:${nip19.neventEncode({ id: reactedEventId })}`}
+									{/if}
+								{:else if event.kind === 40}
+									{@const channel = channelMap.get(event.id)}
+									{#if channel !== undefined}
+										<ChannelMeta {channel} level={level + 1} />
+									{:else}
+										unknown channel
 									{/if}
 								{:else if event.kind === 30030}
 									{@const dTagName =

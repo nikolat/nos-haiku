@@ -3,7 +3,6 @@
 	import type { ChannelContent, ProfileContentEvent } from '$lib/utils';
 	import { getEventById, getEventByAddressPointer, getProfileName } from '$lib/resource.svelte';
 	import Entry from '$lib/components/Entry.svelte';
-	import ChannelMeta from '$lib/components/ChannelMeta.svelte';
 	import type { NostrEvent } from 'nostr-tools/pure';
 	import * as nip19 from 'nostr-tools/nip19';
 
@@ -195,10 +194,7 @@
 		{#if d?.type === 'nevent'}
 			{@const eventId = d.data.id}
 			{@const event = getEventById(eventId)}
-			{#if event?.kind === 40 && channelMap.has(eventId)}
-				{@const channel = channelMap.get(eventId)!}
-				<ChannelMeta {channel} level={level + 1} />
-			{:else if event !== undefined}
+			{#if event !== undefined}
 				<Entry
 					{event}
 					{channelMap}

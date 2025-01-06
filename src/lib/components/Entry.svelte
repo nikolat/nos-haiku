@@ -82,13 +82,20 @@
 	});
 	const channel: ChannelContent | undefined = $derived(channelMap.get(channelId ?? ''));
 	const eventsReactionToTheEvent: NostrEvent[] = $derived(
-		eventsReaction.filter(
-			(ev) =>
-				ev.tags
-					.filter((tag) => tag.length >= 2 && tag[0] === 'e')
-					.at(-1)
-					?.at(1) === event.id && !mutedPubkeys.includes(event.pubkey)
-		)
+		eventsReaction.filter((ev) => {
+			const a = ev.tags.findLast((tag) => tag.length >= 2 && tag[0] === 'a')?.at(1);
+			if (a !== undefined) {
+				const d = event.tags.find((tag) => tag.length >= 2 && tag[0] === 'd')?.at(1) ?? '';
+				return a === `${event.kind}:${event.pubkey}:${d}`;
+			} else {
+				return (
+					ev.tags
+						.filter((tag) => tag.length >= 2 && tag[0] === 'e')
+						.at(-1)
+						?.at(1) === event.id && !mutedPubkeys.includes(event.pubkey)
+				);
+			}
+		})
 	);
 	const isMutedPubkey: boolean = $derived(mutedPubkeys.includes(event.pubkey));
 	const isMutedChannel: boolean = $derived(mutedChannelIds.includes(channelId ?? ''));

@@ -750,7 +750,7 @@ rxNostr.use(rxReqBRp).pipe(uniq(flushes$)).subscribe({
 });
 
 const _subTimeline = eventStore
-	.stream([{ kinds: [0, 1, 6, 7, 16, 40, 41, 42, 9734, 9735, 10000, 10005, 10030, 30030] }])
+	.stream([{ kinds: [0, 1, 6, 7, 16, 40, 41, 42, 9734, 9735, 10000, 10005, 10030, 30030, 31990] }])
 	.subscribe(async (event) => {
 		switch (event.kind) {
 			case 0: {
@@ -981,6 +981,20 @@ const _subTimeline = eventStore
 				}
 				break;
 			}
+			case 31990: {
+				const ap: nip19.AddressPointer = {
+					identifier: event.tags.find((tag) => tag.length >= 2 && tag[0] === 'd')?.at(1) ?? '',
+					pubkey: event.pubkey,
+					kind: event.kind
+				};
+				rxReqBRp.emit({
+					kinds: [7],
+					'#a': [`${ap.kind}:${ap.pubkey}:${ap.identifier}`],
+					limit: 10,
+					until: unixNow()
+				});
+				break;
+			}
 			default:
 				break;
 		}
@@ -1177,9 +1191,9 @@ export const getEventsFirst = (
 	} else if (currentAddressPointer !== undefined) {
 		filters.push({
 			kinds: [7],
-			'#k': [String(currentAddressPointer.kind)],
-			'#p': [currentAddressPointer.pubkey],
-			'#d': [currentAddressPointer.identifier]
+			'#a': [
+				`${currentAddressPointer.kind}:${currentAddressPointer.pubkey}:${currentAddressPointer.identifier}`
+			]
 		});
 	} else if (isAntenna && pubkeysFollowing.length > 0) {
 		const f = filters.find((f) => f.authors?.join(':') === pubkeysFollowing.join(':'));

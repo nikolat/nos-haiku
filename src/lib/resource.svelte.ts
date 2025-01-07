@@ -882,6 +882,7 @@ const _subTimeline = eventStore
 						rxReqBId.emit({ ids: [idToGet], until: unixNow() });
 					}
 				}
+				rxReqB1_42.emit({ kinds: [event.kind], '#e': [event.id], until: unixNow() });
 				const { ids, aps } = getIdsForFilter([event]);
 				const idsFiltered = ids.filter((id) => !eventStore.hasEvent(id));
 				const apsFiltered = aps.filter(

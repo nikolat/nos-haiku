@@ -395,15 +395,25 @@ export const getEventById = (id: string): NostrEvent | undefined => {
 };
 
 export const getEventsReplying = (id: string): NostrEvent[] => {
-	return eventsAll.filter((ev) =>
-		ev.tags.some(
-			(tag) =>
-				tag.length >= 4 &&
-				tag[0] === 'e' &&
-				tag[1] === id &&
-				((tag[3] === 'reply' && [1, 42].includes(ev.kind)) || (tag[3] === 'root' && ev.kind === 1))
+	return eventsAll
+		.filter((ev) =>
+			ev.tags.some(
+				(tag) =>
+					tag.length >= 4 &&
+					tag[0] === 'e' &&
+					tag[1] === id &&
+					((tag[3] === 'reply' && [1, 42].includes(ev.kind)) ||
+						(tag[3] === 'root' && ev.kind === 1))
+			)
 		)
-	);
+		.filter(
+			(ev) =>
+				!(
+					ev.tags.some(
+						(tag) => tag.length >= 4 && tag[0] === 'e' && tag[1] === id && tag[3] === 'root'
+					) && ev.tags.some((tag) => tag.length >= 4 && tag[0] === 'e' && tag[3] === 'reply')
+				)
+		);
 };
 
 export const getEventByAddressPointer = (data: nip19.AddressPointer): NostrEvent | undefined => {

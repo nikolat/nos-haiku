@@ -664,7 +664,7 @@
 								}}
 							>
 								<span>↳</span>
-								{#each eventsReplying as ev}
+								{#each eventsReplying as ev (ev.id)}
 									{@const prof = profileMap.get(ev.pubkey)}
 									{@const picture = URL.canParse(prof?.picture ?? '') ? prof?.picture : undefined}
 									{#if picture !== undefined}

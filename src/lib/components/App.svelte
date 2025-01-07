@@ -58,6 +58,7 @@
 			[]
 	);
 
+	let isLoading: boolean = $state(false);
 	let idTimeout: number;
 	let nowRealtime: number = $state(1000 * unixNow());
 	let intervalID: number;
@@ -87,7 +88,10 @@
 	});
 	afterNavigate(() => {
 		idTimeout = setTimeout(() => {
-			getEventsFirst(urlParams);
+			isLoading = true;
+			getEventsFirst(urlParams, undefined, () => {
+				isLoading = false;
+			});
 		}, 1000);
 		intervalID = setInterval(() => {
 			nowRealtime = 1000 * unixNow();
@@ -176,6 +180,7 @@
 			{uploaderSelected}
 			{isEnabledRelativeTime}
 			{nowRealtime}
+			bind:isLoading
 		/>
 	{/if}
 </div>

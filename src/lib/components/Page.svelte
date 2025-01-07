@@ -38,7 +38,7 @@
 	import * as nip19 from 'nostr-tools/nip19';
 	import { unixNow } from 'applesauce-core/helpers';
 
-	const {
+	let {
 		loginPubkey,
 		isAntenna,
 		currentPubkey,
@@ -54,7 +54,8 @@
 		followingPubkeys,
 		uploaderSelected,
 		isEnabledRelativeTime,
-		nowRealtime
+		nowRealtime,
+		isLoading = $bindable()
 	}: {
 		loginPubkey: string | undefined;
 		isAntenna: boolean | undefined;
@@ -72,6 +73,7 @@
 		uploaderSelected: string;
 		isEnabledRelativeTime: boolean;
 		nowRealtime: number;
+		isLoading: boolean;
 	} = $props();
 	const eventsTimeline: NostrEvent[] = $derived(getEventsTimelineTop());
 	const profileEventMap: Map<string, NostrEvent> = $derived(getProfileEventMap());
@@ -184,7 +186,6 @@
 	);
 
 	let isScrolledBottom = false;
-	let isLoading = false;
 	const scrollThreshold = 300;
 
 	const urlParams: UrlParams = $derived({
@@ -534,6 +535,13 @@
 						/>
 					{/each}
 				</div>
+				{#if isLoading}
+					<div class="Spinner">
+						<span class="Spinner__image">
+							<img src="/apple-touch-icon.png" alt="" />
+						</span>
+					</div>
+				{/if}
 			</div>
 		</div>
 		<div class="Column Column--right">
@@ -705,5 +713,12 @@
 	/* ミュートされた投稿が多すぎてスクロールできず追加読み込みができない場合への備え */
 	.Homepage {
 		min-height: calc(100vh + 300px);
+	}
+	.Spinner {
+		opacity: unset;
+	}
+	.Spinner__image img {
+		width: 64px;
+		height: 64px;
 	}
 </style>

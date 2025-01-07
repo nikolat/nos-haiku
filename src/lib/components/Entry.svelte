@@ -9,6 +9,7 @@
 	} from '$lib/utils';
 	import {
 		getEventById,
+		getEventsReplying,
 		getProfileName,
 		getRelaysToUse,
 		sendDeletion,
@@ -38,7 +39,8 @@
 		currentChannelId,
 		isEnabledRelativeTime,
 		nowRealtime,
-		level
+		level,
+		isNested = false
 	}: {
 		event: NostrEvent;
 		channelMap: Map<string, ChannelContent>;
@@ -55,6 +57,7 @@
 		isEnabledRelativeTime: boolean;
 		nowRealtime: number;
 		level: number;
+		isNested?: boolean;
 	} = $props();
 
 	const getRootId = (event: NostrEvent | undefined): string | undefined => {
@@ -139,6 +142,9 @@
 	);
 	const classNames: string[] = $derived.by(() => {
 		const classNames: string[] = ['Entry'];
+		if (isNested) {
+			classNames.push('Nested');
+		}
 		if (level > 0) {
 			classNames.push('Quote');
 		}
@@ -168,6 +174,7 @@
 	let showMutedPubkey: boolean = $state(false);
 	let showMutedChannel: boolean = $state(false);
 	let showMutedContent: boolean = $state(false);
+	let showReplies: boolean = $state(false);
 
 	const prof: ProfileContentEvent | undefined = $derived(profileMap.get(event.pubkey));
 	const idReplyTo: string | undefined = $derived.by(() => {
@@ -215,6 +222,8 @@
 		}
 		return obj;
 	};
+
+	const eventsReplying = $derived(getEventsReplying(event.id));
 </script>
 
 <article class={classNames.join(' ')}>
@@ -643,7 +652,28 @@
 							{/if}
 						</div>
 					</div>
-					<div class="Entry__replyline"></div>
+					<div class="Entry__replyline">
+						{#if eventsReplying.length > 0 && !showReplies}
+							<!-- svelte-ignore a11y_click_events_have_key_events -->
+							<!-- svelte-ignore a11y_no_static_element_interactions -->
+							<div
+								title="返信を表示"
+								class="ReplyAvatars noselect"
+								onclick={() => {
+									showReplies = true;
+								}}
+							>
+								<span>↳</span>
+								{#each eventsReplying as ev}
+									{@const prof = profileMap.get(ev.pubkey)}
+									{@const picture = URL.canParse(prof?.picture ?? '') ? prof?.picture : undefined}
+									{#if picture !== undefined}
+										<img alt="" loading="lazy" src={picture} class="Avatar" />
+									{/if}
+								{/each}
+							</div>
+						{/if}
+					</div>
 					<div class="Entry__MobileActions"></div>
 				</div>
 			</div>
@@ -658,6 +688,30 @@
 							channelToPost={undefined}
 							bind:showForm
 						/>
+					{/if}
+				</div>
+				<div class="Entry__replies">
+					{#if showReplies}
+						{#each eventsReplying as ev}
+							<Entry
+								event={ev}
+								{channelMap}
+								{profileMap}
+								{loginPubkey}
+								{mutedPubkeys}
+								{mutedChannelIds}
+								{mutedWords}
+								{eventsTimeline}
+								{eventsReaction}
+								{uploaderSelected}
+								{channelToPost}
+								{currentChannelId}
+								{isEnabledRelativeTime}
+								{nowRealtime}
+								level={level + 1}
+								isNested={true}
+							/>
+						{/each}
 					{/if}
 				</div>
 			</div>

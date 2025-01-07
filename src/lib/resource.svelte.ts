@@ -394,6 +394,18 @@ export const getEventById = (id: string): NostrEvent | undefined => {
 	return eventsAll.find((ev) => ev.id === id);
 };
 
+export const getEventsReplying = (id: string): NostrEvent[] => {
+	return eventsAll.filter((ev) =>
+		ev.tags.some(
+			(tag) =>
+				tag.length >= 4 &&
+				tag[0] === 'e' &&
+				tag[1] === id &&
+				((tag[3] === 'reply' && [1, 42].includes(ev.kind)) || (tag[3] === 'root' && ev.kind === 1))
+		)
+	);
+};
+
 export const getEventByAddressPointer = (data: nip19.AddressPointer): NostrEvent | undefined => {
 	return eventsAll.find(
 		(ev) =>

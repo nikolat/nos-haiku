@@ -296,6 +296,8 @@
 								<Reaction reactionEvent={event} profile={undefined} isAuthor={false} />7
 							{:else if event.kind === 40}
 								Channel
+							{:else if event.kind === 30023}
+								Long-form Content
 							{:else if event.kind === 30030}
 								Emoji set
 							{:else if event.kind === 31990}

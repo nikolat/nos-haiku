@@ -750,7 +750,9 @@ rxNostr.use(rxReqBRp).pipe(uniq(flushes$)).subscribe({
 });
 
 const _subTimeline = eventStore
-	.stream([{ kinds: [0, 1, 6, 7, 16, 40, 41, 42, 9734, 9735, 10000, 10005, 10030, 30030, 31990] }])
+	.stream([
+		{ kinds: [0, 1, 6, 7, 16, 40, 41, 42, 9734, 9735, 10000, 10005, 10030, 30030, 30023, 31990] }
+	])
 	.subscribe(async (event) => {
 		switch (event.kind) {
 			case 0: {
@@ -975,13 +977,12 @@ const _subTimeline = eventStore
 				}
 				break;
 			}
-			case 30030: {
+			case 30023:
+			case 30030:
+			case 31990: {
 				if (!profileMap.has(event.pubkey)) {
 					rxReqB0.emit({ kinds: [0], authors: [event.pubkey], until: unixNow() });
 				}
-				break;
-			}
-			case 31990: {
 				const ap: nip19.AddressPointer = {
 					identifier: event.tags.find((tag) => tag.length >= 2 && tag[0] === 'd')?.at(1) ?? '',
 					pubkey: event.pubkey,

@@ -1070,7 +1070,7 @@ const prepareFirstEvents = (completeOnNextFetch: () => void = complete) => {
 		)
 	);
 	merge(...obs$)
-		.pipe(uniq(flushes$))
+		.pipe(uniq(flushes$), completeOnTimeout(secOnCompleteTimeout))
 		.subscribe({
 			next,
 			complete: completeOnNextFetch

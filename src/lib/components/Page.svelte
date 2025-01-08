@@ -268,12 +268,18 @@
 />
 <main class="Homepage View">
 	<div class="Layout">
-		<div class="Column Column--left Column--nomobile">
-			<div class="Card">
-				<div class="Card__head">
-					<h3 class="Card__title"><i class="fa-fw fas fa-users"></i>ユーザー一覧</h3>
-				</div>
-				<div class="Card__body">
+		<div
+			class={currentPubkey === undefined
+				? 'Column Column--left Column--nomobile'
+				: 'Column Column--left'}
+		>
+			<div class={currentPubkey === undefined ? 'Card' : 'Card Card--nomargin'}>
+				{#if currentPubkey === undefined}
+					<div class="Card__head">
+						<h3 class="Card__title"><i class="fa-fw fas fa-users"></i>ユーザー一覧</h3>
+					</div>
+				{/if}
+				<div class={currentPubkey === undefined ? 'Card__body' : 'Card__body Card__body--nopad'}>
 					{#if currentPubkey === undefined}
 						<div class="UserList UserList--grid">
 							{#each profilePubkeysActive as pubkey (pubkey)}

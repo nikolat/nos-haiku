@@ -9,7 +9,7 @@ export const defaultRelays: RelayRecord = {
 	'wss://nostr.compile-error.net/': { read: true, write: true }
 };
 
-export const profileRelays = ['wss://directory.yabu.me/', 'wss://purplepag.es/'];
+export const profileRelays = ['wss://directory.yabu.me/'];
 export const searchRelays = ['wss://search.nos.today/', 'wss://nostr.wine/'];
 export const subRelaysForChannel = ['wss://relay-jp.nostr.wirednet.jp/', 'wss://yabu.me/'];
 export const urlToLinkProfileEditor = 'https://nos-profile-arekore.vercel.app/';

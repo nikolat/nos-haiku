@@ -418,7 +418,7 @@
 									)}
 									<div class="emoji-set">
 										<p>{dTagName}</p>
-										{#each emojiTags as emojiTag}
+										{#each emojiTags as emojiTag (emojiTag[1])}
 											<img
 												class="emoji"
 												src={emojiTag[2]}

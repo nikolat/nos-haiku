@@ -7,7 +7,7 @@
 		zapNpub,
 		zapRelays
 	} from '$lib/config';
-	import type { ChannelContent, ProfileContentEvent, UrlParams } from '$lib/utils';
+	import { zap, type ChannelContent, type ProfileContentEvent, type UrlParams } from '$lib/utils';
 	import {
 		bookmarkChannel,
 		followUser,
@@ -242,6 +242,7 @@
 
 	let channelToPost: ChannelContent | undefined = $state();
 	let isEnabledScrollInfinitely: boolean = $state(true);
+	let zapWindowContainer: HTMLElement | undefined = $state();
 
 	beforeNavigate(() => {
 		document.removeEventListener('click', handlerSetting);
@@ -620,13 +621,14 @@
 					<button
 						class="Button"
 						disabled={loginPubkey === undefined}
-						data-npub={zapNpub}
-						data-note-id={zapNoteId}
-						data-relays={zapRelays.join(',')}
+						onclick={() => {
+							zap(zapNpub, zapNoteId, zapRelays, zapWindowContainer);
+						}}
 					>
 						<img alt="Zap" src={zapImageUri} />
-						<span>Nos Haikuをサポート </span>
+						<span>Nos Haikuをサポート</span>
 					</button>
+					<div class="zap-window-container" bind:this={zapWindowContainer}></div>
 				</div>
 				<div class="Card">
 					<div class="Card__head">

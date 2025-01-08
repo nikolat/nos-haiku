@@ -153,7 +153,7 @@
 		<!-- svelte-ignore a11y_no_static_element_interactions -->
 		<span
 			class="GlobalHeader__Item GlobalHeader__menuToggle"
-			onclick={(_event) => {
+			onclick={() => {
 				if (nav.style.display) {
 					nav.style.display = '';
 				} else {

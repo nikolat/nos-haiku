@@ -79,9 +79,8 @@
 		const { init } = await import('nostr-login');
 		init({});
 		// @ts-expect-error 型なんて定義されてないよ
-		const { injectCSS, initTargets } = await import('nostr-zap/src/view');
+		const { injectCSS } = await import('nostr-zap/src/view');
 		injectCSS();
-		initTargets();
 	});
 	beforeNavigate(() => {
 		clearInterval(intervalID);

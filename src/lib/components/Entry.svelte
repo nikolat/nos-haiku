@@ -674,7 +674,41 @@
 							</div>
 						{/if}
 					</div>
-					<div class="Entry__MobileActions"></div>
+					<div class="Entry__MobileActions">
+						<div class="TabList">
+							<!-- svelte-ignore a11y_click_events_have_key_events -->
+							<!-- svelte-ignore a11y_no_static_element_interactions -->
+							<span
+								title="返信"
+								class="Action Action--reply"
+								onclick={() => {
+									showForm = !showForm;
+								}}
+							>
+								<i class="fal fa-comment-lines"></i>
+							</span>
+							{#if eventsReplying.length > 0 && !showReplies}
+								<!-- svelte-ignore a11y_click_events_have_key_events -->
+								<!-- svelte-ignore a11y_no_static_element_interactions -->
+								<span
+									title="返信を表示"
+									class="Action Action--replies noselect"
+									onclick={() => {
+										showReplies = true;
+									}}
+								>
+									<i class="far fa-comment-alt-lines"></i>
+									{#each eventsReplying as ev}
+										{@const prof = profileMap.get(ev.pubkey)}
+										{@const picture = URL.canParse(prof?.picture ?? '') ? prof?.picture : undefined}
+										{#if picture !== undefined}
+											<img alt="" loading="lazy" src={picture} class="Avatar" />
+										{/if}
+									{/each}
+								</span>
+							{/if}
+						</div>
+					</div>
 				</div>
 			</div>
 			<div class="Extra">

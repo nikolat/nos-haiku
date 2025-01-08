@@ -790,10 +790,6 @@
 </article>
 
 <style>
-	.Entry {
-		max-height: 50em;
-		overflow-y: visible;
-	}
 	.Entry__head {
 		position: relative;
 	}

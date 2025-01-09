@@ -862,35 +862,49 @@ const _subTimeline = eventStore
 						.find((tag) => tag.length >= 4 && tag[0] === 'e' && tag[3] === marker)
 						?.at(1);
 				};
-				const rootdId = getIdOfMarkerd('root');
+				const rootId = getIdOfMarkerd('root');
 				const repliedId = getIdOfMarkerd('reply');
+				//自分が参照しているrootイベントまたはreply先イベントを取得する
 				if (event.kind === 42) {
-					if (rootdId !== undefined && !channelMap.has(rootdId)) {
-						rxReqB40.emit({ kinds: [40], ids: [rootdId], until: unixNow() });
+					if (rootId !== undefined && !channelMap.has(rootId)) {
+						rxReqB40.emit({ kinds: [40], ids: [rootId], until: unixNow() });
 					}
-					if (repliedId !== undefined && !channelMap.has(repliedId)) {
+					if (repliedId !== undefined && !eventStore.hasEvent(repliedId)) {
 						rxReqBId.emit({ kinds: [42], ids: [repliedId], until: unixNow() });
 					}
 				} else if (event.kind === 1) {
-					const idToGet = repliedId ?? rootdId;
+					const idToGet = repliedId ?? rootId;
 					if (
 						idToGet !== undefined &&
 						!eventStore.hasEvent(idToGet) &&
-						rootdId !== undefined &&
-						(countThread.get(rootdId) ?? 0) < countThreadLimit
+						rootId !== undefined &&
+						(countThread.get(rootId) ?? 0) < countThreadLimit
 					) {
-						countThread.set(rootdId, (countThread.get(rootdId) ?? 0) + 1);
+						countThread.set(rootId, (countThread.get(rootId) ?? 0) + 1);
 						rxReqBId.emit({ ids: [idToGet], until: unixNow() });
 					}
 				}
-				if (
-					(rootdId !== undefined && (countThread.get(rootdId) ?? 0) < countThreadLimit) ||
-					(rootdId === undefined && (countThread.get(event.id) ?? 0) < countThreadLimit)
-				) {
-					const id = rootdId ?? event.id;
-					countThread.set(id, (countThread.get(id) ?? 0) + 1);
-					rxReqB1_42.emit({ kinds: [event.kind], '#e': [event.id], until: unixNow() });
+				//自分が参照しているrootイベントまたは自分自身のidを参照しているイベントを取得する
+				//if (
+				//	event.kind === 1 &&
+				//	rootId !== undefined &&
+				//	(countThread.get(rootId) ?? 0) < countThreadLimit
+				//) {
+				//	countThread.set(rootId, countThreadLimit); //この取得は一度だけでよい
+				//	rxReqB1_42.emit({ kinds: [event.kind], '#e': [rootId], limit: 10, until: unixNow() });
+				//} else if (
+				//	((event.kind === 1 && rootId === undefined) || event.kind === 42) &&
+				//	(countThread.get(event.id) ?? 0) < countThreadLimit
+				//) {
+				//	countThread.set(event.id, countThreadLimit); //この取得は一度だけでよい
+				//	rxReqB1_42.emit({ kinds: [event.kind], '#e': [event.id], limit: 10, until: unixNow() });
+				//}
+				//↑海外リレーはスレッド文化過ぎて取得が終わらないので kind:42のみとする
+				if (event.kind === 42 && (countThread.get(event.id) ?? 0) < countThreadLimit) {
+					countThread.set(event.id, countThreadLimit); //この取得は一度だけでよい
+					rxReqB1_42.emit({ kinds: [event.kind], '#e': [event.id], limit: 10, until: unixNow() });
 				}
+				//content内の nostr: による参照を探して取得する
 				const { ids, aps } = getIdsForFilter([event]);
 				const idsFiltered = ids.filter((id) => !eventStore.hasEvent(id));
 				const apsFiltered = aps.filter(

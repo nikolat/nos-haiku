@@ -183,7 +183,7 @@
 				<a
 					href={getUrlToLinkProfile(nip19.npubEncode(currentPubkey))}
 					target="_blank"
-					rel="noreferrer"
+					rel="noopener noreferrer"
 					><img alt="" src={serviceIconImageUri} />
 					<h2>id:{prof?.name ?? 'none'}</h2></a
 				>
@@ -200,7 +200,7 @@
 					{/await}
 				{/if}
 				{#if URL.canParse(prof.website ?? '')}
-					<p class="website">🔗<a href={prof.website}>{prof.website}</a></p>
+					<p class="website">🔗<a href={prof.website} target="_blank" rel="noopener noreferrer">{prof.website}</a></p>
 				{/if}
 			{/if}
 			<p>

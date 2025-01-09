@@ -883,7 +883,14 @@ const _subTimeline = eventStore
 						rxReqBId.emit({ ids: [idToGet], until: unixNow() });
 					}
 				}
-				rxReqB1_42.emit({ kinds: [event.kind], '#e': [event.id], until: unixNow() });
+				if (
+					(rootdId !== undefined && (countThread.get(rootdId) ?? 0) < countThreadLimit) ||
+					(rootdId === undefined && (countThread.get(event.id) ?? 0) < countThreadLimit)
+				) {
+					const id = rootdId ?? event.id;
+					countThread.set(id, (countThread.get(id) ?? 0) + 1);
+					rxReqB1_42.emit({ kinds: [event.kind], '#e': [event.id], until: unixNow() });
+				}
 				const { ids, aps } = getIdsForFilter([event]);
 				const idsFiltered = ids.filter((id) => !eventStore.hasEvent(id));
 				const apsFiltered = aps.filter(

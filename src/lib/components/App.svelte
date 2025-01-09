@@ -71,7 +71,7 @@
 				goto(location.href);
 			} else {
 				setLoginPubkey(undefined);
-				clearCache();
+				clearCache([{ until: unixNow() }]);
 				resetRelaysDefault();
 				goto(location.href);
 			}

@@ -18,9 +18,10 @@ import { verifier } from 'rx-nostr-crypto';
 import { EventStore } from 'applesauce-core';
 import { unixNow, getProfileContent, type ProfileContent } from 'applesauce-core/helpers';
 import { sortEvents, type EventTemplate, type NostrEvent } from 'nostr-tools/pure';
-import * as nip19 from 'nostr-tools/nip19';
+import type { Filter } from 'nostr-tools/filter';
 import type { RelayRecord } from 'nostr-tools/relay';
 import type { WindowNostr } from 'nostr-tools/nip07';
+import * as nip19 from 'nostr-tools/nip19';
 import {
 	clientTag,
 	defaultReactionToAdd,
@@ -327,8 +328,8 @@ export const setRelaysToUseSelected = async (relaysSelected: string): Promise<vo
 	savelocalStorage();
 };
 
-export const clearCache = () => {
-	for (const ev of eventStore.getAll([{ kinds: [1, 3, 6, 7, 16, 42, 10000, 30078] }])) {
+export const clearCache = (filters: Filter[] = [{ kinds: [1, 3, 6, 7, 16, 42, 10000, 30078] }]) => {
+	for (const ev of eventStore.getAll(filters)) {
 		eventStore.database.deleteEvent(ev);
 	}
 	if (loginPubkey !== undefined) {

@@ -200,7 +200,9 @@
 					{/await}
 				{/if}
 				{#if URL.canParse(prof.website ?? '')}
-					<p class="website">🔗<a href={prof.website} target="_blank" rel="noopener noreferrer">{prof.website}</a></p>
+					<p class="website">
+						🔗<a href={prof.website} target="_blank" rel="noopener noreferrer">{prof.website}</a>
+					</p>
 				{/if}
 			{/if}
 			<p>

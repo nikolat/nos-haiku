@@ -114,7 +114,11 @@
 						} else if (hashtag !== undefined) {
 							return ev.tags.some((tag) => tag.length >= 2 && tag[0] === 't' && tag[1] === hashtag);
 						} else {
-							return true;
+							const rootId =
+								ev.tags
+									.find((tag) => tag.length >= 4 && tag[0] === 'e' && tag[3] === 'root')
+									?.at(1) ?? '';
+							return !mutedChannelIds.includes(rootId);
 						}
 					})
 					.map((ev) => ev.pubkey)

@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { getRoboHashURL } from '$lib/config';
-	import type { ChannelContent, ProfileContentEvent } from '$lib/utils';
+	import { urlLinkString, type ChannelContent, type ProfileContentEvent } from '$lib/utils';
 	import { getEventById, getEventByAddressPointer, getProfileName } from '$lib/resource.svelte';
 	import Entry from '$lib/components/Entry.svelte';
 	import type { NostrEvent } from 'nostr-tools/pure';
@@ -51,7 +51,7 @@
 		tags: string[][]
 	): [IterableIterator<RegExpMatchArray>, string[], { [key: string]: string }] => {
 		const regMatchArray = [
-			'https?://[\\w!?/=+\\-_~:;.,*&@#$%[\\]]+',
+			'https?://[\\w!?/=+\\-_~:;.,*&@#$%()[\\]]+',
 			'nostr:npub1\\w{58}',
 			'nostr:nprofile1\\w+',
 			'nostr:note1\\w{58}',
@@ -91,7 +91,7 @@
 
 {plainTexts.shift()}{#each Array.from(matchesIterator) as match}
 	{#if /^https?:\/\/\S+/.test(match[1]) && URL.canParse(match[1])}
-		{@const url = match[1]}
+		{@const [url, rest] = urlLinkString(match[1])}
 		{@const ytb1 = url.match(/^https?:\/\/(www|m)\.youtube\.com\/watch\?v=([\w-]+)/i)}
 		{@const ytb2 = url.match(/^https?:\/\/youtu\.be\/([\w-]+)(\?\w+)?/i)}
 		{@const ytb3 = url.match(/^https?:\/\/youtube\.com\/shorts\/([\w-]+)(\?\w+)?/i)}
@@ -127,7 +127,7 @@
 			<audio controls preload="metadata" src={url}></audio>
 		{:else}
 			<a href={url} target="_blank" rel="noopener noreferrer">{url}</a>
-		{/if}
+		{/if}{rest}
 	{:else if /nostr:npub1\w{58}/.test(match[2])}
 		{@const matchedText = match[2]}
 		{@const npubText = matchedText.replace(/nostr:/, '')}

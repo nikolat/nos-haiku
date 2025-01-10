@@ -39,6 +39,7 @@ import {
 	getRelaysToUseByRelaysSelected,
 	isValidEmoji,
 	splitNip51List,
+	urlLinkString,
 	type ChannelContent,
 	type ProfileContentEvent,
 	type UrlParams
@@ -1775,7 +1776,12 @@ export const sendNote = async (
 	const matchesIteratorHashTag = content.matchAll(/(^|\s)#([^\s#]+)/g);
 	const hashtags: Set<string> = new Set();
 	for (const match of matchesIteratorHashTag) {
-		hashtags.add(match[2]);
+		hashtags.add(match[2].toLowerCase());
+	}
+	const matchesIteratorLink = content.matchAll(/https?:\/\/[\w!?/=+\-_~:;.,*&@#$%()[\]]+/g);
+	const links: Set<string> = new Set();
+	for (const match of matchesIteratorLink) {
+		links.add(urlLinkString(match[0])[0]);
 	}
 	const emojiShortcodes: Set<string> = new Set();
 	if (emojiMap !== undefined) {
@@ -1796,7 +1802,10 @@ export const sendNote = async (
 		tags.push(['p', p]);
 	}
 	for (const t of hashtags) {
-		tags.push(['t', t.toLowerCase()]);
+		tags.push(['t', t]);
+	}
+	for (const r of links) {
+		tags.push(['r', r]);
 	}
 	for (const e of emojiShortcodes) {
 		tags.push(['emoji', e, emojiMap!.get(e)!]);

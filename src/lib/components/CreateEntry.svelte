@@ -5,7 +5,11 @@
 	import { getChannelEventMap, getEventEmojiSet, sendNote } from '$lib/resource.svelte';
 	import type { EventTemplate, NostrEvent } from 'nostr-tools/pure';
 	import * as nip19 from 'nostr-tools/nip19';
-	import { readServerConfig, type OptionalFormDataFields } from 'nostr-tools/nip96';
+	import {
+		readServerConfig,
+		type FileUploadResponse,
+		type OptionalFormDataFields
+	} from 'nostr-tools/nip96';
 	import { getToken } from 'nostr-tools/nip98';
 	import type { ProfileContent } from 'applesauce-core/helpers';
 
@@ -28,6 +32,7 @@
 	} = $props();
 
 	let filesToUpload: FileList | undefined = $state();
+	let imetaMap: Map<string, FileUploadResponse> = new Map<string, FileUploadResponse>();
 	let inputFile: HTMLInputElement;
 	let textArea: HTMLTextAreaElement;
 
@@ -93,6 +98,7 @@
 		if (uploadedFileUrl === undefined) {
 			return;
 		}
+		imetaMap.set(uploadedFileUrl, fileUploadResponse);
 		insertText(uploadedFileUrl);
 	};
 
@@ -125,12 +131,15 @@
 			channelToPost?.eventkind40 ??
 			eventToReply ??
 			(currentChannelId !== undefined ? channelEventMap.get(currentChannelId) : undefined);
-		sendNote(contentToSend, channelNameToCreate, targetEventToReply, emojiMap).then(() => {
-			contentToSend = '';
-			channelToPost = undefined;
-			channelNameToCreate = '';
-			showForm = false;
-		});
+		sendNote(contentToSend, channelNameToCreate, targetEventToReply, emojiMap, imetaMap).then(
+			() => {
+				contentToSend = '';
+				channelToPost = undefined;
+				channelNameToCreate = '';
+				filesToUpload = undefined;
+				showForm = false;
+			}
+		);
 	};
 </script>
 

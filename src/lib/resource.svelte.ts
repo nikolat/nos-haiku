@@ -23,6 +23,7 @@ import type { Filter } from 'nostr-tools/filter';
 import type { RelayRecord } from 'nostr-tools/relay';
 import type { WindowNostr } from 'nostr-tools/nip07';
 import * as nip19 from 'nostr-tools/nip19';
+import type { FileUploadResponse } from 'nostr-tools/nip96';
 import {
 	clientTag,
 	defaultReactionToAdd,
@@ -1685,6 +1686,7 @@ export const sendNote = async (
 	channelNameToCreate: string,
 	targetEventToReply?: NostrEvent,
 	emojiMap?: Map<string, string>,
+	imetaMap?: Map<string, FileUploadResponse>,
 	contentWarningReason?: string | null | undefined
 ) => {
 	if (window.nostr === undefined) {
@@ -1793,6 +1795,20 @@ export const sendNote = async (
 	for (const match of matchesIteratorLink) {
 		links.add(urlLinkString(match[0])[0]);
 	}
+	const imetaTags: string[][] = [];
+	if (imetaMap !== undefined) {
+		for (const [url, fr] of imetaMap) {
+			if (!links.has(url) || fr.nip94_event === undefined) {
+				continue;
+			}
+			imetaTags.push([
+				'imeta',
+				...fr.nip94_event.tags
+					.filter((tag) => tag.length >= 2 && tag[0].length > 0 && tag[1].length > 0)
+					.map((tag) => `${tag[0]} ${tag[1]}`)
+			]);
+		}
+	}
 	const emojiShortcodes: Set<string> = new Set();
 	if (emojiMap !== undefined) {
 		const matchesIteratorEmojiTag = content.matchAll(
@@ -1825,6 +1841,9 @@ export const sendNote = async (
 	}
 	for (const r of links) {
 		tags.push(['r', r]);
+	}
+	for (const imetaTag of imetaTags) {
+		tags.push(imetaTag);
 	}
 	for (const e of emojiShortcodes) {
 		tags.push(['emoji', e, emojiMap!.get(e)!]);

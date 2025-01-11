@@ -12,7 +12,8 @@
 		setRelaysToUseSelected,
 		setUploaderSelected,
 		unmuteChannel,
-		unmuteUser
+		unmuteUser,
+		unmuteWord
 	} from '$lib/resource.svelte';
 	import Header from '$lib/components/Header.svelte';
 	import Profile from '$lib/components/Profile.svelte';
@@ -289,7 +290,7 @@
 							<div class="Label">
 								<i class="fa-fw fas fa-user-minus"></i> <span>ミュート中のユーザー</span>
 								<p class="Tip">
-									ミュートされたユーザーは最新のタイムラインから除外されます。ただし、直接ユーザーのページを開くと見ることができます。
+									ミュートされたユーザーはタイムラインから除外されます。ただし、直接ユーザーのページを開くと見ることができます。
 								</p>
 							</div>
 							<div class="Control">
@@ -323,10 +324,9 @@
 														>
 													</div>
 												</li>
-											{/each}
-											{#if mutedPubkeys.length === 0}
+											{:else}
 												<li>ミュートしていません</li>
-											{/if}
+											{/each}
 										</ul>
 									</div>
 								</div>
@@ -335,7 +335,9 @@
 						<div class="Settings__section">
 							<div class="Label">
 								<i class="fa-fw fas fa-tags"></i> <span>ミュート中のキーワード</span>
-								<p class="Tip">ミュートされたキーワードは最新のタイムラインから除外されます。</p>
+								<p class="Tip">
+									ミュートされたキーワードはタイムラインから除外されます。ただし、直接キーワードのページを開くと見ることができます。
+								</p>
 							</div>
 							<div class="Control">
 								<div class="BlockList">
@@ -368,15 +370,50 @@
 														>
 													</div>
 												</li>
-											{/each}
-											{#if mutedChannels.length === 0}
+											{:else}
 												<li>ミュートしていません</li>
-											{/if}
+											{/each}
 										</ul>
 									</div>
 								</div>
 							</div>
 						</div>
+						{#if mutedWords.length > 0}
+							<div class="Settings__section">
+								<div class="Label">
+									<i class="fa-fw fas fa-tags"></i> <span>ミュート中のワード</span>
+									<p class="Tip">
+										ミュートされたワードを含む投稿およびキーワードはタイムラインから除外されます。
+									</p>
+								</div>
+								<div class="Control">
+									<div class="BlockList">
+										<div class="BlockList__container">
+											<ul>
+												{#each mutedWords as word (word)}
+													<li>
+														<div>
+															<p>{word}</p>
+														</div>
+														<div>
+															<button
+																class="Button Button--warn"
+																aria-label="ミュート解除"
+																onclick={() => {
+																	if (loginPubkey !== undefined) {
+																		unmuteWord(word, loginPubkey);
+																	}
+																}}><i class="fa-fw fas fa-trash-alt"></i></button
+															>
+														</div>
+													</li>
+												{/each}
+											</ul>
+										</div>
+									</div>
+								</div>
+							</div>
+						{/if}
 					</div>
 				</div>
 				<div data-settings-group="logout" class="Card Settings">

@@ -1446,6 +1446,42 @@ export const unmuteChannel = async (channelId: string, loginPubkey: string): Pro
 	sendEvent(eventToSend, options);
 };
 
+export const unmuteWord = async (word: string, loginPubkey: string): Promise<void> => {
+	if (window.nostr?.nip04 === undefined) {
+		return;
+	}
+	if (eventMuteList === undefined) {
+		console.warn('kind:10000 event does not exist');
+		return;
+	} else if (!mutedWords.includes(word)) {
+		console.warn('not muted yet');
+		return;
+	}
+	const { tagList, contentList } = await splitNip51List(eventMuteList, loginPubkey);
+	const tags: string[][] = tagList.filter(
+		(tag) => !(tag.length >= 2 && tag[0] === 'word' && tag[1] === word)
+	);
+	const content: string = !contentList.some(
+		(tag) => tag.length >= 2 && tag[0] === 'word' && tag[1] === word
+	)
+		? eventMuteList.content
+		: await window.nostr.nip04.encrypt(
+				loginPubkey,
+				JSON.stringify(
+					contentList.filter((tag) => !(tag.length >= 2 && tag[0] === 'word' && tag[1] === word))
+				)
+			);
+	const eventTemplate: EventTemplate = $state.snapshot({
+		kind: eventMuteList.kind,
+		tags,
+		content,
+		created_at: unixNow()
+	});
+	const eventToSend = await window.nostr.signEvent(eventTemplate);
+	const options: Partial<RxNostrSendOptions> = { on: { relays: relaysToWrite } };
+	sendEvent(eventToSend, options);
+};
+
 export const followUser = async (pubkey: string): Promise<void> => {
 	if (window.nostr === undefined) {
 		return;

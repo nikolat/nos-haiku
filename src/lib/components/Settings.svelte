@@ -383,7 +383,7 @@
 								<div class="Label">
 									<i class="fa-fw fas fa-tags"></i> <span>ミュート中のワード</span>
 									<p class="Tip">
-										ミュートされたワードを含む投稿およびキーワードはタイムラインから除外されます。
+										ミュートされたワードを含む投稿・キーワード・リアクションはタイムラインから除外されます。
 									</p>
 								</div>
 								<div class="Control">

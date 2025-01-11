@@ -10,16 +10,22 @@
 		event,
 		loginPubkey,
 		profileMap,
-		eventsReactionToTheEvent
+		eventsReactionToTheEvent,
+		mutedWords
 	}: {
 		event: NostrEvent;
 		loginPubkey: string | undefined;
 		profileMap: Map<string, ProfileContent>;
 		eventsReactionToTheEvent: NostrEvent[];
+		mutedWords: string[];
 	} = $props();
 
 	const reactionValidEvents = $derived(
-		[...eventsReactionToTheEvent.filter((ev) => isValidEmoji(ev))].reverse()
+		[
+			...eventsReactionToTheEvent.filter(
+				(ev) => isValidEmoji(ev) && !mutedWords.some((word) => ev.content.includes(word))
+			)
+		].reverse()
 	);
 	const reactionFirst = $derived(reactionValidEvents.at(0)!);
 	const reactionLast = $derived(reactionValidEvents.at(-1)!);

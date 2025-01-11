@@ -317,7 +317,7 @@
 								{`unsupported kind:${event.kind} event`}
 							{/if}
 						</h3>
-						<AddStar {event} {loginPubkey} {profileMap} {eventsReactionToTheEvent} />
+						<AddStar {event} {loginPubkey} {profileMap} {eventsReactionToTheEvent} {mutedWords} />
 					</div>
 					<div class="Entry__body">
 						{#if idReplyTo !== undefined}

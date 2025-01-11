@@ -1,13 +1,13 @@
-import { bufferTime, Subscription, merge, debounceTime, Subject } from 'rxjs';
+import { bufferTime, Subscription, merge, debounceTime } from 'rxjs';
 import {
 	batch,
 	completeOnTimeout,
 	createRxBackwardReq,
 	createRxForwardReq,
 	createRxNostr,
+	createTie,
 	filterByKind,
 	latestEach,
-	uniq,
 	type EventPacket,
 	type LazyFilter,
 	type MergeFilter,
@@ -136,6 +136,7 @@ const countThreadLimit = 5;
 
 const eventStore = new EventStore();
 const rxNostr = createRxNostr({ verifier, authenticator: 'auto' });
+let [tie, seenOn] = createTie();
 let subF: Subscription;
 
 let eventsMention: { baseEvent: NostrEvent; targetEvent: NostrEvent | undefined }[] = $state([]);
@@ -350,7 +351,7 @@ export const clearCache = (filters: Filter[] = [{ kinds: [1, 3, 6, 7, 16, 42, 10
 	mutedWords = [];
 	myBookmarkedChannelIds = [];
 	subF?.unsubscribe();
-	flushes$.next();
+	[tie, seenOn] = createTie();
 };
 
 export const getEventsMention = (): {
@@ -445,6 +446,14 @@ export const getFollowList = (): NostrEvent | undefined => {
 
 export const getReadTimeOfNotification = (): number => {
 	return eventRead?.created_at ?? 0;
+};
+
+export const getSeenOn = (id: string): string[] => {
+	const s = seenOn.get(id);
+	if (s === undefined) {
+		return [];
+	}
+	return Array.from(s);
 };
 
 //====================[受信したイベントの処理]====================
@@ -718,7 +727,6 @@ const mergeFilterId: MergeFilter = (a: LazyFilter[], b: LazyFilter[]) => {
 	return [{ ids: ids, limit: f?.limit, until: f?.until, since: f?.since }];
 };
 
-const flushes$ = new Subject<void>();
 const rxReqF = createRxForwardReq();
 const rxReqB0 = createRxBackwardReq();
 const rxReqB1_42 = createRxBackwardReq();
@@ -731,24 +739,24 @@ const batchedReq0 = rxReqB0.pipe(bufferTime(secBufferTime), batch(mergeFilter0))
 rxNostr
 	.use(batchedReq0, { relays: relaysToUseForProfile })
 	.pipe(
-		uniq(flushes$),
+		tie,
 		latestEach(({ event }) => event.pubkey)
 	)
 	.subscribe({
 		next,
 		complete
 	});
-rxNostr.use(rxReqB1_42).pipe(uniq(flushes$)).subscribe({
+rxNostr.use(rxReqB1_42).pipe(tie).subscribe({
 	next,
 	complete
 });
 const batchedReq7 = rxReqB7.pipe(bufferTime(secBufferTime), batch(mergeFilter7));
-rxNostr.use(batchedReq7).pipe(uniq(flushes$)).subscribe({
+rxNostr.use(batchedReq7).pipe(tie).subscribe({
 	next,
 	complete
 });
 const batchedReq40 = rxReqB40.pipe(bufferTime(secBufferTime), batch(mergeFilter40));
-rxNostr.use(batchedReq40, { relays: relaysToUseForChannelMeta }).pipe(uniq(flushes$)).subscribe({
+rxNostr.use(batchedReq40, { relays: relaysToUseForChannelMeta }).pipe(tie).subscribe({
 	next,
 	complete
 });
@@ -756,7 +764,7 @@ const batchedReq41 = rxReqB41.pipe(bufferTime(secBufferTime), batch(mergeFilter4
 rxNostr
 	.use(batchedReq41, { relays: relaysToUseForChannelMeta })
 	.pipe(
-		uniq(flushes$),
+		tie,
 		latestEach(({ event }) => event.pubkey)
 	)
 	.subscribe({
@@ -764,11 +772,11 @@ rxNostr
 		complete
 	});
 const batchedReqId = rxReqBId.pipe(bufferTime(secBufferTime), batch(mergeFilterId));
-rxNostr.use(batchedReqId).pipe(uniq(flushes$)).subscribe({
+rxNostr.use(batchedReqId).pipe(tie).subscribe({
 	next,
 	complete
 });
-rxNostr.use(rxReqBRp).pipe(uniq(flushes$)).subscribe({
+rxNostr.use(rxReqBRp).pipe(tie).subscribe({
 	next,
 	complete
 });
@@ -1064,7 +1072,7 @@ export const fetchEventsMention = (until: number, completeCustom: () => void): v
 		filters = [{ kinds: [1, 6, 7, 16, 42, 9735], '#p': [loginPubkey], limit: 10, until }];
 	}
 	const rxReqBFirst = createRxBackwardReq();
-	rxNostr.use(rxReqBFirst).pipe(uniq(flushes$), completeOnTimeout(secOnCompleteTimeout)).subscribe({
+	rxNostr.use(rxReqBFirst).pipe(tie, completeOnTimeout(secOnCompleteTimeout)).subscribe({
 		next,
 		complete: completeCustom
 	});
@@ -1093,7 +1101,7 @@ const prepareFirstEvents = (completeOnNextFetch: () => void = complete) => {
 		)
 	);
 	merge(...obs$)
-		.pipe(uniq(flushes$), completeOnTimeout(secOnCompleteTimeout))
+		.pipe(tie, completeOnTimeout(secOnCompleteTimeout))
 		.subscribe({
 			next,
 			complete: completeOnNextFetch
@@ -1187,7 +1195,7 @@ export const getEventsFirst = (
 	const rxReqBFirst = createRxBackwardReq();
 	rxNostr
 		.use(rxReqBFirst, { on: options })
-		.pipe(uniq(flushes$), completeOnTimeout(secOnCompleteTimeout))
+		.pipe(tie, completeOnTimeout(secOnCompleteTimeout))
 		.subscribe({
 			next,
 			complete: completeCustom
@@ -1199,7 +1207,7 @@ export const getEventsFirst = (
 		rxNostr
 			.use(rxReqBBookmark)
 			.pipe(
-				uniq(flushes$),
+				tie,
 				latestEach(({ event }) => event.pubkey)
 			)
 			.subscribe({
@@ -1291,7 +1299,7 @@ export const getEventsFirst = (
 		});
 	}
 	subF?.unsubscribe();
-	subF = rxNostr.use(rxReqF, { on: options }).pipe(uniq(flushes$)).subscribe({
+	subF = rxNostr.use(rxReqF, { on: options }).pipe(tie).subscribe({
 		next,
 		complete
 	});

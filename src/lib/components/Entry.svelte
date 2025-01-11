@@ -12,6 +12,7 @@
 		getEventsReplying,
 		getProfileName,
 		getRelaysToUse,
+		getSeenOn,
 		sendDeletion,
 		sendRepost
 	} from '$lib/resource.svelte';
@@ -756,6 +757,14 @@
 							<dd>
 								<pre class="json-view"><code>{JSON.stringify(event, undefined, 2)}</code></pre>
 							</dd>
+							<dt>Relays seen on</dt>
+							<dd>
+								<ul>
+									{#each getSeenOn(event.id) as relay (relay)}
+										<li>{relay}</li>
+									{/each}
+								</ul>
+							</dd>
 						</dl>
 					</aside>
 				{/if}
@@ -923,5 +932,8 @@
 	}
 	.Entry__json dl code {
 		font-size: x-small;
+	}
+	.Entry__json dl dd {
+		text-indent: 1em;
 	}
 </style>

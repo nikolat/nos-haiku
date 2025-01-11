@@ -193,6 +193,7 @@
 	);
 
 	let showForm: boolean = $state(false);
+	let showJson: boolean = $state(false);
 
 	const repostedEventId: string | undefined = $derived(
 		event.tags.findLast((tag) => tag.length >= 2 && tag[0] === 'e')?.at(1)
@@ -641,6 +642,29 @@
 									</span>
 									<div class="zap-window-container" bind:this={zapWindowContainer}></div>
 								{/if}
+								<span class="Separator">·</span>
+								<span class="show-json">
+									<button
+										aria-label="Show JSON"
+										class="show-json"
+										title="Show JSON"
+										onclick={() => {
+											showJson = !showJson;
+										}}
+									>
+										<svg
+											xmlns="http://www.w3.org/2000/svg"
+											width="24"
+											height="24"
+											viewBox="0 0 24 24"
+										>
+											<path
+												fill-rule="evenodd"
+												d="M5,14 C3.8954305,14 3,13.1045695 3,12 C3,10.8954305 3.8954305,10 5,10 C6.1045695,10 7,10.8954305 7,12 C7,13.1045695 6.1045695,14 5,14 Z M12,14 C10.8954305,14 10,13.1045695 10,12 C10,10.8954305 10.8954305,10 12,10 C13.1045695,10 14,10.8954305 14,12 C14,13.1045695 13.1045695,14 12,14 Z M19,14 C17.8954305,14 17,13.1045695 17,12 C17,10.8954305 17.8954305,10 19,10 C20.1045695,10 21,10.8954305 21,12 C21,13.1045695 20.1045695,14 19,14 Z"
+											/>
+										</svg>
+									</button>
+								</span>
 								<!-- svelte-ignore a11y_click_events_have_key_events -->
 								<!-- svelte-ignore a11y_no_static_element_interactions -->
 								<span
@@ -712,6 +736,29 @@
 				</div>
 			</div>
 			<div class="Extra">
+				{#if showJson}
+					{@const d = event.tags.find((tag) => tag.length >= 2 && tag[0] === 'd')?.at(1)}
+					{@const eventIdEncoded =
+						d === undefined
+							? nip19.neventEncode({ ...event, author: event.pubkey })
+							: nip19.naddrEncode({
+									identifier: d,
+									pubkey: event.pubkey,
+									kind: event.kind
+								})}
+					<aside class="Entry__json">
+						<dl class="details">
+							<dt>User ID</dt>
+							<dd><code>{nip19.npubEncode(event.pubkey)}</code></dd>
+							<dt>Event ID</dt>
+							<dd><code>{eventIdEncoded}</code></dd>
+							<dt>Event JSON</dt>
+							<dd>
+								<pre class="json-view"><code>{JSON.stringify(event, undefined, 2)}</code></pre>
+							</dd>
+						</dl>
+					</aside>
+				{/if}
 				<div class="Entry__composeReply">
 					{#if showForm}
 						<CreateEntry
@@ -863,5 +910,18 @@
 	}
 	.handler-information img.picture {
 		max-height: 32px;
+	}
+	.Entry__json {
+		background-color: var(--entry-nested-bg);
+		overflow-x: auto;
+		max-width: 60em;
+		padding: 3px 1em;
+		margin-top: 3px;
+	}
+	.Entry__json dl * {
+		font-size: small;
+	}
+	.Entry__json dl code {
+		font-size: x-small;
 	}
 </style>

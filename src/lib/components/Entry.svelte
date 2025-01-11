@@ -304,7 +304,7 @@
 									{/if}
 								{/if}
 							{:else if event.kind === 7}
-								<Reaction reactionEvent={event} profile={undefined} isAuthor={false} />7
+								Reaction <Reaction reactionEvent={event} profile={undefined} isAuthor={false} />
 							{:else if event.kind === 40}
 								Channel
 							{:else if event.kind === 30023}

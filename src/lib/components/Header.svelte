@@ -343,7 +343,9 @@
 									{/if}
 									<br />
 									{#if ev.kind === 7}
-										<Reaction reactionEvent={ev} profile={undefined} isAuthor={false} />
+										<a href="/entry/{nip19.neventEncode({ ...ev, author: ev.pubkey })}"
+											><Reaction reactionEvent={ev} profile={undefined} isAuthor={false} /></a
+										>
 									{:else if [1, 42].includes(ev.kind)}
 										<a href="/entry/{nip19.neventEncode({ ...ev, author: ev.pubkey })}">コメント</a>
 									{:else if [6, 16].includes(ev.kind)}

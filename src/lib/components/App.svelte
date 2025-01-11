@@ -158,6 +158,7 @@
 			{profileMap}
 			{channelMap}
 			{mutedPubkeys}
+			{mutedWords}
 			{isEnabledRelativeTime}
 			{nowRealtime}
 		/>

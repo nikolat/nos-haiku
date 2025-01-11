@@ -66,6 +66,7 @@
 	{loginPubkey}
 	{profileMap}
 	{mutedPubkeys}
+	{mutedWords}
 	{isEnabledRelativeTime}
 	{nowRealtime}
 	isEnabledScrollInfinitely={false}

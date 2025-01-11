@@ -9,6 +9,7 @@
 		profileMap,
 		channelMap,
 		mutedPubkeys,
+		mutedWords,
 		isEnabledRelativeTime,
 		nowRealtime
 	}: {
@@ -17,6 +18,7 @@
 		profileMap: Map<string, ProfileContentEvent>;
 		channelMap: Map<string, ChannelContent>;
 		mutedPubkeys: string[];
+		mutedWords: string[];
 		isEnabledRelativeTime: boolean;
 		nowRealtime: number;
 	} = $props();
@@ -35,6 +37,7 @@
 	{loginPubkey}
 	{profileMap}
 	{mutedPubkeys}
+	{mutedWords}
 	{isEnabledRelativeTime}
 	{nowRealtime}
 	isEnabledScrollInfinitely={false}

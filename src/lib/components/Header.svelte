@@ -19,6 +19,7 @@
 		loginPubkey,
 		profileMap,
 		mutedPubkeys,
+		mutedWords,
 		isEnabledRelativeTime,
 		nowRealtime,
 		isEnabledScrollInfinitely = $bindable()
@@ -26,10 +27,30 @@
 		loginPubkey: string | undefined;
 		profileMap: Map<string, ProfileContentEvent>;
 		mutedPubkeys: string[];
+		mutedWords: string[];
 		isEnabledRelativeTime: boolean;
 		nowRealtime: number;
 		isEnabledScrollInfinitely: boolean;
 	} = $props();
+
+	const removeMutedEvent = (
+		events: {
+			baseEvent: NostrEvent;
+			targetEvent: NostrEvent | undefined;
+		}[]
+	): {
+		baseEvent: NostrEvent;
+		targetEvent: NostrEvent | undefined;
+	}[] => {
+		return events.filter(
+			({ baseEvent }) =>
+				!mutedPubkeys.includes(baseEvent.pubkey) &&
+				!mutedWords.some((word) => baseEvent.content.includes(word)) &&
+				!baseEvent.tags.some(
+					(tag) => tag.length >= 2 && tag[0] === 'p' && mutedPubkeys.includes(tag[1])
+				)
+		);
+	};
 
 	const eventsMention: { baseEvent: NostrEvent; targetEvent: NostrEvent | undefined }[] =
 		$derived(getEventsMention());
@@ -40,9 +61,7 @@
 			return 0;
 		}
 		let r: number = 0;
-		for (const ev of eventsMention.filter(
-			({ baseEvent }) => !mutedPubkeys.includes(baseEvent.pubkey)
-		)) {
+		for (const ev of removeMutedEvent(eventsMention)) {
 			if (readTimeOfNotification < ev.baseEvent.created_at) {
 				r++;
 			} else {
@@ -51,8 +70,8 @@
 		}
 		return r;
 	});
-	let query: string = $state('');
 
+	let query: string = $state('');
 	const goSearchUrl = () => {
 		goto(`/search/${query}`);
 	};
@@ -130,21 +149,8 @@
 		countToShow = 10 - correctionCount;
 	});
 
-	const timelineAll: {
-		baseEvent: NostrEvent;
-		targetEvent: NostrEvent | undefined;
-	}[] = $derived(
-		eventsMention.filter(
-			(evs) =>
-				!evs.baseEvent.tags.some(
-					(tag) => tag.length >= 2 && tag[0] === 'p' && mutedPubkeys.includes(tag[1])
-				)
-		)
-	);
-	const timelineSliced = $derived(timelineAll.slice(0, countToShow));
-	const mentionToShow = $derived(
-		timelineSliced.filter(({ baseEvent }) => !mutedPubkeys.includes(baseEvent.pubkey))
-	);
+	const timelineSliced = $derived(eventsMention.slice(0, countToShow));
+	const mentionToShow = $derived(removeMutedEvent(timelineSliced));
 </script>
 
 <header class="GlobalHeader">

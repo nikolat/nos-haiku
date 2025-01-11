@@ -267,6 +267,7 @@
 	{loginPubkey}
 	{profileMap}
 	{mutedPubkeys}
+	{mutedWords}
 	{isEnabledRelativeTime}
 	{nowRealtime}
 	bind:isEnabledScrollInfinitely

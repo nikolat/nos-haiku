@@ -138,7 +138,7 @@ const countThreadLimit = 5;
 
 const eventStore = new EventStore();
 const rxNostr = createRxNostr({ verifier, authenticator: 'auto' });
-let [tie, seenOn] = createTie();
+const [tie, seenOn] = createTie();
 let subF: Subscription;
 
 let eventsMention: { baseEvent: NostrEvent; targetEvent: NostrEvent | undefined }[] = $state([]);
@@ -353,7 +353,7 @@ export const clearCache = (filters: Filter[] = [{ kinds: [1, 3, 6, 7, 16, 42, 10
 	mutedWords = [];
 	myBookmarkedChannelIds = [];
 	subF?.unsubscribe();
-	[tie, seenOn] = createTie();
+	seenOn.clear();
 };
 
 export const getEventsMention = (): {

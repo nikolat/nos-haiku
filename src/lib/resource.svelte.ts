@@ -18,6 +18,7 @@ import { verifier } from 'rx-nostr-crypto';
 import { EventStore } from 'applesauce-core';
 import { unixNow, getProfileContent, type ProfileContent } from 'applesauce-core/helpers';
 import { sortEvents, type EventTemplate, type NostrEvent } from 'nostr-tools/pure';
+import { normalizeURL } from 'nostr-tools/utils';
 import type { Filter } from 'nostr-tools/filter';
 import type { RelayRecord } from 'nostr-tools/relay';
 import type { WindowNostr } from 'nostr-tools/nip07';
@@ -453,7 +454,7 @@ export const getSeenOn = (id: string): string[] => {
 	if (s === undefined) {
 		return [];
 	}
-	return Array.from(s);
+	return Array.from(s).map((url) => normalizeURL(url));
 };
 
 //====================[受信したイベントの処理]====================
@@ -1580,7 +1581,7 @@ export const sendRepost = async (targetEvent: NostrEvent): Promise<void> => {
 	}
 	let kind: number = 6;
 	const content: string = ''; //魚拓リポストはしない
-	const recommendedRelay: string = ''; //TODO リレーヒントはMUST
+	const recommendedRelay: string = getSeenOn(targetEvent.id).at(0) ?? '';
 	const tags: string[][] = [
 		['e', targetEvent.id, recommendedRelay],
 		['p', targetEvent.pubkey]
@@ -1707,7 +1708,8 @@ export const sendNote = async (
 		targetEventToReply = eventChannelToSend;
 	}
 	//投稿作成
-	const recommendeRelay = '';
+	const recommendedRelay: string =
+		targetEventToReply === undefined ? '' : (getSeenOn(targetEventToReply.id).at(0) ?? '');
 	const tags: string[][] = [];
 	const mentionPubkeys: Set<string> = new Set();
 	let pubkeyToReply: string | undefined;
@@ -1725,10 +1727,10 @@ export const sendNote = async (
 	);
 	if (rootTag !== undefined) {
 		tags.push(rootTag);
-		tags.push(['e', targetEventToReply!.id, recommendeRelay, 'reply', targetEventToReply!.pubkey]);
+		tags.push(['e', targetEventToReply!.id, recommendedRelay, 'reply', targetEventToReply!.pubkey]);
 		mentionPubkeys.add(targetEventToReply!.pubkey);
 	} else if (targetEventToReply !== undefined) {
-		tags.push(['e', targetEventToReply.id, recommendeRelay, 'root', targetEventToReply.pubkey]);
+		tags.push(['e', targetEventToReply.id, recommendedRelay, 'root', targetEventToReply.pubkey]);
 	}
 	for (const p of (targetEventToReply?.tags ?? [])
 		.filter((tag) => tag.length >= 2 && tag[0] === 'p')
@@ -1801,7 +1803,16 @@ export const sendNote = async (
 		}
 	}
 	for (const id of quoteIds) {
-		tags.push(['q', id]);
+		const qTag: string[] = ['q', id];
+		const recommendedRelayForQuote: string | undefined = getSeenOn(id).at(0);
+		if (recommendedRelayForQuote !== undefined) {
+			qTag.push(recommendedRelayForQuote);
+			const pubkeyForQuote: string | undefined = getEventById(id)?.pubkey;
+			if (pubkeyForQuote !== undefined) {
+				qTag.push(pubkeyForQuote);
+			}
+		}
+		tags.push(qTag);
 	}
 	for (const a of apsStr) {
 		tags.push(['a', a]);

@@ -234,7 +234,7 @@ export const getIdsForFilter = (
 				continue;
 			}
 			content = profile.about;
-		} else if ([1, 42].includes(ev.kind)) {
+		} else if ([1, 42, 30023].includes(ev.kind)) {
 			content = ev.content;
 		}
 		if (content !== undefined) {
@@ -260,7 +260,7 @@ export const getIdsForFilter = (
 			}
 		}
 		//kind1,42は個別に探索する(スレッドの上限を決めている)
-		if (![1, 42].includes(ev.kind)) {
+		if (![1, 42, 30023].includes(ev.kind)) {
 			for (const id of ev.tags
 				.filter((tag) => tag.length >= 2 && tag[0] === 'e')
 				.map((tag) => tag[1])) {

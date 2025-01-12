@@ -839,6 +839,36 @@ const getEventsByIdWithRelayHint = (event: NostrEvent, tagNameToGet: string) => 
 	}
 };
 
+//content内の nostr: による参照を探して取得する
+const getEventsQuoted = (event: NostrEvent) => {
+	const { ids, aps } = getIdsForFilter([event]);
+	const idsFiltered = ids.filter((id) => !eventStore.hasEvent(id));
+	const apsFiltered = aps.filter(
+		(ap) => !eventStore.hasReplaceable(ap.kind, ap.pubkey, ap.identifier)
+	);
+	const pubkeys = getPubkeysForFilter([event]);
+	const pubkeysFilterd = pubkeys.filter((pubkey) => !profileMap.has(pubkey));
+	if (idsFiltered.length > 0) {
+		rxReqBId.emit({ ids: idsFiltered, until: unixNow() });
+	}
+	if (apsFiltered.length > 0) {
+		for (const ap of apsFiltered) {
+			const f: LazyFilter = {
+				kinds: [ap.kind],
+				authors: [ap.pubkey],
+				'#d': [ap.identifier],
+				until: unixNow()
+			};
+			rxReqBRp.emit(f);
+		}
+	}
+	if (pubkeysFilterd.length > 0) {
+		rxReqB0.emit({ kinds: [0], authors: pubkeysFilterd, until: unixNow() });
+	}
+	//リレーヒント付き引用による取得
+	getEventsByIdWithRelayHint(event, 'q');
+};
+
 const _subTimeline = eventStore
 	.stream([
 		{ kinds: [0, 1, 6, 7, 16, 40, 41, 42, 9734, 9735, 10000, 10005, 10030, 30030, 30023, 31990] }
@@ -972,33 +1002,7 @@ const _subTimeline = eventStore
 					countThread.set(event.id, countThreadLimit); //この取得は一度だけでよい
 					rxReqB1_42.emit({ kinds: [event.kind], '#e': [event.id], limit: 10, until: unixNow() });
 				}
-				//content内の nostr: による参照を探して取得する
-				const { ids, aps } = getIdsForFilter([event]);
-				const idsFiltered = ids.filter((id) => !eventStore.hasEvent(id));
-				const apsFiltered = aps.filter(
-					(ap) => !eventStore.hasReplaceable(ap.kind, ap.pubkey, ap.identifier)
-				);
-				const pubkeys = getPubkeysForFilter([event]);
-				const pubkeysFilterd = pubkeys.filter((pubkey) => !profileMap.has(pubkey));
-				if (idsFiltered.length > 0) {
-					rxReqBId.emit({ ids: idsFiltered, until: unixNow() });
-				}
-				if (apsFiltered.length > 0) {
-					for (const ap of apsFiltered) {
-						const f: LazyFilter = {
-							kinds: [ap.kind],
-							authors: [ap.pubkey],
-							'#d': [ap.identifier],
-							until: unixNow()
-						};
-						rxReqBRp.emit(f);
-					}
-				}
-				if (pubkeysFilterd.length > 0) {
-					rxReqB0.emit({ kinds: [0], authors: pubkeysFilterd, until: unixNow() });
-				}
-				//リレーヒント付き引用による取得
-				getEventsByIdWithRelayHint(event, 'q');
+				getEventsQuoted(event);
 				break;
 			}
 			case 9734: {
@@ -1109,6 +1113,9 @@ const _subTimeline = eventStore
 					limit: 10,
 					until: unixNow()
 				});
+				if (event.kind === 30023) {
+					getEventsQuoted(event);
+				}
 				break;
 			}
 			default:

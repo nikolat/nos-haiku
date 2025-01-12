@@ -8,20 +8,25 @@
 </script>
 
 <div class="Card__body">
-	<a href={`/keyword/${nip19.neventEncode(channel)}`}>{channel.name}</a>
-	<img
-		alt=""
-		src={URL.canParse(channel.picture ?? '')
-			? channel.picture
-			: getRoboHashURL(nip19.neventEncode({ id: channel.id }))}
-	/>
-	<p>
-		<Content content={channel.about ?? ''} tags={[]} isAbout={true} />
-	</p>
+	<div class="Entry__content">
+		<a href={`/keyword/${nip19.neventEncode(channel)}`}>{channel.name}</a>
+		<img
+			alt=""
+			src={URL.canParse(channel.picture ?? '')
+				? channel.picture
+				: getRoboHashURL(nip19.neventEncode({ id: channel.id }))}
+		/>
+		<p>
+			<Content content={channel.about ?? ''} tags={[]} isAbout={true} />
+		</p>
+	</div>
 </div>
 
 <style>
-	.Card__body > a {
+	.Card__body > .Entry__content {
+		display: unset;
+	}
+	.Card__body > .Entry__content > a {
 		color: var(--internal-link-color);
 	}
 </style>

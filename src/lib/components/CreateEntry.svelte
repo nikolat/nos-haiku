@@ -149,6 +149,8 @@
 			contentToSend = '';
 			channelToPost = undefined;
 			channelNameToCreate = '';
+			addContentWarning = false;
+			reasonContentWarning = '';
 			filesToUpload = undefined;
 			showForm = false;
 		});

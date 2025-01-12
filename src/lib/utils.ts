@@ -272,9 +272,10 @@ export const getIdsForFilter = (
 
 export const getRelaysToUseByRelaysSelected = (
 	relaysSelected: string,
-	eventRelayList?: NostrEvent
+	eventRelayList?: NostrEvent,
+	eventsRelaySets?: NostrEvent[]
 ): Promise<RelayRecord> => {
-	switch (relaysSelected) {
+	switch (relaysSelected.startsWith('30002:') ? 'kind30002' : relaysSelected) {
 		case 'kind10002': {
 			const newRelays: RelayRecord = {};
 			for (const tag of eventRelayList?.tags.filter((tag) => tag.length >= 2 && tag[0] === 'r') ??
@@ -286,12 +287,35 @@ export const getRelaysToUseByRelaysSelected = (
 			}
 			return Promise.resolve(newRelays);
 		}
-		case 'nip07':
+		case 'kind30002': {
+			const [kind, pubkey, dTag] = relaysSelected.split(':');
+			const eventRelaySets = (
+				eventsRelaySets?.filter(
+					(ev) =>
+						ev.kind === parseInt(kind) &&
+						ev.pubkey === pubkey &&
+						(ev.tags.find((tag) => tag.length >= 2 && tag[0] === 'd')?.at(1) ?? '') === dTag
+				) ?? []
+			).at(0);
+			const newRelays: RelayRecord = {};
+			for (const tag of eventRelaySets?.tags.filter(
+				(tag) => tag.length >= 2 && tag[0] === 'relay' && URL.canParse(tag[1])
+			) ?? []) {
+				newRelays[normalizeURL(tag[1])] = {
+					read: true,
+					write: true
+				};
+			}
+			return Promise.resolve(newRelays);
+		}
+		case 'nip07': {
 			if (window.nostr?.getRelays === undefined) return Promise.resolve({});
 			return window.nostr.getRelays();
+		}
 		case 'default':
-		default:
+		default: {
 			return Promise.resolve(defaultRelays);
+		}
 	}
 };
 

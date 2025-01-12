@@ -149,6 +149,7 @@ let eventsTimeline: NostrEvent[] = $state([]);
 let eventsChannelBookmark: NostrEvent[] = $state([]);
 let eventsReaction: NostrEvent[] = $state([]);
 let eventFollowList: NostrEvent | undefined = $state();
+let eventsRelaySets: NostrEvent[] = $state([]);
 let eventRead: NostrEvent | undefined = $state();
 let eventMuteList: NostrEvent | undefined;
 let eventRelayList: NostrEvent | undefined;
@@ -328,11 +329,17 @@ export const resetRelaysDefault = (): void => {
 };
 
 export const setRelaysToUseSelected = async (relaysSelected: string): Promise<void> => {
-	relaysToUse = await getRelaysToUseByRelaysSelected(relaysSelected, eventRelayList);
+	relaysToUse = await getRelaysToUseByRelaysSelected(
+		relaysSelected,
+		eventRelayList,
+		eventsRelaySets
+	);
 	savelocalStorage();
 };
 
-export const clearCache = (filters: Filter[] = [{ kinds: [1, 3, 6, 7, 16, 42, 10000, 30078] }]) => {
+export const clearCache = (
+	filters: Filter[] = [{ kinds: [1, 3, 6, 7, 16, 42, 10000, 30002, 30078] }]
+) => {
 	for (const ev of eventStore.getAll(filters)) {
 		eventStore.database.deleteEvent(ev);
 	}
@@ -347,6 +354,7 @@ export const clearCache = (filters: Filter[] = [{ kinds: [1, 3, 6, 7, 16, 42, 10
 	eventFollowList = undefined;
 	eventMuteList = undefined;
 	eventMyPublicChatsList = undefined;
+	eventsRelaySets = [];
 	eventRead = undefined;
 	mutedPubkeys = [];
 	mutedChannelIds = [];
@@ -444,6 +452,10 @@ export const getMutedWords = (): string[] => {
 
 export const getFollowList = (): NostrEvent | undefined => {
 	return eventFollowList;
+};
+
+export const getRelaySets = (): NostrEvent[] => {
+	return eventsRelaySets;
 };
 
 export const getReadTimeOfNotification = (): number => {
@@ -546,6 +558,14 @@ const nextOnSubscribeEventStore = (event: NostrEvent | null, kindToDelete?: numb
 			}
 			break;
 		}
+		case 30002: {
+			if (loginPubkey !== undefined) {
+				eventsRelaySets = sortEvents(
+					Array.from(eventStore.getAll([{ kinds: [30002], authors: [loginPubkey] }]))
+				);
+			}
+			break;
+		}
 		case 30030: {
 			if (loginPubkey !== undefined && eventEmojiSetList !== undefined) {
 				const events30030 = sortEvents(Array.from(eventStore.getAll([{ kinds: [30030] }])));
@@ -628,7 +648,11 @@ const nextOnSubscribeEventStore = (event: NostrEvent | null, kindToDelete?: numb
 
 eventStore
 	.stream([
-		{ kinds: [0, 1, 3, 5, 6, 7, 16, 40, 41, 42, 9734, 10000, 10002, 10005, 10030, 30030, 30078] }
+		{
+			kinds: [
+				0, 1, 3, 5, 6, 7, 16, 40, 41, 42, 9734, 10000, 10002, 10005, 10030, 30002, 30030, 30078
+			]
+		}
 	])
 	.subscribe({
 		next: nextOnSubscribeEventStore
@@ -1089,7 +1113,7 @@ const prepareFirstEvents = (completeOnNextFetch: () => void = complete) => {
 	}
 	rxNostr.setDefaultRelays(relaysToUse);
 	const rxReqB = createRxBackwardReq();
-	const filterKinds = [3, 10000, 10002, 10005, 10030];
+	const filterKinds = [3, 10000, 10002, 10005, 10030, 30002];
 	if (!profileMap.has(loginPubkey)) {
 		filterKinds.push(0);
 	}
@@ -1226,7 +1250,7 @@ export const getEventsFirst = (
 	}
 	//ここから先はForwardReq用追加分(受信しっぱなし)
 	if (loginPubkey !== undefined) {
-		let kinds = [0, 1, 3, 5, 6, 7, 40, 41, 42, 9735, 10000, 10002, 10005, 10030];
+		let kinds = [0, 1, 3, 5, 6, 7, 40, 41, 42, 9735, 10000, 10002, 10005, 10030, 30002];
 		if (!pubkeysFollowing.includes(loginPubkey)) {
 			kinds = kinds.concat(16).toSorted((a, b) => a - b);
 		}

@@ -3,6 +3,7 @@
 	import type { ChannelContent, ProfileContentEvent } from '$lib/utils';
 	import {
 		clearCache,
+		getRelaySets,
 		getRelaysToUse,
 		setIsEnabledDarkMode,
 		setIsEnabledRelativeTime,
@@ -56,6 +57,7 @@
 	} = $props();
 
 	const relaysToUse: RelayRecord = $derived(getRelaysToUse());
+	const relaySets: NostrEvent[] = $derived(getRelaySets());
 
 	const mutedChannels: ChannelContent[] = $derived(
 		mutedChannelIds.map((id) => channelMap.get(id)).filter((cc) => cc !== undefined)
@@ -213,7 +215,19 @@
 								>
 									{#if loginPubkey !== undefined}
 										<option value="nip07">NIP-07</option>
-										<option value="kind10002">Kind 10002</option>
+										<option value="kind10002">kind 10002</option>
+										{#if relaySets.length > 0}
+											<optgroup label="kind 30002">
+												{#each relaySets as relaySet (relaySet.id)}
+													{@const dTag =
+														relaySet.tags.find((tag) => tag.length >= 2 && tag[0] === 'd')?.at(1) ??
+														''}
+													<option value={`${relaySet.kind}:${relaySet.pubkey}:${dTag}`}
+														>{dTag}</option
+													>
+												{/each}
+											</optgroup>
+										{/if}
 									{/if}
 									<option value="default">Default</option>
 								</select>

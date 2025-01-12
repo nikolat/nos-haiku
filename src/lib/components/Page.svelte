@@ -21,6 +21,7 @@
 		getProfileName,
 		muteChannel,
 		muteUser,
+		sendChannelEdit,
 		sendDeletion,
 		unbookmarkChannel,
 		unfollowUser,
@@ -247,6 +248,22 @@
 	let channelToPost: ChannelContent | undefined = $state();
 	let isEnabledScrollInfinitely: boolean = $state(true);
 	let zapWindowContainer: HTMLElement | undefined = $state();
+	let isEnabledToEditChannel: boolean = $state(false);
+	let editChannelName: string = $state('');
+	let editChannelAbout: string = $state('');
+	let editChannelPicture: string = $state('');
+
+	const callSendChannelEdit = async (channel: ChannelContent) => {
+		const c: ChannelContent = { ...channel };
+		c.name = editChannelName;
+		c.about = editChannelAbout;
+		c.picture = editChannelPicture;
+		await sendChannelEdit(c);
+		editChannelName = '';
+		editChannelAbout = '';
+		editChannelPicture = '';
+		isEnabledToEditChannel = false;
+	};
 
 	beforeNavigate(() => {
 		document.removeEventListener('click', handlerSetting);
@@ -393,12 +410,14 @@
 											<!-- svelte-ignore a11y_missing_attribute -->
 											{#if mutedPubkeys.includes(currentPubkey)}
 												<a
+													title={`${idView} のミュートを解除`}
 													onclick={() => {
 														unmuteUser(currentPubkey, loginPubkey);
 													}}><i class="fa-fw fas fa-eye"></i> {idView} のミュートを解除</a
 												>
 											{:else}
 												<a
+													title={`${idView} をミュートする`}
 													onclick={() => {
 														muteUser(currentPubkey, loginPubkey);
 													}}><i class="fa-fw fas fa-eye-slash"></i> {idView} をミュートする</a
@@ -413,6 +432,54 @@
 							{#if channel !== undefined}
 								<h1 class="Feed__title"><i class="fa-fw fas fa-tags"></i> {channel.name}</h1>
 								<h3 class="Feed__subtitle">{channel.name} についてのエントリーを見る</h3>
+								{#if isEnabledToEditChannel}
+									<dl class="edit-channel">
+										<dt><label for="edit-channel-name">Name</label></dt>
+										<dd>
+											<input
+												id="edit-channel-name"
+												class="RichTextEditor ql-editor"
+												type="text"
+												placeholder="channel name"
+												bind:value={editChannelName}
+											/>
+										</dd>
+										<dt><label for="edit-channel-about">About</label></dt>
+										<dd>
+											<textarea
+												id="edit-channel-about"
+												class="RichTextEditor ql-editor"
+												placeholder="channel description"
+												bind:value={editChannelAbout}
+											></textarea>
+										</dd>
+										<dt><label for="edit-channel-picture">Picture</label></dt>
+										<dd>
+											<input
+												id="edit-channel-picture"
+												class="RichTextEditor ql-editor"
+												type="url"
+												placeholder="https://..."
+												bind:value={editChannelPicture}
+											/>
+										</dd>
+									</dl>
+									<div class="CreateEntry__actions">
+										<button
+											class="Button"
+											disabled={editChannelName.length === 0}
+											onclick={() => {
+												callSendChannelEdit(channel);
+											}}><span>送信</span></button
+										>
+										<button
+											class="Button Button--cancel"
+											onclick={() => {
+												isEnabledToEditChannel = false;
+											}}><span>キャンセル</span></button
+										>
+									</div>
+								{/if}
 								{#if mutedChannelIds.includes(currentChannelId) && loginPubkey !== undefined}
 									<span class="Feed__muted"
 										><i class="fa-fw fas fa-eye-slash"></i>
@@ -467,12 +534,14 @@
 											<div class="SettingButton__Dropdown Dropdown--left">
 												{#if mutedChannelIds.includes(currentChannelId)}
 													<a
+														title={`${channel.name} のミュートを解除`}
 														onclick={() => {
 															unmuteChannel(currentChannelId, loginPubkey);
 														}}><i class="fa-fw fas fa-eye"></i> {channel.name} のミュートを解除</a
 													>
 												{:else}
 													<a
+														title={`${channel.name} をミュートする`}
 														onclick={() => {
 															muteChannel(currentChannelId, loginPubkey);
 														}}
@@ -481,6 +550,16 @@
 												{/if}
 												{#if channel.pubkey === loginPubkey}
 													<a
+														title={`${channel.name} を編集する`}
+														onclick={() => {
+															isEnabledToEditChannel = true;
+															editChannelName = channel.name;
+															editChannelAbout = channel.about ?? '';
+															editChannelPicture = channel.picture ?? '';
+														}}><i class="fa-fw fas fa-edit"></i> {channel.name} を編集する</a
+													>
+													<a
+														title={`${channel.name} を削除する`}
 														onclick={() => {
 															if (confirm('このチャンネルを削除しますか？')) {
 																sendDeletion(channel.eventkind40);
@@ -733,5 +812,14 @@
 	.Spinner__image img {
 		width: 64px;
 		height: 64px;
+	}
+	.edit-channel input,
+	.edit-channel textarea {
+		appearance: none;
+		border-radius: 4px;
+		font: inherit;
+		outline: none;
+		width: 100%;
+		resize: none;
 	}
 </style>

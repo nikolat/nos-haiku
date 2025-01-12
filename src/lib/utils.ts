@@ -14,6 +14,7 @@ export interface ProfileContentEvent extends ProfileContent {
 
 export interface ChannelContent extends nip19.EventPointer {
 	eventkind40: NostrEvent;
+	eventkind41?: NostrEvent;
 	name: string;
 	about?: string;
 	picture?: string;

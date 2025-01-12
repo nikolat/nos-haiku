@@ -222,6 +222,7 @@ const channelMap = $derived.by(() => {
 					continue;
 				}
 				channel.eventkind40 = c.eventkind40;
+				channel.eventkind41 = ev;
 				channel.id = c.id;
 				channel.kind = c.kind;
 				channel.pubkey = c.pubkey;
@@ -1769,6 +1770,31 @@ export const sendReadTime = async (time: number): Promise<void> => {
 		tags,
 		content: '',
 		created_at: time
+	});
+	const eventToSend = await window.nostr.signEvent(eventTemplate);
+	const options: Partial<RxNostrSendOptions> = { on: { relays: relaysToWrite } };
+	sendEvent(eventToSend, options);
+};
+
+export const sendChannelEdit = async (channel: ChannelContent) => {
+	if (window.nostr === undefined) {
+		return;
+	}
+	const contentBase: string = channel.eventkind41?.content ?? channel.eventkind40.content;
+	const obj = JSON.parse(contentBase);
+	obj.name = channel.name;
+	obj.about = channel.about ?? '';
+	obj.picture = channel.picture ?? '';
+	obj.relays = relaysToWrite;
+	const content = JSON.stringify(obj);
+	const recommendedRelay: string = getSeenOn(channel.id).at(0) ?? '';
+	const eTag = ['e', channel.id, recommendedRelay];
+	const tags: string[][] = isEnabledUseClientTag ? [eTag, clientTag] : [eTag];
+	const eventTemplate: EventTemplate = $state.snapshot({
+		content,
+		kind: 41,
+		tags,
+		created_at: unixNow()
 	});
 	const eventToSend = await window.nostr.signEvent(eventTemplate);
 	const options: Partial<RxNostrSendOptions> = { on: { relays: relaysToWrite } };

@@ -67,6 +67,11 @@ const relaysToUseForChannelMeta: string[] = $derived([
 		.map((v) => v[0]),
 	...subRelaysForChannel
 ]);
+const relaysToRead: string[] = $derived(
+	Object.entries(relaysToUse)
+		.filter((v) => v[1].read)
+		.map((v) => v[0])
+);
 const relaysToWrite: string[] = $derived(
 	Object.entries(relaysToUse)
 		.filter((v) => v[1].write)
@@ -807,6 +812,32 @@ rxNostr.use(rxReqBRp).pipe(tie).subscribe({
 	complete
 });
 
+const getEventsByIdWithRelayHint = (event: NostrEvent, tagNameToGet: string) => {
+	const eTags = event.tags.filter((tag) => tag.length >= 3 && tag[0] === tagNameToGet);
+	for (const eTag of eTags) {
+		const id = eTag[1];
+		const relayHint = eTag[2];
+		if (eventStore.hasEvent(id) || relayHint === undefined || !URL.canParse(relayHint)) {
+			continue;
+		}
+		const relay = normalizeURL(relayHint);
+		if (relaysToRead.includes(relay)) {
+			continue;
+		}
+		const rxReqBIdCustom = createRxBackwardReq();
+		const batchedReqIdCustom = rxReqBIdCustom.pipe(bufferTime(secBufferTime), batch(mergeFilterId));
+		rxNostr
+			.use(batchedReqIdCustom, { relays: [relay] })
+			.pipe(tie, completeOnTimeout(secOnCompleteTimeout))
+			.subscribe({
+				next,
+				complete
+			});
+		rxReqBIdCustom.emit({ ids: [id], until: unixNow() });
+		rxReqBIdCustom.over();
+	}
+};
+
 const _subTimeline = eventStore
 	.stream([
 		{ kinds: [0, 1, 6, 7, 16, 40, 41, 42, 9734, 9735, 10000, 10005, 10030, 30030, 30023, 31990] }
@@ -837,6 +868,7 @@ const _subTimeline = eventStore
 				}
 				const id = event.tags.findLast((tag) => tag.length >= 2 && tag[0] === 'e')?.at(1);
 				if (id !== undefined && !eventStore.hasEvent(id)) {
+					getEventsByIdWithRelayHint(event, 'e');
 					rxReqBId.emit({ ids: [id], until: unixNow() });
 				}
 				break;
@@ -964,6 +996,8 @@ const _subTimeline = eventStore
 				if (pubkeysFilterd.length > 0) {
 					rxReqB0.emit({ kinds: [0], authors: pubkeysFilterd, until: unixNow() });
 				}
+				//リレーヒント付き引用による取得
+				getEventsByIdWithRelayHint(event, 'q');
 				break;
 			}
 			case 9734: {

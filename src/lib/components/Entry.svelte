@@ -230,8 +230,14 @@
 
 <article class={classNames.join(' ')}>
 	{#if (!isMutedPubkey || showMutedPubkey) && (!isMutedChannel || showMutedChannel) && (!isMutedContent || showMutedContent)}
-		{#if event.kind === 42 && (channelId === undefined || channel?.id === undefined || channel.name === undefined)}
-			kind:42 event of unknown channel
+		{#if event.kind === 42 && (channelId === undefined || channel === undefined || channel.name === undefined)}
+			{#if channelId === undefined}
+				kind:42 event without valid channel id
+			{:else if channel === undefined}
+				kind:42 event of unknown channel
+			{:else if channel.name === undefined}
+				kind:42 event with unnamed channel
+			{/if}
 		{:else}
 			{@const d = event.tags.find((tag) => tag.length >= 2 && tag[0] === 'd')?.at(1)}
 			{@const link =

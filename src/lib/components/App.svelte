@@ -86,12 +86,15 @@
 		clearInterval(intervalID);
 	});
 	afterNavigate(() => {
-		idTimeout = setTimeout(() => {
-			isLoading = true;
-			getEventsFirst(urlParams, undefined, () => {
-				isLoading = false;
-			});
-		}, 1000);
+		idTimeout = setTimeout(
+			() => {
+				isLoading = true;
+				getEventsFirst(urlParams, undefined, () => {
+					isLoading = false;
+				});
+			},
+			loginPubkey === undefined ? 1000 : 10
+		);
 		intervalID = setInterval(() => {
 			nowRealtime = 1000 * unixNow();
 		}, 5000);

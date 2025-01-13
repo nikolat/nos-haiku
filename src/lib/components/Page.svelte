@@ -38,7 +38,6 @@
 	import type { NostrEvent } from 'nostr-tools/pure';
 	import * as nip19 from 'nostr-tools/nip19';
 	import { unixNow } from 'applesauce-core/helpers';
-	import VirtualScroll from 'svelte-virtual-scroll-list';
 
 	let {
 		loginPubkey,
@@ -191,7 +190,8 @@
 		})
 	);
 
-	const scrollThreshold = 100;
+	let isScrolledBottom = false;
+	const scrollThreshold = 300;
 
 	const urlParams: UrlParams = $derived({
 		currentPubkey,
@@ -202,23 +202,38 @@
 	});
 
 	const handlerScroll = () => {
-		if (isEnabledScrollInfinitely && !isLoading) {
-			console.log('[Loading Start]');
-			isLoading = true;
-			const until: number = timelineSliced.at(-1)?.created_at ?? unixNow();
-			const correctionCount: number = $state.snapshot(
-				timelineSliced.filter((ev) => ev.created_at === until).length
-			);
-			getEventsFirst(
-				urlParams,
-				until,
-				() => {
-					console.log('[Loading Complete]');
-					countToShow += 10 - correctionCount; //unitlと同時刻のイベントは被って取得されるので補正
-					isLoading = false;
-				},
-				false
-			);
+		const scrollHeight = Math.max(
+			document.body.scrollHeight,
+			document.documentElement.scrollHeight,
+			document.body.offsetHeight,
+			document.documentElement.offsetHeight,
+			document.body.clientHeight,
+			document.documentElement.clientHeight
+		);
+		const pageMostBottom = scrollHeight - window.innerHeight;
+		const scrollTop = window.scrollY || document.documentElement.scrollTop;
+		if (scrollTop > pageMostBottom - scrollThreshold) {
+			if (isEnabledScrollInfinitely && !isScrolledBottom && !isLoading) {
+				console.log('[Loading Start]');
+				isScrolledBottom = true;
+				isLoading = true;
+				const until: number = timelineSliced.at(-1)?.created_at ?? unixNow();
+				const correctionCount: number = $state.snapshot(
+					timelineSliced.filter((ev) => ev.created_at === until).length
+				);
+				getEventsFirst(
+					urlParams,
+					until,
+					() => {
+						console.log('[Loading Complete]');
+						countToShow += 10 - correctionCount; //unitlと同時刻のイベントは被って取得されるので補正
+						isLoading = false;
+					},
+					false
+				);
+			}
+		} else if (isScrolledBottom && scrollTop < pageMostBottom + scrollThreshold) {
+			isScrolledBottom = false;
 		}
 	};
 
@@ -252,10 +267,12 @@
 
 	beforeNavigate(() => {
 		document.removeEventListener('click', handlerSetting);
+		document.removeEventListener('scroll', handlerScroll);
 		countToShow = 10;
 	});
 	afterNavigate(() => {
 		document.addEventListener('click', handlerSetting);
+		document.addEventListener('scroll', handlerScroll);
 		const correctionCount: number = $state.snapshot(
 			timelineSliced.filter((ev) => ev.created_at === timelineSliced.at(-1)?.created_at).length
 		);
@@ -589,15 +606,9 @@
 					/>
 				</div>
 				<div class="FeedList">
-					<VirtualScroll
-						data={timelineToShow}
-						key="id"
-						let:data
-						bottomThreshold={scrollThreshold}
-						on:bottom={handlerScroll}
-					>
+					{#each timelineToShow as event (event.id)}
 						<Entry
-							event={data}
+							{event}
 							{channelMap}
 							{profileMap}
 							{loginPubkey}
@@ -613,15 +624,15 @@
 							{nowRealtime}
 							level={0}
 						/>
-						<div class="Spinner" slot="footer">
-							{#if isLoading}
-								<span class="Spinner__image">
-									<img src="/apple-touch-icon.png" alt="" />
-								</span>
-							{/if}
-						</div>
-					</VirtualScroll>
+					{/each}
 				</div>
+				{#if isLoading}
+					<div class="Spinner">
+						<span class="Spinner__image">
+							<img src="/apple-touch-icon.png" alt="" />
+						</span>
+					</div>
+				{/if}
 			</div>
 		</div>
 		<div class="Column Column--right">
@@ -791,13 +802,9 @@
 	.KeywordItem span > button:active > svg {
 		fill: yellow;
 	}
-	.FeedList {
-		height: 100vh;
-	}
-	@media (max-width: 46.24em) {
-		.FeedList {
-			height: 90vh;
-		}
+	/* ミュートされた投稿が多すぎてスクロールできず追加読み込みができない場合への備え */
+	.Homepage {
+		min-height: calc(100vh + 300px);
 	}
 	.Spinner {
 		opacity: unset;

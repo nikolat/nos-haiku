@@ -3085,32 +3085,23 @@ code[class*='language-css'] {
 	text-align: center;
 	margin-bottom: 14px;
 }
-.FeedList > .Entry {
-	width: 100%;
-	border-radius: 0;
+.FeedList {
 	border: 2px solid var(--card-accent);
-	border-bottom: none;
+	border-radius: 0;
+}
+.FeedList > div > div > div > .Entry {
+	width: 100%;
+	border-bottom: 2px solid var(--card-accent);
+	border-radius: 0;
 }
 @media (max-width: 46.24em) {
-	.FeedList > .Entry {
+	.FeedList > div > div > div > .Entry {
 		border-left-width: 0;
 		border-right-width: 0;
 	}
 }
-@media (min-width: 46.25em) {
-	.FeedList > .Entry:first-child {
-		border-top-left-radius: 14px;
-		border-top-right-radius: 14px;
-	}
-}
-.FeedList > .Entry:last-child {
+.FeedList > div > div > div:last-child > .Entry {
 	border-bottom: 2px solid var(--card-accent);
-}
-@media (min-width: 46.25em) {
-	.FeedList > .Entry:last-child {
-		border-bottom-left-radius: 14px;
-		border-bottom-right-radius: 14px;
-	}
 }
 .NewEntryModal {
 	background: var(--card-bg);

@@ -794,6 +794,11 @@
 	.FeedList {
 		height: 50vh;
 	}
+	@media (max-width: 46.24em) {
+		.FeedList {
+			height: 90vh;
+		}
+	}
 	.Spinner {
 		opacity: unset;
 	}

@@ -1161,11 +1161,11 @@ const prepareFirstEvents = (completeOnNextFetch: () => void = complete) => {
 	}
 	rxNostr.setDefaultRelays(relaysToUse);
 	const rxReqB = createRxBackwardReq();
-	const filterKinds = [3, 10000, 10002, 10005, 10030, 30002];
+	const filterKinds = [3, 10000, 10002, 10005, 10030];
 	if (!profileMap.has(loginPubkey)) {
 		filterKinds.push(0);
 	}
-	const lFilter: LazyFilter = { kinds: filterKinds, authors: [loginPubkey!], until: unixNow() };
+	const lFilter: LazyFilter = { kinds: filterKinds, authors: [loginPubkey], until: unixNow() };
 	const observable$ = rxNostr.use(rxReqB, { relays: relaysToUseForProfile });
 	const obs$ = filterKinds.map((kind) =>
 		observable$.pipe(
@@ -1182,6 +1182,7 @@ const prepareFirstEvents = (completeOnNextFetch: () => void = complete) => {
 		});
 	rxReqB.emit(lFilter);
 	rxReqB.over();
+	rxReqBRp.emit({ kinds: [30002], authors: [loginPubkey], until: unixNow() });
 };
 
 export const getEventsFirst = (

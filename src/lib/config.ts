@@ -19,7 +19,7 @@ export const defaultReactionToAdd = '+';
 export const gitHubUrl = 'https://github.com/nikolat/nos-haiku';
 export const zapNpub = 'npub1dv9xpnlnajj69vjstn9n7ufnmppzq3wtaaq085kxrz0mpw2jul2qjy6uhz';
 export const zapNoteId = 'note1n5wkmwdg7tvl2xxrjuln3j05pheqhxptjlwqtf93z23c8uurjqkqtrdm3f';
-// kind:1, 6, 7, 16, 40, 42 を対象に入れる
+// kind:1, 6, 7, 16, 40, 41, 42 を対象に入れる
 export const clientTag = [
 	'client',
 	'Nos Haiku',

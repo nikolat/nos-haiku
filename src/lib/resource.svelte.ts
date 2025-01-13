@@ -797,7 +797,10 @@ rxNostr
 	.use(batchedReq41, { relays: relaysToUseForChannelMeta })
 	.pipe(
 		tie,
-		latestEach(({ event }) => event.pubkey)
+		latestEach(
+			({ event }) =>
+				`${event.kind}:${event.pubkey}:${event.tags.find((tag) => tag.length >= 2 && tag[0] === 'e')?.at(1) ?? ''}`
+		)
 	)
 	.subscribe({
 		next,

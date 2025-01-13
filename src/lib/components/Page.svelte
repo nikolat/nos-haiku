@@ -792,7 +792,7 @@
 		fill: yellow;
 	}
 	.FeedList {
-		height: 50vh;
+		height: 100vh;
 	}
 	@media (max-width: 46.24em) {
 		.FeedList {

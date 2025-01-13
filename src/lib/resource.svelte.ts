@@ -566,9 +566,17 @@ const nextOnSubscribeEventStore = (event: NostrEvent | null, kindToDelete?: numb
 		}
 		case 30002: {
 			if (loginPubkey !== undefined) {
-				eventsRelaySets = sortEvents(
-					Array.from(eventStore.getAll([{ kinds: [30002], authors: [loginPubkey] }]))
+				const ds = Array.from(eventStore.getAll([{ kinds: [30002], authors: [loginPubkey] }])).map(
+					(ev) => ev.tags.find((tag) => tag.length >= 2 && tag[0] === 'd')?.at(1)
 				);
+				const events: NostrEvent[] = [];
+				for (const d of ds) {
+					const event = eventStore.getReplaceable(30002, loginPubkey, d);
+					if (event !== undefined) {
+						events.push(event);
+					}
+				}
+				eventsRelaySets = sortEvents(events);
 			}
 			break;
 		}

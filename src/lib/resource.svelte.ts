@@ -941,6 +941,9 @@ const _subTimeline = eventStore
 				break;
 			}
 			case 40: {
+				if (!profileMap.has(event.pubkey)) {
+					rxReqB0.emit({ kinds: [0], authors: [event.pubkey], until: unixNow() });
+				}
 				rxReqB41.emit({ kinds: [41], '#e': [event.id], until: unixNow() });
 				break;
 			}

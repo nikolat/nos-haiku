@@ -3095,7 +3095,7 @@ code[class*='language-css'] {
 	border-radius: 0;
 }
 @media (max-width: 46.24em) {
-	.FeedList > div > div > div > .Entry {
+	.FeedList {
 		border-left-width: 0;
 		border-right-width: 0;
 	}

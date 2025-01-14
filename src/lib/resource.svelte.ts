@@ -189,6 +189,10 @@ const profileMap: Map<string, ProfileContentEvent> = $derived.by(() => {
 
 const channelMap = $derived.by(() => {
 	const channelMap = new Map<string, ChannelContent>();
+	const getCategories = (event: NostrEvent): string[] =>
+		event.tags
+			.filter((tag) => tag.length >= 2 && tag[0] === 't' && /^[^\s#]+$/.test(tag[1]))
+			.map((tag) => tag[1]);
 	for (const ev of eventsChannel) {
 		let channel: ChannelContent;
 		try {
@@ -197,6 +201,7 @@ const channelMap = $derived.by(() => {
 			console.warn(error);
 			continue;
 		}
+		channel.categories = getCategories(ev);
 		channel.eventkind40 = ev;
 		channel.id = ev.id;
 		channel.kind = ev.kind;
@@ -221,6 +226,7 @@ const channelMap = $derived.by(() => {
 					console.warn(error);
 					continue;
 				}
+				channel.categories = getCategories(ev);
 				channel.eventkind40 = c.eventkind40;
 				channel.eventkind41 = ev;
 				channel.id = c.id;
@@ -1798,7 +1804,7 @@ export const sendReadTime = async (time: number): Promise<void> => {
 	sendEvent(eventToSend, options);
 };
 
-export const sendChannelEdit = async (channel: ChannelContent) => {
+export const sendChannelEdit = async (channel: ChannelContent, tTags: string[]) => {
 	if (window.nostr === undefined) {
 		return;
 	}
@@ -1810,8 +1816,14 @@ export const sendChannelEdit = async (channel: ChannelContent) => {
 	obj.relays = relaysToWrite;
 	const content = JSON.stringify(obj);
 	const recommendedRelay: string = getSeenOn(channel.id).at(0) ?? '';
-	const eTag = ['e', channel.id, recommendedRelay];
-	const tags: string[][] = isEnabledUseClientTag ? [eTag, clientTag] : [eTag];
+	const eTag = ['e', channel.id, recommendedRelay, 'root', channel.pubkey];
+	const tags: string[][] = [eTag];
+	for (const tTag of new Set(tTags.map(t => t.toLowerCase()))) {
+		tags.push(['t', tTag]);
+	}
+	if (isEnabledUseClientTag) {
+		tags.push(clientTag);
+	}
 	const eventTemplate: EventTemplate = $state.snapshot({
 		content,
 		kind: 41,

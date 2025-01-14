@@ -252,16 +252,21 @@
 	let editChannelName: string = $state('');
 	let editChannelAbout: string = $state('');
 	let editChannelPicture: string = $state('');
+	let editChannelTag: string = $state('');
+	let editChannelTags: string[] = $state([]);
+	let editChannelTagInput: HTMLInputElement | undefined = $state();
 
 	const callSendChannelEdit = async (channel: ChannelContent) => {
 		const c: ChannelContent = { ...channel };
 		c.name = editChannelName;
 		c.about = editChannelAbout;
 		c.picture = editChannelPicture;
-		await sendChannelEdit(c);
+		await sendChannelEdit(c, editChannelTags);
 		editChannelName = '';
 		editChannelAbout = '';
 		editChannelPicture = '';
+		editChannelTag = '';
+		editChannelTags = [];
 		isEnabledToEditChannel = false;
 	};
 
@@ -463,6 +468,54 @@
 												bind:value={editChannelPicture}
 											/>
 										</dd>
+										<dt>
+											<label for="edit-channel-category">Category</label>
+											{#each editChannelTags as tTag}
+												<span class="category-tag">#{tTag}</span><button
+													class="category-delete"
+													title="delete the category"
+													onclick={() => {
+														editChannelTags = editChannelTags.filter((t) => t !== tTag);
+													}}
+													aria-label="delete the category"
+												>
+													<svg
+														xmlns="http://www.w3.org/2000/svg"
+														width="16"
+														height="16"
+														viewBox="0 0 16 16"
+													>
+														<path
+															fill-rule="evenodd"
+															d="M8,16 C3.581722,16 0,12.418278 0,8 C0,3.581722 3.581722,0 8,0 C12.418278,0 16,3.581722 16,8 C16,12.418278 12.418278,16 8,16 Z M8,14 C11.3137085,14 14,11.3137085 14,8 C14,4.6862915 11.3137085,2 8,2 C4.6862915,2 2,4.6862915 2,8 C2,11.3137085 4.6862915,14 8,14 Z M8,9.41421356 L5.70710678,11.7071068 L4.29289322,10.2928932 L6.58578644,8 L4.29289322,5.70710678 L5.70710678,4.29289322 L8,6.58578644 L10.2928932,4.29289322 L11.7071068,5.70710678 L9.41421356,8 L11.7071068,10.2928932 L10.2928932,11.7071068 L8,9.41421356 Z"
+														/>
+													</svg>
+												</button>
+											{/each}
+										</dt>
+										<dd>
+											<input
+												id="edit-channel-category"
+												class="RichTextEditor ql-editor"
+												type="text"
+												placeholder="category"
+												pattern="[^\s#]+"
+												bind:value={editChannelTag}
+												bind:this={editChannelTagInput}
+											/>
+										</dd>
+										<button
+											class="Button"
+											disabled={editChannelTag.length === 0 ||
+												editChannelTagInput.validity.patternMismatch ||
+												editChannelTags
+													.map((t) => t.toLowerCase())
+													.includes(editChannelTag.toLowerCase())}
+											onclick={() => {
+												editChannelTags.push(editChannelTag.toLowerCase());
+												editChannelTag = '';
+											}}><span>追加</span></button
+										>
 									</dl>
 									<div class="CreateEntry__actions">
 										<button
@@ -556,6 +609,7 @@
 															editChannelName = channel.name;
 															editChannelAbout = channel.about ?? '';
 															editChannelPicture = channel.picture ?? '';
+															editChannelTags = channel.categories;
 														}}><i class="fa-fw fas fa-edit"></i> {channel.name} を編集する</a
 													>
 													<a
@@ -780,6 +834,7 @@
 		font-size: 12px;
 		margin-right: 3px;
 	}
+	button.category-delete,
 	.KeywordItem span > button {
 		border: none;
 		outline: none;
@@ -791,14 +846,17 @@
 		border-radius: 10%;
 		vertical-align: text-bottom;
 	}
+	button:disabled.category-delete,
 	.KeywordItem span > button:disabled {
 		cursor: not-allowed;
 	}
+	button.category-delete > svg,
 	.KeywordItem span > button > svg {
 		width: 16px;
 		height: 16px;
 		fill: var(--secondary-text-color);
 	}
+	button:active.category-delete > svg,
 	.KeywordItem span > button:active > svg {
 		fill: yellow;
 	}
@@ -821,5 +879,11 @@
 		outline: none;
 		width: 100%;
 		resize: none;
+	}
+	.category-tag {
+		margin-left: 0.5em;
+	}
+	input#edit-channel-category:invalid {
+		border: red solid 1px;
 	}
 </style>

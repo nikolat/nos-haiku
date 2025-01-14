@@ -19,6 +19,7 @@ export interface ChannelContent extends nip19.EventPointer {
 	about?: string;
 	picture?: string;
 	relays?: string[];
+	categories: string[];
 	pubkey: string;
 	created_at: number;
 }

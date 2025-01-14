@@ -448,7 +448,7 @@
 								<h3 class="Feed__subtitle">{channel.name} についてのエントリーを見る</h3>
 								{#if channel.categories.length > 0}
 									<div class="categories">
-										{#each channel.categories as category}
+										{#each channel.categories as category (category)}
 											<a class="category" href="/category/{encodeURI(category)}">#{category}</a>
 										{/each}
 									</div>
@@ -486,7 +486,7 @@
 										</dd>
 										<dt>
 											<label for="edit-channel-category">Category</label>
-											{#each editChannelTags as tTag}
+											{#each editChannelTags as tTag (tTag)}
 												<span class="category-tag">#{tTag}</span><button
 													class="category-delete"
 													title="delete the category"

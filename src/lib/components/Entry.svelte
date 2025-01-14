@@ -729,7 +729,7 @@
 									}}
 								>
 									<i class="far fa-comment-alt-lines"></i>
-									{#each eventsReplying as ev}
+									{#each eventsReplying as ev (ev.id)}
 										{@const prof = profileMap.get(ev.pubkey)}
 										{@const picture = URL.canParse(prof?.picture ?? '') ? prof?.picture : undefined}
 										{#if picture !== undefined}
@@ -753,25 +753,33 @@
 									pubkey: event.pubkey,
 									kind: event.kind
 								})}
+					{@const channel = channelMap.get(event.id)}
+					{@const events =
+						event.kind === 40 && channel?.eventkind41 !== undefined
+							? [channel.eventkind41, event]
+							: [event]}
 					<aside class="Entry__json">
-						<dl class="details">
-							<dt>User ID</dt>
-							<dd><code>{nip19.npubEncode(event.pubkey)}</code></dd>
-							<dt>Event ID</dt>
-							<dd><code>{eventIdEncoded}</code></dd>
-							<dt>Event JSON</dt>
-							<dd>
-								<pre class="json-view"><code>{JSON.stringify(event, undefined, 2)}</code></pre>
-							</dd>
-							<dt>Relays seen on</dt>
-							<dd>
-								<ul>
-									{#each getSeenOn(event.id) as relay (relay)}
-										<li>{relay}</li>
-									{/each}
-								</ul>
-							</dd>
-						</dl>
+						{#each events as event, i (event.id)}
+							{#if i > 0}<hr />{/if}
+							<dl class="details">
+								<dt>User ID</dt>
+								<dd><code>{nip19.npubEncode(event.pubkey)}</code></dd>
+								<dt>Event ID</dt>
+								<dd><code>{eventIdEncoded}</code></dd>
+								<dt>Event JSON</dt>
+								<dd>
+									<pre class="json-view"><code>{JSON.stringify(event, undefined, 2)}</code></pre>
+								</dd>
+								<dt>Relays seen on</dt>
+								<dd>
+									<ul>
+										{#each getSeenOn(event.id) as relay (relay)}
+											<li>{relay}</li>
+										{/each}
+									</ul>
+								</dd>
+							</dl>
+						{/each}
 					</aside>
 				{/if}
 				<div class="Entry__composeReply">
@@ -788,7 +796,7 @@
 				</div>
 				<div class="Entry__replies">
 					{#if showReplies}
-						{#each eventsReplying as ev}
+						{#each eventsReplying as ev (ev.id)}
 							<Entry
 								event={ev}
 								{channelMap}

@@ -190,9 +190,13 @@ const profileMap: Map<string, ProfileContentEvent> = $derived.by(() => {
 const channelMap = $derived.by(() => {
 	const channelMap = new Map<string, ChannelContent>();
 	const getCategories = (event: NostrEvent): string[] =>
-		event.tags
-			.filter((tag) => tag.length >= 2 && tag[0] === 't' && /^[^\s#]+$/.test(tag[1]))
-			.map((tag) => tag[1]);
+		Array.from(
+			new Set<string>(
+				event.tags
+					.filter((tag) => tag.length >= 2 && tag[0] === 't' && /^[^\s#]+$/.test(tag[1]))
+					.map((tag) => tag[1].toLowerCase())
+			)
+		);
 	for (const ev of eventsChannel) {
 		let channel: ChannelContent;
 		try {

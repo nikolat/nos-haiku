@@ -12,7 +12,7 @@
 		<h3><a href={`/keyword/${nip19.neventEncode(channel)}`}>{channel.name}</a></h3>
 		{#if channel.categories.length > 0}
 			<div class="categories">
-				{#each channel.categories as category}
+				{#each channel.categories as category (category)}
 					<a class="category" href="/category/{encodeURI(category)}">#{category}</a>
 				{/each}
 			</div>

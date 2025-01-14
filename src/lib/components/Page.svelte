@@ -14,6 +14,7 @@
 		getChannelBookmarkMap,
 		getEventByAddressPointer,
 		getEventById,
+		getEventsChannel,
 		getEventsFirst,
 		getEventsReaction,
 		getEventsTimelineTop,
@@ -47,6 +48,7 @@
 		currentNoteId,
 		currentAddressPointer,
 		hashtag,
+		category,
 		profileMap,
 		channelMap,
 		mutedPubkeys,
@@ -65,6 +67,7 @@
 		currentNoteId: string | undefined;
 		currentAddressPointer: nip19.AddressPointer | undefined;
 		hashtag: string | undefined;
+		category: string | undefined;
 		profileMap: Map<string, ProfileContentEvent>;
 		channelMap: Map<string, ChannelContent>;
 		mutedPubkeys: string[];
@@ -76,7 +79,9 @@
 		nowRealtime: number;
 		isLoading: boolean;
 	} = $props();
-	const eventsTimeline: NostrEvent[] = $derived(getEventsTimelineTop());
+	const eventsTimeline: NostrEvent[] = $derived(
+		category === undefined ? getEventsTimelineTop() : getEventsChannel()
+	);
 	const profileEventMap: Map<string, NostrEvent> = $derived(getProfileEventMap());
 	const channelBookmarkMap: Map<string, string[]> = $derived(getChannelBookmarkMap());
 	const followingChannelIds: string[] = $derived(channelBookmarkMap.get(loginPubkey ?? '') ?? []);
@@ -113,7 +118,9 @@
 								)
 							);
 						} else if (hashtag !== undefined) {
-							return ev.tags.some((tag) => tag.length >= 2 && tag[0] === 't' && tag[1] === hashtag);
+							return ev.tags.some(
+								(tag) => tag.length >= 2 && tag[0] === 't' && tag[1].toLowerCase() === hashtag
+							);
 						} else {
 							const rootId =
 								ev.tags
@@ -156,11 +163,13 @@
 			);
 		} else if (hashtag !== undefined) {
 			tl = eventsTimeline.filter((ev) =>
-				ev.tags.some(
-					(tag) =>
-						tag.length >= 2 && tag[0] === 't' && tag[1].toLowerCase() === hashtag.toLowerCase()
-				)
+				ev.tags.some((tag) => tag.length >= 2 && tag[0] === 't' && tag[1].toLowerCase() === hashtag)
 			);
+		} else if (category !== undefined) {
+			tl = eventsTimeline.filter((ev) => {
+				const channel = channelMap.get(ev.id);
+				return channel?.categories.includes(category) === true;
+			});
 		} else {
 			tl = eventsTimeline.filter(
 				(ev) =>
@@ -437,6 +446,13 @@
 							{#if channel !== undefined}
 								<h1 class="Feed__title"><i class="fa-fw fas fa-tags"></i> {channel.name}</h1>
 								<h3 class="Feed__subtitle">{channel.name} についてのエントリーを見る</h3>
+								{#if channel.categories.length > 0}
+									<div class="categories">
+										{#each channel.categories as category}
+											<a class="category" href="/category/{encodeURI(category)}">#{category}</a>
+										{/each}
+									</div>
+								{/if}
 								{#if isEnabledToEditChannel}
 									<dl class="edit-channel">
 										<dt><label for="edit-channel-name">Name</label></dt>
@@ -630,6 +646,9 @@
 						{:else if hashtag !== undefined}
 							<h1 class="Feed__title"><i class="fa-fw fas fa-tags"></i> #{hashtag}</h1>
 							<h3 class="Feed__subtitle">#{hashtag} についてのエントリーを見る</h3>
+						{:else if category !== undefined}
+							<h1 class="Feed__title"><i class="fa-fw fas fa-tags"></i> #{category}</h1>
+							<h3 class="Feed__subtitle">#{category} についてのキーワードを見る</h3>
 						{:else}
 							<h1 class="Feed__title">最新の投稿</h1>
 							<h3 class="Feed__subtitle">みんなでハイク</h3>
@@ -885,5 +904,8 @@
 	}
 	input#edit-channel-category:invalid {
 		border: red solid 1px;
+	}
+	.categories .category {
+		margin-right: 0.5em;
 	}
 </style>

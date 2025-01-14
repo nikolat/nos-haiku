@@ -387,6 +387,10 @@ export const getEventsTimelineTop = (): NostrEvent[] => {
 	return eventsTimeline;
 };
 
+export const getEventsChannel = (): NostrEvent[] => {
+	return eventsChannel;
+};
+
 export const getChannelMap = (): Map<string, ChannelContent> => {
 	return channelMap;
 };
@@ -1212,6 +1216,7 @@ export const getEventsFirst = (
 		currentAddressPointer,
 		query,
 		hashtag,
+		category,
 		isAntenna,
 		isSettings
 	} = urlParams;
@@ -1228,9 +1233,15 @@ export const getEventsFirst = (
 		return;
 	}
 	const isTopPage =
-		[currentNoteId, currentPubkey, currentChannelId, currentAddressPointer, hashtag, query].every(
-			(q) => q === undefined
-		) &&
+		[
+			currentNoteId,
+			currentPubkey,
+			currentChannelId,
+			currentAddressPointer,
+			hashtag,
+			category,
+			query
+		].every((q) => q === undefined) &&
 		!isAntenna &&
 		!isSettings;
 	const pubkeysFollowing: string[] =
@@ -1250,7 +1261,9 @@ export const getEventsFirst = (
 			'#d': [currentAddressPointer.identifier]
 		});
 	} else if (hashtag !== undefined) {
-		filters.push({ kinds: [1, 42], '#t': [hashtag.toLowerCase()] });
+		filters.push({ kinds: [1, 42], '#t': [hashtag] });
+	} else if (category !== undefined) {
+		filters.push({ kinds: [40, 41], '#t': [category] });
 	} else if (query !== undefined) {
 		options = { relays: searchRelays };
 		filters.push({ kinds: [40, 41], search: query });
@@ -1818,7 +1831,7 @@ export const sendChannelEdit = async (channel: ChannelContent, tTags: string[]) 
 	const recommendedRelay: string = getSeenOn(channel.id).at(0) ?? '';
 	const eTag = ['e', channel.id, recommendedRelay, 'root', channel.pubkey];
 	const tags: string[][] = [eTag];
-	for (const tTag of new Set(tTags.map(t => t.toLowerCase()))) {
+	for (const tTag of new Set(tTags.map((t) => t.toLowerCase()))) {
 		tags.push(['t', tTag]);
 	}
 	if (isEnabledUseClientTag) {

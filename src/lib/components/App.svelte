@@ -36,6 +36,7 @@
 		currentNoteId,
 		currentAddressPointer,
 		hashtag,
+		category,
 		query,
 		isSettings,
 		isAntenna
@@ -118,6 +119,8 @@
 			title = channel?.name ?? 'unknown channel';
 		} else if (hashtag !== undefined) {
 			title = `#${hashtag}`;
+		} else if (category !== undefined) {
+			title = `#${category}`;
 		} else if (page.url.pathname === '/') {
 			title = 'ホーム';
 		}
@@ -174,6 +177,7 @@
 			{currentNoteId}
 			{currentAddressPointer}
 			{hashtag}
+			{category}
 			{profileMap}
 			{channelMap}
 			{mutedPubkeys}

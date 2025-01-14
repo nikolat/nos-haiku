@@ -4,11 +4,11 @@
 	import App from '$lib/components/App.svelte';
 
 	let { data }: { data: PageData } = $props();
-	let hashtag: string | undefined = $state();
+	let category: string | undefined = $state();
 
 	afterNavigate(() => {
-		hashtag = data.params.tag.toLowerCase();
+		category = data.params.tag.toLowerCase();
 	});
 </script>
 
-<App {hashtag} />
+<App {category} />

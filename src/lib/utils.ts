@@ -30,6 +30,7 @@ export type UrlParams = {
 	currentNoteId?: string;
 	currentAddressPointer?: nip19.AddressPointer;
 	hashtag?: string;
+	category?: string;
 	query?: string;
 	isSettings?: boolean;
 	isAntenna?: boolean;

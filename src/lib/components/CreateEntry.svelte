@@ -182,7 +182,7 @@
 						class="input-wrapper"
 					>
 						<input
-							placeholder="キーワードを新規作成 (オプション)"
+							placeholder={isTopPage ? 'キーワードを新規作成' : 'キーワードを新規作成 (オプション)'}
 							disabled={channelToPost !== undefined}
 							class="default-input Input"
 							aria-autocomplete="list"

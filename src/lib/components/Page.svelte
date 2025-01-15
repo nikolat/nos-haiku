@@ -674,6 +674,54 @@
 						{:else if hashtag !== undefined}
 							<h1 class="Feed__title"><i class="fa-fw fas fa-tags"></i> #{hashtag}</h1>
 							<h3 class="Feed__subtitle">#{hashtag} についてのエントリーを見る</h3>
+							{#if loginPubkey !== undefined}
+								{#if mutedHashTags.includes(hashtag)}
+									<span class="Feed__muted"
+										><i class="fa-fw fas fa-eye-slash"></i>
+										<!-- svelte-ignore a11y_click_events_have_key_events -->
+										<!-- svelte-ignore a11y_no_static_element_interactions -->
+										このハッシュタグのエントリーはミュート中です。
+										<span
+											onclick={() => {
+												unmuteHashTag(hashtag, loginPubkey);
+											}}>ミュートを解除</span
+										></span
+									>
+								{/if}
+								<div class="Actions">
+									<!-- svelte-ignore a11y_click_events_have_key_events -->
+									<!-- svelte-ignore a11y_no_static_element_interactions -->
+									<div
+										title="設定"
+										class={showSetting ? 'SettingButton SettingButton--active' : 'SettingButton'}
+										onclick={() => {
+											showSetting = !showSetting;
+										}}
+									>
+										<div class="SettingButton__Button">
+											<span class="fa-fw fas fa-cog"></span>
+										</div>
+										<!-- svelte-ignore a11y_missing_attribute -->
+										<div class="SettingButton__Dropdown Dropdown--left">
+											{#if mutedHashTags.includes(hashtag)}
+												<a
+													title={`${hashtag} のミュートを解除`}
+													onclick={() => {
+														unmuteHashTag(hashtag, loginPubkey);
+													}}><i class="fa-fw fas fa-eye"></i> #{hashtag} のミュートを解除</a
+												>
+											{:else}
+												<a
+													title={`${hashtag} をミュートする`}
+													onclick={() => {
+														muteHashTag(hashtag, loginPubkey);
+													}}><i class="fa-fw fas fa-eye-slash"></i> #{hashtag} をミュートする</a
+												>
+											{/if}
+										</div>
+									</div>
+								</div>
+							{/if}
 						{:else if category !== undefined}
 							<h1 class="Feed__title"><i class="fa-fw fas fa-tags"></i> #{category}</h1>
 							<h3 class="Feed__subtitle">#{category} についてのキーワードを見る</h3>

@@ -62,11 +62,10 @@
 		const emojiUrls: { [key: string]: string } = {};
 		const emojiRegs = [];
 		for (const tag of tags) {
-			if (!/\w+/.test(tag[1]) || !URL.canParse(tag[2])) {
-				continue;
+			if (tag.length >= 3 && tag[0] === 'emoji' && /\w+/.test(tag[1]) && URL.canParse(tag[2])) {
+				emojiRegs.push(`:${tag[1]}:`);
+				emojiUrls[`:${tag[1]}:`] = tag[2];
 			}
-			emojiRegs.push(`:${tag[1]}:`);
-			emojiUrls[`:${tag[1]}:`] = tag[2];
 		}
 		if (emojiRegs.length > 0) {
 			regMatchArray.push(emojiRegs.join('|'));
@@ -245,7 +244,15 @@
 		{/if}
 	{:else if /#\S+/.test(match[7])}
 		{@const matchedText = match[7]}
-		<a href="/hashtag/{encodeURI(matchedText.toLowerCase().replace('#', ''))}">{matchedText}</a>
+		{@const hashTagText = matchedText.replace('#', '').toLowerCase()}
+		{@const tTags = tags
+			.filter((tag) => tag.length >= 2 && tag[0] === 't')
+			.map((tag) => tag[1].toLowerCase())}
+		{#if tTags.includes(hashTagText)}
+			<a href="/hashtag/{encodeURI(hashTagText.toLowerCase())}">{matchedText}</a>
+		{:else}
+			{matchedText}
+		{/if}
 	{:else if match[8]}
 		{@const matchedText = match[8]}
 		<img

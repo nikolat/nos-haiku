@@ -270,7 +270,8 @@
 		c.name = editChannelName;
 		c.about = editChannelAbout;
 		c.picture = editChannelPicture;
-		await sendChannelEdit(c, editChannelTags);
+		c.categories = editChannelTags;
+		await sendChannelEdit(c);
 		editChannelName = '';
 		editChannelAbout = '';
 		editChannelPicture = '';

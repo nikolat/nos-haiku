@@ -1821,7 +1821,7 @@ export const sendReadTime = async (time: number): Promise<void> => {
 	sendEvent(eventToSend, options);
 };
 
-export const sendChannelEdit = async (channel: ChannelContent, tTags: string[]) => {
+export const sendChannelEdit = async (channel: ChannelContent) => {
 	if (window.nostr === undefined) {
 		return;
 	}
@@ -1835,7 +1835,7 @@ export const sendChannelEdit = async (channel: ChannelContent, tTags: string[]) 
 	const recommendedRelay: string = getSeenOn(channel.id).at(0) ?? '';
 	const eTag = ['e', channel.id, recommendedRelay, 'root', channel.pubkey];
 	const tags: string[][] = [eTag];
-	for (const tTag of new Set(tTags.map((t) => t.toLowerCase()))) {
+	for (const tTag of new Set(channel.categories.map((t) => t.toLowerCase()))) {
 		tags.push(['t', tTag]);
 	}
 	if (isEnabledUseClientTag) {

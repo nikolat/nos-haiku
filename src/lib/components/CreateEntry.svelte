@@ -17,6 +17,7 @@
 		loginPubkey,
 		currentChannelId,
 		eventToReply,
+		isTopPage,
 		profileMap,
 		uploaderSelected,
 		channelToPost = $bindable(),
@@ -25,6 +26,7 @@
 		loginPubkey: string | undefined;
 		currentChannelId?: string | undefined;
 		eventToReply?: NostrEvent;
+		isTopPage: boolean;
 		profileMap: Map<string, ProfileContent>;
 		uploaderSelected: string;
 		channelToPost: ChannelContent | undefined;
@@ -304,8 +306,10 @@
 			</div>
 		</div>
 		<div class="CreateEntry__actions">
-			<button class="Button" disabled={contentToSend.length === 0} onclick={callSendNote}
-				><span>投稿</span></button
+			<button
+				class="Button"
+				disabled={contentToSend.length === 0 || (isTopPage && channelNameToCreate.length === 0)}
+				onclick={callSendNote}><span>投稿</span></button
 			>
 			{#if eventToReply !== undefined}
 				<button

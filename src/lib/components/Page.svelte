@@ -79,6 +79,17 @@
 		nowRealtime: number;
 		isLoading: boolean;
 	} = $props();
+
+	const isTopPage: boolean = $derived(
+		[
+			currentNoteId,
+			currentPubkey,
+			currentChannelId,
+			currentAddressPointer,
+			hashtag,
+			category
+		].every((q) => q === undefined) && !isAntenna
+	);
 	const eventsTimeline: NostrEvent[] = $derived(
 		category === undefined ? getEventsTimelineTop() : getEventsChannel()
 	);
@@ -673,6 +684,8 @@
 					<CreateEntry
 						{loginPubkey}
 						{currentChannelId}
+						eventToReply={undefined}
+						{isTopPage}
 						{profileMap}
 						{uploaderSelected}
 						bind:channelToPost

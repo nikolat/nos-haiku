@@ -786,7 +786,9 @@
 					{#if showForm}
 						<CreateEntry
 							{loginPubkey}
+							currentChannelId={undefined}
 							eventToReply={event}
+							isTopPage={false}
 							{profileMap}
 							{uploaderSelected}
 							channelToPost={undefined}

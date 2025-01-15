@@ -13,6 +13,7 @@
 		setRelaysToUseSelected,
 		setUploaderSelected,
 		unmuteChannel,
+		unmuteHashTag,
 		unmuteUser,
 		unmuteWord
 	} from '$lib/resource.svelte';
@@ -37,6 +38,7 @@
 		mutedPubkeys,
 		mutedChannelIds,
 		mutedWords,
+		mutedHashTags,
 		followingPubkeys,
 		nowRealtime
 	}: {
@@ -52,6 +54,7 @@
 		mutedPubkeys: string[];
 		mutedChannelIds: string[];
 		mutedWords: string[];
+		mutedHashTags: string[];
 		followingPubkeys: string[];
 		nowRealtime: number;
 	} = $props();
@@ -417,6 +420,43 @@
 																onclick={() => {
 																	if (loginPubkey !== undefined) {
 																		unmuteWord(word, loginPubkey);
+																	}
+																}}><i class="fa-fw fas fa-trash-alt"></i></button
+															>
+														</div>
+													</li>
+												{/each}
+											</ul>
+										</div>
+									</div>
+								</div>
+							</div>
+						{/if}
+						{#if mutedHashTags.length > 0}
+							<div class="Settings__section">
+								<div class="Label">
+									<i class="fa-fw fas fa-tags"></i>
+									<span>ミュート中のハッシュタグ</span>
+									<p class="Tip">
+										ミュートされたハッシュタグを含む投稿・カテゴリーに指定されたキーワードはタイムラインから除外されます。
+									</p>
+								</div>
+								<div class="Control">
+									<div class="BlockList">
+										<div class="BlockList__container">
+											<ul>
+												{#each mutedHashTags as hashTag (hashTag)}
+													<li>
+														<div>
+															<p>#{hashTag}</p>
+														</div>
+														<div>
+															<button
+																class="Button Button--warn"
+																aria-label="ミュート解除"
+																onclick={() => {
+																	if (loginPubkey !== undefined) {
+																		unmuteHashTag(hashTag, loginPubkey);
 																	}
 																}}><i class="fa-fw fas fa-trash-alt"></i></button
 															>

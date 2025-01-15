@@ -166,6 +166,7 @@ let eventsAll: NostrEvent[] = $state([]);
 let mutedPubkeys: string[] = $state([]);
 let mutedChannelIds: string[] = $state([]);
 let mutedWords: string[] = $state([]);
+let mutedHashTags: string[] = $state([]);
 let myBookmarkedChannelIds: string[] = $state([]);
 
 const profileMap: Map<string, ProfileContentEvent> = $derived.by(() => {
@@ -375,6 +376,7 @@ export const clearCache = (
 	mutedPubkeys = [];
 	mutedChannelIds = [];
 	mutedWords = [];
+	mutedHashTags = [];
 	myBookmarkedChannelIds = [];
 	subF?.unsubscribe();
 	seenOn.clear();
@@ -468,6 +470,10 @@ export const getMutedChannelIds = (): string[] => {
 
 export const getMutedWords = (): string[] => {
 	return mutedWords;
+};
+
+export const getMutedHashTags = (): string[] => {
+	return mutedHashTags;
 };
 
 export const getFollowList = (): NostrEvent | undefined => {
@@ -1065,10 +1071,14 @@ const _subTimeline = eventStore
 			}
 			case 10000: {
 				if (loginPubkey !== undefined) {
-					const { pPub, ePub, wPub, pSec, eSec, wSec } = await splitNip51List(event, loginPubkey);
+					const { pPub, ePub, wPub, tPub, pSec, eSec, wSec, tSec } = await splitNip51List(
+						event,
+						loginPubkey
+					);
 					mutedPubkeys = Array.from(new Set<string>([...pPub, ...pSec]));
 					mutedChannelIds = Array.from(new Set<string>([...ePub, ...eSec]));
 					mutedWords = Array.from(new Set<string>([...wPub, ...wSec]));
+					mutedHashTags = Array.from(new Set<string>([...tPub, ...tSec]));
 				}
 				if (mutedPubkeys.length > 0) {
 					rxReqB0.emit({ kinds: [0], authors: mutedPubkeys, until: unixNow() });
@@ -1573,6 +1583,42 @@ export const unmuteWord = async (word: string, loginPubkey: string): Promise<voi
 				loginPubkey,
 				JSON.stringify(
 					contentList.filter((tag) => !(tag.length >= 2 && tag[0] === 'word' && tag[1] === word))
+				)
+			);
+	const eventTemplate: EventTemplate = $state.snapshot({
+		kind: eventMuteList.kind,
+		tags,
+		content,
+		created_at: unixNow()
+	});
+	const eventToSend = await window.nostr.signEvent(eventTemplate);
+	const options: Partial<RxNostrSendOptions> = { on: { relays: relaysToWrite } };
+	sendEvent(eventToSend, options);
+};
+
+export const unmuteHashTag = async (hashTag: string, loginPubkey: string): Promise<void> => {
+	if (window.nostr?.nip04 === undefined) {
+		return;
+	}
+	if (eventMuteList === undefined) {
+		console.warn('kind:10000 event does not exist');
+		return;
+	} else if (!mutedHashTags.includes(hashTag)) {
+		console.warn('not muted yet');
+		return;
+	}
+	const { tagList, contentList } = await splitNip51List(eventMuteList, loginPubkey);
+	const tags: string[][] = tagList.filter(
+		(tag) => !(tag.length >= 2 && tag[0] === 't' && tag[1] === hashTag)
+	);
+	const content: string = !contentList.some(
+		(tag) => tag.length >= 2 && tag[0] === 't' && tag[1] === hashTag
+	)
+		? eventMuteList.content
+		: await window.nostr.nip04.encrypt(
+				loginPubkey,
+				JSON.stringify(
+					contentList.filter((tag) => !(tag.length >= 2 && tag[0] === 't' && tag[1] === hashTag))
 				)
 			);
 	const eventTemplate: EventTemplate = $state.snapshot({

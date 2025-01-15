@@ -9,10 +9,11 @@
 		getIsEnabledRelativeTime,
 		getIsEnabledSkipKind1,
 		getIsEnabledUseClientTag,
+		getLoginPubkey,
 		getMutedChannelIds,
+		getMutedHashTags,
 		getMutedPubkeys,
 		getMutedWords,
-		getLoginPubkey,
 		getProfileMap,
 		getRelaysSelected,
 		getUploaderSelected,
@@ -53,6 +54,7 @@
 	const mutedPubkeys: string[] = $derived(getMutedPubkeys());
 	const mutedChannelIds: string[] = $derived(getMutedChannelIds());
 	const mutedWords: string[] = $derived(getMutedWords());
+	const mutedHashTags: string[] = $derived(getMutedHashTags());
 	const eventFollowList: NostrEvent | undefined = $derived(getFollowList());
 	const followingPubkeys: string[] = $derived(
 		eventFollowList?.tags.filter((tag) => tag.length >= 2 && tag[0] === 'p').map((tag) => tag[1]) ??
@@ -154,6 +156,7 @@
 			{mutedPubkeys}
 			{mutedChannelIds}
 			{mutedWords}
+			{mutedHashTags}
 			{followingPubkeys}
 			{nowRealtime}
 		/>

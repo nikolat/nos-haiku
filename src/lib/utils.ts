@@ -137,18 +137,20 @@ export const splitNip51List = async (
 	pPub: string[];
 	ePub: string[];
 	wPub: string[];
+	tPub: string[];
 	pSec: string[];
 	eSec: string[];
 	wSec: string[];
+	tSec: string[];
 	tagList: string[][];
 	contentList: string[][];
 }> => {
 	const getList = (tags: string[][], tagName: string): string[] =>
 		tags.filter((tag) => tag.length >= 2 && tag[0] === tagName).map((tag) => tag[1]);
-	const [pPub, ePub, wPub] = ['p', 'e', 'word'].map((tagName: string) =>
+	const [pPub, ePub, wPub, tPub] = ['p', 'e', 'word', 't'].map((tagName: string) =>
 		getList(event.tags, tagName)
 	);
-	let [pSec, eSec, wSec]: [string[], string[], string[]] = [[], [], []];
+	let [pSec, eSec, wSec, tSec]: [string[], string[], string[], string[]] = [[], [], [], []];
 	const tagList: string[][] = event.tags;
 	let contentList: string[][] = [];
 	if (event.content.length > 0 && window.nostr?.nip04 !== undefined) {
@@ -158,9 +160,11 @@ export const splitNip51List = async (
 		} catch (error) {
 			console.warn(error);
 		}
-		[pSec, eSec, wSec] = ['p', 'e', 'word'].map((tagName: string) => getList(contentList, tagName));
+		[pSec, eSec, wSec, tSec] = ['p', 'e', 'word', 't'].map((tagName: string) =>
+			getList(contentList, tagName)
+		);
 	}
-	return { pPub, ePub, wPub, pSec, eSec, wSec, tagList, contentList };
+	return { pPub, ePub, wPub, tPub, pSec, eSec, wSec, tSec, tagList, contentList };
 };
 
 export const getPubkeysForFilter = (events: NostrEvent[]): string[] => {

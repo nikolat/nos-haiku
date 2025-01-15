@@ -26,6 +26,7 @@
 		mutedPubkeys,
 		mutedChannelIds,
 		mutedWords,
+		mutedHashTags,
 		followingPubkeys
 	}: {
 		loginPubkey: string | undefined;
@@ -38,6 +39,7 @@
 		mutedPubkeys: string[];
 		mutedChannelIds: string[];
 		mutedWords: string[];
+		mutedHashTags: string[];
 		followingPubkeys: string[];
 	} = $props();
 
@@ -215,6 +217,7 @@
 					{mutedPubkeys}
 					{mutedChannelIds}
 					{mutedWords}
+					{mutedHashTags}
 					{eventsTimeline}
 					{eventsReaction}
 					uploaderSelected={''}

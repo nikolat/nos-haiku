@@ -10,6 +10,7 @@
 		channelMap,
 		mutedPubkeys,
 		mutedWords,
+		mutedHashTags,
 		isEnabledRelativeTime,
 		nowRealtime
 	}: {
@@ -19,6 +20,7 @@
 		channelMap: Map<string, ChannelContent>;
 		mutedPubkeys: string[];
 		mutedWords: string[];
+		mutedHashTags: string[];
 		isEnabledRelativeTime: boolean;
 		nowRealtime: number;
 	} = $props();
@@ -38,6 +40,7 @@
 	{profileMap}
 	{mutedPubkeys}
 	{mutedWords}
+	{mutedHashTags}
 	{isEnabledRelativeTime}
 	{nowRealtime}
 	isEnabledScrollInfinitely={false}

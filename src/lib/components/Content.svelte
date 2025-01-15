@@ -15,6 +15,7 @@
 		mutedPubkeys = [],
 		mutedChannelIds = [],
 		mutedWords = [],
+		mutedHashTags = [],
 		eventsTimeline = [],
 		eventsReaction = [],
 		uploaderSelected = '',
@@ -34,6 +35,7 @@
 		mutedPubkeys?: string[];
 		mutedChannelIds?: string[];
 		mutedWords?: string[];
+		mutedHashTags?: string[];
 		eventsTimeline?: NostrEvent[];
 		eventsReaction?: NostrEvent[];
 		uploaderSelected?: string;
@@ -174,6 +176,7 @@
 					{mutedPubkeys}
 					{mutedChannelIds}
 					{mutedWords}
+					{mutedHashTags}
 					{eventsTimeline}
 					{eventsReaction}
 					{uploaderSelected}
@@ -202,6 +205,7 @@
 					{mutedPubkeys}
 					{mutedChannelIds}
 					{mutedWords}
+					{mutedHashTags}
 					{eventsTimeline}
 					{eventsReaction}
 					{uploaderSelected}
@@ -229,6 +233,7 @@
 					{mutedPubkeys}
 					{mutedChannelIds}
 					{mutedWords}
+					{mutedHashTags}
 					{eventsTimeline}
 					{eventsReaction}
 					{uploaderSelected}

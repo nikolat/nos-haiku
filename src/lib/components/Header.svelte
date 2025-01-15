@@ -20,6 +20,7 @@
 		profileMap,
 		mutedPubkeys,
 		mutedWords,
+		mutedHashTags,
 		isEnabledRelativeTime,
 		nowRealtime,
 		isEnabledScrollInfinitely = $bindable()
@@ -28,6 +29,7 @@
 		profileMap: Map<string, ProfileContentEvent>;
 		mutedPubkeys: string[];
 		mutedWords: string[];
+		mutedHashTags: string[];
 		isEnabledRelativeTime: boolean;
 		nowRealtime: number;
 		isEnabledScrollInfinitely: boolean;
@@ -46,6 +48,11 @@
 			({ baseEvent }) =>
 				!mutedPubkeys.includes(baseEvent.pubkey) &&
 				!mutedWords.some((word) => baseEvent.content.includes(word)) &&
+				!mutedHashTags.some((t) =>
+					baseEvent.tags
+						.filter((tag) => tag.length >= 2 && tag[0] === 't')
+						.map((tag) => tag[1].includes(t))
+				) &&
 				!baseEvent.tags.some(
 					(tag) => tag.length >= 2 && tag[0] === 'p' && mutedPubkeys.includes(tag[1])
 				)

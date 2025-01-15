@@ -168,6 +168,7 @@
 			{channelMap}
 			{mutedPubkeys}
 			{mutedWords}
+			{mutedHashTags}
 			{isEnabledRelativeTime}
 			{nowRealtime}
 		/>
@@ -186,6 +187,7 @@
 			{mutedPubkeys}
 			{mutedChannelIds}
 			{mutedWords}
+			{mutedHashTags}
 			{followingPubkeys}
 			{uploaderSelected}
 			{isEnabledRelativeTime}

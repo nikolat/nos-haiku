@@ -54,6 +54,7 @@
 		mutedPubkeys,
 		mutedChannelIds,
 		mutedWords,
+		mutedHashTags,
 		followingPubkeys,
 		uploaderSelected,
 		isEnabledRelativeTime,
@@ -73,6 +74,7 @@
 		mutedPubkeys: string[];
 		mutedChannelIds: string[];
 		mutedWords: string[];
+		mutedHashTags: string[];
 		followingPubkeys: string[];
 		uploaderSelected: string;
 		isEnabledRelativeTime: boolean;
@@ -107,7 +109,9 @@
 					.filter((id) => id !== undefined)
 					.filter(
 						(id) =>
-							!mutedChannelIds.includes(id) && !mutedWords.includes(channelMap.get(id)?.name ?? '')
+							!mutedChannelIds.includes(id) &&
+							!mutedWords.some((w) => (channelMap.get(id)?.name ?? '').includes(w)) &&
+							!mutedHashTags.some((t) => (channelMap.get(id)?.categories ?? []).includes(t))
 					)
 			)
 		)
@@ -204,6 +208,14 @@
 					(word) =>
 						ev.content.includes(word) ||
 						(ev.kind === 42 && (channelMap.get(rootId ?? '')?.name ?? '').includes(word))
+				) &&
+				!mutedHashTags.some(
+					(t) =>
+						ev.tags
+							.filter((tag) => tag.length >= 2 && tag[0] === 't')
+							.map((tag) => tag[1])
+							.includes(t) ||
+						(ev.kind === 42 && (channelMap.get(rootId ?? '')?.categories ?? []).includes(t))
 				) &&
 				!(ev.kind === 42 && rootId === undefined)
 			);
@@ -311,6 +323,7 @@
 	{profileMap}
 	{mutedPubkeys}
 	{mutedWords}
+	{mutedHashTags}
 	{isEnabledRelativeTime}
 	{nowRealtime}
 	bind:isEnabledScrollInfinitely
@@ -357,6 +370,7 @@
 							{mutedPubkeys}
 							{mutedChannelIds}
 							{mutedWords}
+							{mutedHashTags}
 							{followingPubkeys}
 						/>
 					{/if}
@@ -702,6 +716,7 @@
 							{mutedPubkeys}
 							{mutedChannelIds}
 							{mutedWords}
+							{mutedHashTags}
 							{eventsTimeline}
 							{eventsReaction}
 							{uploaderSelected}

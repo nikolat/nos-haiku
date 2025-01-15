@@ -72,6 +72,7 @@
 	{profileMap}
 	{mutedPubkeys}
 	{mutedWords}
+	{mutedHashTags}
 	{isEnabledRelativeTime}
 	{nowRealtime}
 	isEnabledScrollInfinitely={false}
@@ -132,6 +133,7 @@
 										{mutedPubkeys}
 										{mutedChannelIds}
 										{mutedWords}
+										{mutedHashTags}
 									/>
 								{/if}
 							</div>

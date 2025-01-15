@@ -33,6 +33,7 @@
 		mutedPubkeys,
 		mutedChannelIds,
 		mutedWords,
+		mutedHashTags,
 		eventsTimeline,
 		eventsReaction,
 		uploaderSelected,
@@ -50,6 +51,7 @@
 		mutedPubkeys: string[];
 		mutedChannelIds: string[];
 		mutedWords: string[];
+		mutedHashTags: string[];
 		eventsTimeline: NostrEvent[];
 		eventsReaction: NostrEvent[];
 		uploaderSelected: string;
@@ -104,6 +106,16 @@
 	const isMutedPubkey: boolean = $derived(mutedPubkeys.includes(event.pubkey));
 	const isMutedChannel: boolean = $derived(mutedChannelIds.includes(channelId ?? ''));
 	const isMutedContent: boolean = $derived(mutedWords.some((word) => event.content.includes(word)));
+	const isMutedHashTag: boolean = $derived(
+		mutedHashTags.some(
+			(t) =>
+				event.tags
+					.filter((tag) => tag.length >= 2 && tag[0] === 't')
+					.map((tag) => tag[1])
+					.includes(t) ||
+				(channel !== undefined && channel.categories.includes(t))
+		)
+	);
 	const urlViaAP: string | undefined = $derived(
 		event.tags
 			.find((tag) => tag.length >= 3 && tag[0] === 'proxy' && tag[2] === 'activitypub')
@@ -163,6 +175,9 @@
 		if (isMutedContent) {
 			classNames.push('Muted-content');
 		}
+		if (isMutedHashTag) {
+			classNames.push('Muted-hashtag');
+		}
 		if (contentWarningReason !== null) {
 			classNames.push('ContentWarning');
 		}
@@ -175,6 +190,7 @@
 	let showMutedPubkey: boolean = $state(false);
 	let showMutedChannel: boolean = $state(false);
 	let showMutedContent: boolean = $state(false);
+	let showMutedHashTag: boolean = $state(false);
 	let showReplies: boolean = $state(false);
 
 	const prof: ProfileContentEvent | undefined = $derived(profileMap.get(event.pubkey));
@@ -229,7 +245,7 @@
 </script>
 
 <article class={classNames.join(' ')}>
-	{#if (!isMutedPubkey || showMutedPubkey) && (!isMutedChannel || showMutedChannel) && (!isMutedContent || showMutedContent)}
+	{#if (!isMutedPubkey || showMutedPubkey) && (!isMutedChannel || showMutedChannel) && (!isMutedContent || showMutedContent) && (!isMutedHashTag || showMutedHashTag)}
 		{#if event.kind === 42 && (channelId === undefined || channel === undefined || channel.name === undefined)}
 			{#if channelId === undefined}
 				kind:42 event without valid channel id
@@ -364,6 +380,7 @@
 												{mutedPubkeys}
 												{mutedChannelIds}
 												{mutedWords}
+												{mutedHashTags}
 												{eventsTimeline}
 												{eventsReaction}
 												{uploaderSelected}
@@ -395,6 +412,7 @@
 											{mutedPubkeys}
 											{mutedChannelIds}
 											{mutedWords}
+											{mutedHashTags}
 											{eventsTimeline}
 											{eventsReaction}
 											{uploaderSelected}
@@ -517,6 +535,14 @@
 										onclick={() => {
 											showMutedContent = false;
 										}}><span>click to hide the content by muted word</span></button
+									>
+								{/if}
+								{#if isMutedHashTag}
+									<button
+										class="Button toggle-mute"
+										onclick={() => {
+											showMutedHashTag = false;
+										}}><span>click to hide the content by muted hashtag</span></button
 									>
 								{/if}
 							{:else}
@@ -807,6 +833,7 @@
 								{mutedPubkeys}
 								{mutedChannelIds}
 								{mutedWords}
+								{mutedHashTags}
 								{eventsTimeline}
 								{eventsReaction}
 								{uploaderSelected}
@@ -852,6 +879,15 @@
 								onclick={() => {
 									showMutedContent = true;
 								}}><span>click to show the content by muted word</span></button
+							>
+						{/if}
+						{#if isMutedHashTag && !showMutedHashTag}
+							<p class="muted-message">muted hashtag</p>
+							<button
+								class="Button toggle-mute"
+								onclick={() => {
+									showMutedHashTag = true;
+								}}><span>click to show the content by muted hashtag</span></button
 							>
 						{/if}
 					</div>

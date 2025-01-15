@@ -1596,6 +1596,38 @@ export const unmuteWord = async (word: string, loginPubkey: string): Promise<voi
 	sendEvent(eventToSend, options);
 };
 
+export const muteHashTag = async (hashTag: string, loginPubkey: string): Promise<void> => {
+	if (window.nostr?.nip04 === undefined) {
+		return;
+	}
+	const kind = 10000;
+	let tags: string[][];
+	let content: string;
+	if (eventMuteList === undefined) {
+		tags = [['t', hashTag]];
+		content = '';
+	} else if (mutedHashTags.includes(hashTag)) {
+		console.warn('already muted');
+		return;
+	} else {
+		const { tagList, contentList } = await splitNip51List(eventMuteList, loginPubkey);
+		tags = tagList;
+		content = await window.nostr.nip04.encrypt(
+			loginPubkey,
+			JSON.stringify([...contentList, ['t', hashTag]])
+		);
+	}
+	const eventTemplate: EventTemplate = $state.snapshot({
+		kind,
+		tags,
+		content,
+		created_at: unixNow()
+	});
+	const eventToSend = await window.nostr.signEvent(eventTemplate);
+	const options: Partial<RxNostrSendOptions> = { on: { relays: relaysToWrite } };
+	sendEvent(eventToSend, options);
+};
+
 export const unmuteHashTag = async (hashTag: string, loginPubkey: string): Promise<void> => {
 	if (window.nostr?.nip04 === undefined) {
 		return;

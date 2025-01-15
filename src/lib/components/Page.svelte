@@ -21,12 +21,14 @@
 		getProfileEventMap,
 		getProfileName,
 		muteChannel,
+		muteHashTag,
 		muteUser,
 		sendChannelEdit,
 		sendDeletion,
 		unbookmarkChannel,
 		unfollowUser,
 		unmuteChannel,
+		unmuteHashTag,
 		unmuteUser
 	} from '$lib/resource.svelte';
 	import Header from '$lib/components/Header.svelte';
@@ -575,20 +577,20 @@
 										>
 									</div>
 								{/if}
-								{#if mutedChannelIds.includes(currentChannelId) && loginPubkey !== undefined}
-									<span class="Feed__muted"
-										><i class="fa-fw fas fa-eye-slash"></i>
-										<!-- svelte-ignore a11y_click_events_have_key_events -->
-										<!-- svelte-ignore a11y_no_static_element_interactions -->
-										このキーワードのエントリーはミュート中です。
-										<span
-											onclick={() => {
-												unmuteChannel(currentChannelId, loginPubkey);
-											}}>ミュートを解除</span
-										></span
-									>
-								{/if}
 								{#if loginPubkey !== undefined}
+									{#if mutedChannelIds.includes(currentChannelId)}
+										<span class="Feed__muted"
+											><i class="fa-fw fas fa-eye-slash"></i>
+											<!-- svelte-ignore a11y_click_events_have_key_events -->
+											<!-- svelte-ignore a11y_no_static_element_interactions -->
+											このキーワードのエントリーはミュート中です。
+											<span
+												onclick={() => {
+													unmuteChannel(currentChannelId, loginPubkey);
+												}}>ミュートを解除</span
+											></span
+										>
+									{/if}
 									<div class="Actions">
 										{#if followingChannelIds.includes(currentChannelId)}
 											<div title="お気に入りから削除" class="FavoriteButton FavoriteButton--active">
@@ -675,6 +677,54 @@
 						{:else if category !== undefined}
 							<h1 class="Feed__title"><i class="fa-fw fas fa-tags"></i> #{category}</h1>
 							<h3 class="Feed__subtitle">#{category} についてのキーワードを見る</h3>
+							{#if loginPubkey !== undefined}
+								{#if mutedHashTags.includes(category)}
+									<span class="Feed__muted"
+										><i class="fa-fw fas fa-eye-slash"></i>
+										<!-- svelte-ignore a11y_click_events_have_key_events -->
+										<!-- svelte-ignore a11y_no_static_element_interactions -->
+										このカテゴリーのキーワードはミュート中です。
+										<span
+											onclick={() => {
+												unmuteHashTag(category, loginPubkey);
+											}}>ミュートを解除</span
+										></span
+									>
+								{/if}
+								<div class="Actions">
+									<!-- svelte-ignore a11y_click_events_have_key_events -->
+									<!-- svelte-ignore a11y_no_static_element_interactions -->
+									<div
+										title="設定"
+										class={showSetting ? 'SettingButton SettingButton--active' : 'SettingButton'}
+										onclick={() => {
+											showSetting = !showSetting;
+										}}
+									>
+										<div class="SettingButton__Button">
+											<span class="fa-fw fas fa-cog"></span>
+										</div>
+										<!-- svelte-ignore a11y_missing_attribute -->
+										<div class="SettingButton__Dropdown Dropdown--left">
+											{#if mutedHashTags.includes(category)}
+												<a
+													title={`${category} のミュートを解除`}
+													onclick={() => {
+														unmuteHashTag(category, loginPubkey);
+													}}><i class="fa-fw fas fa-eye"></i> #{category} のミュートを解除</a
+												>
+											{:else}
+												<a
+													title={`${category} をミュートする`}
+													onclick={() => {
+														muteHashTag(category, loginPubkey);
+													}}><i class="fa-fw fas fa-eye-slash"></i> #{category} をミュートする</a
+												>
+											{/if}
+										</div>
+									</div>
+								</div>
+							{/if}
 						{:else}
 							<h1 class="Feed__title">最新の投稿</h1>
 							<h3 class="Feed__subtitle">みんなでハイク</h3>

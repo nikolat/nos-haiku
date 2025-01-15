@@ -51,7 +51,8 @@
 				!mutedHashTags.some((t) =>
 					baseEvent.tags
 						.filter((tag) => tag.length >= 2 && tag[0] === 't')
-						.map((tag) => tag[1].includes(t))
+						.map((tag) => tag[1])
+						.includes(t)
 				) &&
 				!baseEvent.tags.some(
 					(tag) => tag.length >= 2 && tag[0] === 'p' && mutedPubkeys.includes(tag[1])

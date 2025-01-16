@@ -47,11 +47,11 @@
 		return events.filter(
 			({ baseEvent }) =>
 				!mutedPubkeys.includes(baseEvent.pubkey) &&
-				!mutedWords.some((word) => baseEvent.content.includes(word)) &&
+				!mutedWords.some((word) => baseEvent.content.toLowerCase().includes(word)) &&
 				!mutedHashTags.some((t) =>
 					baseEvent.tags
 						.filter((tag) => tag.length >= 2 && tag[0] === 't')
-						.map((tag) => tag[1])
+						.map((tag) => tag[1].toLowerCase())
 						.includes(t)
 				) &&
 				!baseEvent.tags.some(

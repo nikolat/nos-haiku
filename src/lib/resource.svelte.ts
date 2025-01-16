@@ -1077,8 +1077,10 @@ const _subTimeline = eventStore
 					);
 					mutedPubkeys = Array.from(new Set<string>([...pPub, ...pSec]));
 					mutedChannelIds = Array.from(new Set<string>([...ePub, ...eSec]));
-					mutedWords = Array.from(new Set<string>([...wPub, ...wSec]));
-					mutedHashTags = Array.from(new Set<string>([...tPub, ...tSec]));
+					mutedWords = Array.from(new Set<string>([...wPub, ...wSec].map((w) => w.toLowerCase())));
+					mutedHashTags = Array.from(
+						new Set<string>([...tPub, ...tSec].map((t) => t.toLowerCase()))
+					);
 				}
 				if (mutedPubkeys.length > 0) {
 					rxReqB0.emit({ kinds: [0], authors: mutedPubkeys, until: unixNow() });
@@ -1564,6 +1566,7 @@ export const unmuteWord = async (word: string, loginPubkey: string): Promise<voi
 	if (window.nostr?.nip04 === undefined) {
 		return;
 	}
+	word = word.toLowerCase();
 	if (eventMuteList === undefined) {
 		console.warn('kind:10000 event does not exist');
 		return;
@@ -1573,16 +1576,18 @@ export const unmuteWord = async (word: string, loginPubkey: string): Promise<voi
 	}
 	const { tagList, contentList } = await splitNip51List(eventMuteList, loginPubkey);
 	const tags: string[][] = tagList.filter(
-		(tag) => !(tag.length >= 2 && tag[0] === 'word' && tag[1] === word)
+		(tag) => !(tag.length >= 2 && tag[0] === 'word' && tag[1].toLowerCase() === word)
 	);
 	const content: string = !contentList.some(
-		(tag) => tag.length >= 2 && tag[0] === 'word' && tag[1] === word
+		(tag) => tag.length >= 2 && tag[0] === 'word' && tag[1].toLowerCase() === word
 	)
 		? eventMuteList.content
 		: await window.nostr.nip04.encrypt(
 				loginPubkey,
 				JSON.stringify(
-					contentList.filter((tag) => !(tag.length >= 2 && tag[0] === 'word' && tag[1] === word))
+					contentList.filter(
+						(tag) => !(tag.length >= 2 && tag[0] === 'word' && tag[1].toLowerCase() === word)
+					)
 				)
 			);
 	const eventTemplate: EventTemplate = $state.snapshot({
@@ -1600,6 +1605,7 @@ export const muteHashTag = async (hashTag: string, loginPubkey: string): Promise
 	if (window.nostr?.nip04 === undefined) {
 		return;
 	}
+	hashTag = hashTag.toLowerCase();
 	const kind = 10000;
 	let tags: string[][];
 	let content: string;
@@ -1632,6 +1638,7 @@ export const unmuteHashTag = async (hashTag: string, loginPubkey: string): Promi
 	if (window.nostr?.nip04 === undefined) {
 		return;
 	}
+	hashTag = hashTag.toLowerCase();
 	if (eventMuteList === undefined) {
 		console.warn('kind:10000 event does not exist');
 		return;
@@ -1641,16 +1648,18 @@ export const unmuteHashTag = async (hashTag: string, loginPubkey: string): Promi
 	}
 	const { tagList, contentList } = await splitNip51List(eventMuteList, loginPubkey);
 	const tags: string[][] = tagList.filter(
-		(tag) => !(tag.length >= 2 && tag[0] === 't' && tag[1] === hashTag)
+		(tag) => !(tag.length >= 2 && tag[0] === 't' && tag[1].toLowerCase() === hashTag)
 	);
 	const content: string = !contentList.some(
-		(tag) => tag.length >= 2 && tag[0] === 't' && tag[1] === hashTag
+		(tag) => tag.length >= 2 && tag[0] === 't' && tag[1].toLowerCase() === hashTag
 	)
 		? eventMuteList.content
 		: await window.nostr.nip04.encrypt(
 				loginPubkey,
 				JSON.stringify(
-					contentList.filter((tag) => !(tag.length >= 2 && tag[0] === 't' && tag[1] === hashTag))
+					contentList.filter(
+						(tag) => !(tag.length >= 2 && tag[0] === 't' && tag[1].toLowerCase() === hashTag)
+					)
 				)
 			);
 	const eventTemplate: EventTemplate = $state.snapshot({
@@ -1913,7 +1922,7 @@ export const sendChannelEdit = async (channel: ChannelContent) => {
 	const recommendedRelay: string = getSeenOn(channel.id).at(0) ?? '';
 	const eTag = ['e', channel.id, recommendedRelay, 'root', channel.pubkey];
 	const tags: string[][] = [eTag];
-	for (const tTag of new Set(channel.categories.map((t) => t.toLowerCase()))) {
+	for (const tTag of new Set(channel.categories)) {
 		tags.push(['t', tTag]);
 	}
 	if (isEnabledUseClientTag) {

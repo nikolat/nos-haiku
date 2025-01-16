@@ -112,7 +112,7 @@
 					.filter(
 						(id) =>
 							!mutedChannelIds.includes(id) &&
-							!mutedWords.some((w) => (channelMap.get(id)?.name ?? '').includes(w)) &&
+							!mutedWords.some((w) => (channelMap.get(id)?.name.toLowerCase() ?? '').includes(w)) &&
 							!mutedHashTags.some((t) => (channelMap.get(id)?.categories ?? []).includes(t))
 					)
 			)
@@ -208,14 +208,15 @@
 				!(currentChannelId === undefined && mutedChannelIds.includes(rootId ?? '')) &&
 				!mutedWords.some(
 					(word) =>
-						ev.content.includes(word) ||
-						(ev.kind === 42 && (channelMap.get(rootId ?? '')?.name ?? '').includes(word))
+						ev.content.toLowerCase().includes(word) ||
+						(ev.kind === 42 &&
+							(channelMap.get(rootId ?? '')?.name.toLowerCase() ?? '').includes(word))
 				) &&
 				!mutedHashTags.some(
 					(t) =>
 						ev.tags
 							.filter((tag) => tag.length >= 2 && tag[0] === 't')
-							.map((tag) => tag[1])
+							.map((tag) => tag[1].toLowerCase())
 							.includes(t) ||
 						(ev.kind === 42 && (channelMap.get(rootId ?? '')?.categories ?? []).includes(t))
 				) &&

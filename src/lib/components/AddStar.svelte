@@ -23,7 +23,8 @@
 	const reactionValidEvents = $derived(
 		[
 			...eventsReactionToTheEvent.filter(
-				(ev) => isValidEmoji(ev) && !mutedWords.some((word) => ev.content.includes(word))
+				(ev) =>
+					isValidEmoji(ev) && !mutedWords.some((word) => ev.content.toLowerCase().includes(word))
 			)
 		].reverse()
 	);

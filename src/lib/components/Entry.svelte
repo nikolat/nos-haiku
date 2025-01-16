@@ -105,13 +105,15 @@
 	);
 	const isMutedPubkey: boolean = $derived(mutedPubkeys.includes(event.pubkey));
 	const isMutedChannel: boolean = $derived(mutedChannelIds.includes(channelId ?? ''));
-	const isMutedContent: boolean = $derived(mutedWords.some((word) => event.content.includes(word)));
+	const isMutedContent: boolean = $derived(
+		mutedWords.some((word) => event.content.toLowerCase().includes(word))
+	);
 	const isMutedHashTag: boolean = $derived(
 		mutedHashTags.some(
 			(t) =>
 				event.tags
 					.filter((tag) => tag.length >= 2 && tag[0] === 't')
-					.map((tag) => tag[1])
+					.map((tag) => tag[1].toLowerCase())
 					.includes(t) ||
 				(channel !== undefined && channel.categories.includes(t))
 		)

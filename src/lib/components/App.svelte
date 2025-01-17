@@ -24,7 +24,7 @@
 	import Search from '$lib/components/Search.svelte';
 	import Page from '$lib/components/Page.svelte';
 	import { onMount } from 'svelte';
-	import { afterNavigate, beforeNavigate, goto } from '$app/navigation';
+	import { afterNavigate, beforeNavigate } from '$app/navigation';
 	import { page } from '$app/state';
 	import type { NostrEvent } from 'nostr-tools/pure';
 	import { unixNow } from 'applesauce-core/helpers';
@@ -65,18 +65,29 @@
 	let idTimeout: number;
 	let nowRealtime: number = $state(1000 * unixNow());
 	let intervalID: number;
+	const getEventsFirstWithLoading = () => {
+		isLoading = true;
+		getEventsFirst(
+			urlParams,
+			undefined,
+			() => {
+				isLoading = false;
+			},
+			true
+		);
+	};
 	onMount(async () => {
 		document.addEventListener('nlAuth', (e) => {
 			clearTimeout(idTimeout);
 			const ce: CustomEvent = e as CustomEvent;
 			if (ce.detail.type === 'login' || ce.detail.type === 'signup') {
 				setLoginPubkey(ce.detail.pubkey);
-				goto(location.href);
+				getEventsFirstWithLoading();
 			} else {
 				setLoginPubkey(undefined);
 				clearCache([{ until: unixNow() }]);
 				resetRelaysDefault();
-				goto(location.href);
+				getEventsFirstWithLoading();
 			}
 		});
 		const { init } = await import('nostr-login');
@@ -89,15 +100,7 @@
 		clearInterval(intervalID);
 	});
 	afterNavigate(() => {
-		idTimeout = setTimeout(
-			() => {
-				isLoading = true;
-				getEventsFirst(urlParams, undefined, () => {
-					isLoading = false;
-				});
-			},
-			loginPubkey === undefined ? 1000 : 10
-		);
+		idTimeout = setTimeout(getEventsFirstWithLoading, loginPubkey === undefined ? 1000 : 10);
 		intervalID = setInterval(() => {
 			nowRealtime = 1000 * unixNow();
 		}, 5000);

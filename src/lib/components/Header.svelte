@@ -81,7 +81,7 @@
 
 	let query: string = $state('');
 	const goSearchUrl = () => {
-		goto(`/search/${query}`);
+		goto(`/search/${encodeURI(query)}`);
 	};
 
 	let nav: HTMLElement;

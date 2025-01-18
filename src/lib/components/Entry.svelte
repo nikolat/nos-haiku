@@ -186,6 +186,9 @@
 		if (loginPubkey !== undefined && pubkeysMentioningTo.includes(loginPubkey)) {
 			classNames.push('mentioning');
 		}
+		if (nowRealtime / 1000 < event.created_at - 5) {
+			classNames.push('future');
+		}
 		return classNames;
 	});
 	let showCW: boolean = $state(false);
@@ -989,5 +992,8 @@
 	}
 	.Entry__json dl dd {
 		text-indent: 1em;
+	}
+	.Entry.future {
+		display: none;
 	}
 </style>

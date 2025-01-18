@@ -61,9 +61,9 @@
 				</div>
 				<div class="Search__body">
 					<ul>
-						{#each channelMapSearched as [k, v]}
+						{#each channelMapSearched.values() as channel (channel.id)}
 							<li>
-								<a href="/keyword/{nip19.neventEncode({ id: k })}" class=""> {v.name} </a>
+								<a href="/keyword/{nip19.neventEncode(channel)}" class=""> {channel.name} </a>
 							</li>
 						{:else}
 							<li>0件</li>

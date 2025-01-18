@@ -49,6 +49,8 @@
 		currentChannelId,
 		currentNoteId,
 		currentAddressPointer,
+		query,
+		urlSearchParams,
 		hashtag,
 		category,
 		profileMap,
@@ -69,6 +71,8 @@
 		currentChannelId: string | undefined;
 		currentNoteId: string | undefined;
 		currentAddressPointer: nip19.AddressPointer | undefined;
+		query: string | undefined;
+		urlSearchParams: URLSearchParams | undefined;
 		hashtag: string | undefined;
 		category: string | undefined;
 		profileMap: Map<string, ProfileContentEvent>;
@@ -178,6 +182,20 @@
 							?.tags.find((tag) => tag.length >= 4 && tag[0] === 'e' && tag[3] === 'root')
 							?.at(1) === currentChannelId)
 			);
+		} else if (query !== undefined) {
+			if (urlSearchParams !== undefined) {
+				const kinds: number[] = [];
+				for (const [k, v] of urlSearchParams) {
+					if (k === 'kind' && /^\d+$/.test(v)) {
+						kinds.push(parseInt(v));
+					}
+				}
+				tl = eventsTimeline.filter(
+					(ev) => kinds.includes(ev.kind) && ev.content.toLowerCase().includes(query.toLowerCase())
+				);
+			} else {
+				tl = eventsTimeline.filter((ev) => ev.content.toLowerCase().includes(query.toLowerCase()));
+			}
 		} else if (hashtag !== undefined) {
 			tl = eventsTimeline.filter((ev) =>
 				ev.tags.some((tag) => tag.length >= 2 && tag[0] === 't' && tag[1].toLowerCase() === hashtag)

@@ -61,6 +61,7 @@
 			[]
 	);
 
+	let urlSearchParams: URLSearchParams = $state(page.url.searchParams);
 	let isLoading: boolean = $state(false);
 	let idTimeout: number;
 	let nowRealtime: number = $state(1000 * unixNow());
@@ -68,7 +69,7 @@
 	const getEventsFirstWithLoading = () => {
 		isLoading = true;
 		getEventsFirst(
-			urlParams,
+			{ ...urlParams, urlSearchParams },
 			undefined,
 			() => {
 				isLoading = false;
@@ -104,6 +105,7 @@
 		intervalID = setInterval(() => {
 			nowRealtime = 1000 * unixNow();
 		}, 5000);
+		urlSearchParams = page.url.searchParams;
 	});
 
 	const title: string = $derived.by(() => {
@@ -163,7 +165,9 @@
 			{followingPubkeys}
 			{nowRealtime}
 		/>
-	{:else if query !== undefined}
+	{:else if query !== undefined && urlSearchParams
+			.entries()
+			.every(([k, v]) => k === 'kind' && /^\d+$/.test(v) && [40, 41].includes(parseInt(v)))}
 		<Search
 			{loginPubkey}
 			{query}
@@ -183,6 +187,8 @@
 			{currentChannelId}
 			{currentNoteId}
 			{currentAddressPointer}
+			{query}
+			{urlSearchParams}
 			{hashtag}
 			{category}
 			{profileMap}

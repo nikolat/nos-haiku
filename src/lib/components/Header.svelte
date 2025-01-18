@@ -81,7 +81,7 @@
 
 	let query: string = $state('');
 	const goSearchUrl = () => {
-		goto(`/search/${encodeURI(query)}`);
+		goto(`/search/${encodeURI(query)}?kind=40&kind=41`);
 	};
 
 	let nav: HTMLElement;

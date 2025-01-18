@@ -1231,6 +1231,7 @@ export const getEventsFirst = (
 		currentNoteId,
 		currentAddressPointer,
 		query,
+		urlSearchParams,
 		hashtag,
 		category,
 		isAntenna,
@@ -1282,7 +1283,23 @@ export const getEventsFirst = (
 		filters.push({ kinds: [40, 41], '#t': [category] });
 	} else if (query !== undefined) {
 		options = { relays: searchRelays };
-		filters.push({ kinds: [40, 41], search: query });
+		const kinds: number[] = [];
+		if (urlSearchParams !== undefined) {
+			kinds.length = 0;
+			for (const [k, v] of urlSearchParams) {
+				if (k === 'kind' && /^\d+$/.test(v)) {
+					const kind = parseInt(v);
+					if (0 <= kind && kind <= 65535) {
+						kinds.push(kind);
+					}
+				}
+			}
+		}
+		if (kinds.length === 0) {
+			kinds.push(40);
+			kinds.push(41);
+		}
+		filters.push({ kinds, search: query, limit: 10 });
 	} else if (isAntenna) {
 		if (pubkeysFollowing.length > 0) {
 			filters.push({ kinds: [1, 6, 16, 42], authors: pubkeysFollowing });

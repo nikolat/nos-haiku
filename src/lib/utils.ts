@@ -32,6 +32,7 @@ export type UrlParams = {
 	hashtag?: string;
 	category?: string;
 	query?: string;
+	urlSearchParams?: URLSearchParams;
 	isSettings?: boolean;
 	isAntenna?: boolean;
 };

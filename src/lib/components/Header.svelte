@@ -80,8 +80,16 @@
 	});
 
 	let query: string = $state('');
+	let searchType: string = $state('channel');
 	const goSearchUrl = () => {
-		goto(`/search/${encodeURI(query)}?kind=40&kind=41`);
+		let kinds: number[];
+		if (searchType === 'note') {
+			kinds = [1, 42];
+		} else {
+			kinds = [40, 41];
+		}
+		const qp = kinds.map((k) => `kind=${k}`).join('&');
+		goto(`/search/${encodeURI(query)}?${qp}`);
 	};
 
 	let nav: HTMLElement;
@@ -224,6 +232,28 @@
 					}}
 				/>
 			</div>
+			<ul class="NavGroup search-type">
+				<li class="NavGroup__item">
+					<input
+						type="radio"
+						id="search-channel"
+						name="search-type"
+						value="channel"
+						bind:group={searchType}
+					/>
+					<label for="search-channel">キーワード</label>
+				</li>
+				<li class="NavGroup__item">
+					<input
+						type="radio"
+						id="search-note"
+						name="search-type"
+						value="note"
+						bind:group={searchType}
+					/>
+					<label for="search-note">投稿</label>
+				</li>
+			</ul>
 			<ul class="NavGroup">
 				{#if loginPubkey !== undefined}
 					{@const prof = profileMap.get(loginPubkey)}
@@ -425,5 +455,8 @@
 	}
 	.GlobalHeader__body span.scroll > button:active > svg {
 		fill: yellow;
+	}
+	.search-type {
+		margin-right: auto;
 	}
 </style>

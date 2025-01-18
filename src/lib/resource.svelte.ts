@@ -1811,7 +1811,7 @@ export const sendRepost = async (targetEvent: NostrEvent): Promise<void> => {
 	const content: string = ''; //魚拓リポストはしない
 	const recommendedRelay: string = getSeenOn(targetEvent.id).at(0) ?? '';
 	const tags: string[][] = [
-		['e', targetEvent.id, recommendedRelay],
+		['e', targetEvent.id, recommendedRelay, 'mention', targetEvent.pubkey],
 		['p', targetEvent.pubkey]
 	];
 	if (targetEvent.kind !== 1) {

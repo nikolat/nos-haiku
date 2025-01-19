@@ -169,12 +169,20 @@
 		countToShow = 10 - correctionCount;
 	});
 	$effect(() => {
-		queryInput = query ?? '';
-		searchType = urlSearchParams
-			?.entries()
-			.every(([k, v]) => k === 'kind' && /^\d+$/.test(v) && [40, 41].includes(parseInt(v)))
-			? 'channel'
-			: 'note';
+		if (query !== undefined) {
+			queryInput = query;
+		}
+		if (urlSearchParams !== undefined) {
+			let type = 'channel';
+			//iPhone の Safari では URLSearchParamsIterator に every() は生えていないため for で回すしかない
+			for (const [k, v] of urlSearchParams.entries()) {
+				if (!(k === 'kind' && /^\d+$/.test(v) && [40, 41].includes(parseInt(v)))) {
+					type = 'note';
+					break;
+				}
+			}
+			searchType = type;
+		}
 	});
 
 	const timelineSliced = $derived(eventsMention.slice(0, countToShow));

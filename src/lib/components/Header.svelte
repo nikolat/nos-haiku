@@ -17,6 +17,8 @@
 
 	let {
 		loginPubkey,
+		query,
+		urlSearchParams,
 		profileMap,
 		mutedPubkeys,
 		mutedWords,
@@ -26,6 +28,8 @@
 		isEnabledScrollInfinitely = $bindable()
 	}: {
 		loginPubkey: string | undefined;
+		query: string | undefined;
+		urlSearchParams: URLSearchParams | undefined;
 		profileMap: Map<string, ProfileContentEvent>;
 		mutedPubkeys: string[];
 		mutedWords: string[];
@@ -79,7 +83,7 @@
 		return r;
 	});
 
-	let query: string = $state('');
+	let queryInput: string = $state('');
 	let searchType: string = $state('channel');
 	const goSearchUrl = () => {
 		let kinds: number[];
@@ -89,7 +93,7 @@
 			kinds = [40, 41];
 		}
 		const qp = kinds.map((k) => `kind=${k}`).join('&');
-		goto(`/search/${encodeURI(query)}?${qp}`);
+		goto(`/search/${encodeURI(queryInput)}?${qp}`);
 	};
 
 	let nav: HTMLElement;
@@ -164,6 +168,14 @@
 		);
 		countToShow = 10 - correctionCount;
 	});
+	$effect(() => {
+		queryInput = query ?? '';
+		searchType = urlSearchParams
+			?.entries()
+			.every(([k, v]) => k === 'kind' && /^\d+$/.test(v) && [40, 41].includes(parseInt(v)))
+			? 'channel'
+			: 'note';
+	});
 
 	const timelineSliced = $derived(eventsMention.slice(0, countToShow));
 	const mentionToShow = $derived(removeMutedEvent(timelineSliced));
@@ -212,7 +224,7 @@
 			<div
 				class="NavGroup Navgroup--search"
 				onclick={() => {
-					if (query.length > 0) {
+					if (queryInput.length > 0) {
 						goSearchUrl();
 					}
 				}}
@@ -221,12 +233,12 @@
 					type="search"
 					placeholder="検索"
 					class="Input"
-					bind:value={query}
+					bind:value={queryInput}
 					onclick={(event) => {
 						event.stopPropagation();
 					}}
 					onkeydown={(event) => {
-						if (event.key === 'Enter' && query.length > 0) {
+						if (event.key === 'Enter' && queryInput.length > 0) {
 							goSearchUrl();
 						}
 					}}

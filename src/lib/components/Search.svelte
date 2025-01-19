@@ -6,6 +6,7 @@
 	const {
 		loginPubkey,
 		query,
+		urlSearchParams,
 		profileMap,
 		channelMap,
 		mutedPubkeys,
@@ -16,6 +17,7 @@
 	}: {
 		loginPubkey: string | undefined;
 		query: string;
+		urlSearchParams: URLSearchParams | undefined;
 		profileMap: Map<string, ProfileContentEvent>;
 		channelMap: Map<string, ChannelContent>;
 		mutedPubkeys: string[];
@@ -37,6 +39,8 @@
 
 <Header
 	{loginPubkey}
+	{query}
+	{urlSearchParams}
 	{profileMap}
 	{mutedPubkeys}
 	{mutedWords}

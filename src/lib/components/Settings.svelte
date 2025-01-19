@@ -27,6 +27,8 @@
 
 	let {
 		loginPubkey,
+		query,
+		urlSearchParams,
 		isEnabledDarkMode,
 		isEnabledRelativeTime,
 		isEnabledSkipKind1,
@@ -43,6 +45,8 @@
 		nowRealtime
 	}: {
 		loginPubkey: string | undefined;
+		query: string | undefined;
+		urlSearchParams: URLSearchParams | undefined;
 		isEnabledDarkMode: boolean;
 		isEnabledRelativeTime: boolean;
 		isEnabledSkipKind1: boolean;
@@ -69,6 +73,8 @@
 
 <Header
 	{loginPubkey}
+	{query}
+	{urlSearchParams}
 	{profileMap}
 	{mutedPubkeys}
 	{mutedWords}

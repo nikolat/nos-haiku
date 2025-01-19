@@ -150,6 +150,8 @@
 	{#if isSettings === true}
 		<Settings
 			{loginPubkey}
+			{query}
+			{urlSearchParams}
 			{isEnabledDarkMode}
 			{isEnabledRelativeTime}
 			{isEnabledSkipKind1}
@@ -171,6 +173,7 @@
 		<Search
 			{loginPubkey}
 			{query}
+			{urlSearchParams}
 			{profileMap}
 			{channelMap}
 			{mutedPubkeys}

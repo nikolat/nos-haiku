@@ -341,6 +341,8 @@
 
 <Header
 	{loginPubkey}
+	{query}
+	{urlSearchParams}
 	{profileMap}
 	{mutedPubkeys}
 	{mutedWords}

@@ -911,6 +911,11 @@
 		max-height: 30em;
 		overflow-y: auto;
 	}
+	.Entry.Quote .Entry__profile img.Avatar {
+		width: 36px;
+		height: 36px;
+		max-width: unset;
+	}
 	.Quote.Odd {
 		background-color: rgba(255, 127, 127, 0.1);
 	}

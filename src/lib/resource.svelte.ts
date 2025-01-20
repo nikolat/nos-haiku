@@ -582,6 +582,17 @@ const nextOnSubscribeEventStore = (event: NostrEvent | null, kindToDelete?: numb
 		case 10030: {
 			if (loginPubkey !== undefined) {
 				eventEmojiSetList = eventStore.getReplaceable(10030, loginPubkey);
+				if (eventEmojiSetList !== undefined) {
+					const events30030 = sortEvents(Array.from(eventStore.getAll([{ kinds: [30030] }])));
+					const aTags = eventEmojiSetList.tags
+						.filter((tag) => tag.length >= 2 && tag[0] === 'a')
+						.map((tag) => tag[1]);
+					eventsEmojiSet = events30030.filter((ev) =>
+						aTags.includes(
+							`${ev.kind}:${ev.pubkey}:${ev.tags.find((tag) => tag.length >= 2 && tag[0] === 'd')?.at(1) ?? ''}`
+						)
+					);
+				}
 			}
 			break;
 		}

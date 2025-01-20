@@ -9,6 +9,7 @@
 	} from '$lib/utils';
 	import {
 		bookmarkEmojiSets,
+		getEventByAddressPointer,
 		getEventById,
 		getEventsReplying,
 		getProfileName,
@@ -338,6 +339,8 @@
 								Reaction <Reaction reactionEvent={event} profile={undefined} isAuthor={false} />
 							{:else if event.kind === 40}
 								Channel
+							{:else if event.kind === 10030}
+								User emoji list
 							{:else if event.kind === 30023}
 								Long-form Content
 							{:else if event.kind === 30030}
@@ -443,6 +446,40 @@
 									{:else}
 										unknown channel
 									{/if}
+								{:else if event.kind === 10030}
+									{@const aStrs = event.tags
+										.filter((tag) => tag.length >= 2 && tag[0] === 'a')
+										.map((tag) => tag[1])}
+									{#each new Set<string>(aStrs) as aStr, i (aStr)}
+										{#if i > 0}{'\n'}{/if}
+										{@const ary = aStr.split(':')}
+										{@const data = { identifier: ary[2], pubkey: ary[1], kind: parseInt(ary[0]) }}
+										{@const ev = getEventByAddressPointer(data)}
+										{#if ev === undefined}
+											{`nostr:${nip19.naddrEncode(data)}`}
+										{:else}
+											<Entry
+												event={ev}
+												{channelMap}
+												{profileMap}
+												{loginPubkey}
+												{mutedPubkeys}
+												{mutedChannelIds}
+												{mutedWords}
+												{mutedHashTags}
+												{eventsTimeline}
+												{eventsReaction}
+												{eventsEmojiSet}
+												{uploaderSelected}
+												{channelToPost}
+												{currentChannelId}
+												{isEnabledRelativeTime}
+												{nowRealtime}
+												level={level + 1}
+												isNested={true}
+											/>
+										{/if}
+									{/each}
 								{:else if event.kind === 30030}
 									{@const dTagName =
 										event.tags.find((tag) => tag.length >= 2 && tag[0] === 'd')?.at(1) ?? ''}

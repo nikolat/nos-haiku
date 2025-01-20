@@ -455,7 +455,7 @@ export const getEventsReplying = (id: string): NostrEvent[] => {
 export const getEventByAddressPointer = (data: nip19.AddressPointer): NostrEvent | undefined => {
 	return eventsAll.find(
 		(ev) =>
-			ev.tags.find((tag) => tag.length >= 2 && tag[0] === 'd')?.at(1) === data.identifier &&
+			(ev.tags.find((tag) => tag.length >= 2 && tag[0] === 'd')?.at(1) ?? '') === data.identifier &&
 			ev.pubkey === data.pubkey &&
 			ev.kind === data.kind
 	);
@@ -1273,11 +1273,18 @@ export const getEventsFirst = (
 	} else if (currentNoteId !== undefined) {
 		filters.push({ ids: [currentNoteId] });
 	} else if (currentAddressPointer !== undefined) {
-		filters.push({
-			kinds: [currentAddressPointer.kind],
-			authors: [currentAddressPointer.pubkey],
-			'#d': [currentAddressPointer.identifier]
-		});
+		if (currentAddressPointer.identifier.length > 0) {
+			filters.push({
+				kinds: [currentAddressPointer.kind],
+				authors: [currentAddressPointer.pubkey],
+				'#d': [currentAddressPointer.identifier]
+			});
+		} else {
+			filters.push({
+				kinds: [currentAddressPointer.kind],
+				authors: [currentAddressPointer.pubkey]
+			});
+		}
 	} else if (hashtag !== undefined) {
 		filters.push({ kinds: [1, 42], '#t': [hashtag] });
 	} else if (category !== undefined) {

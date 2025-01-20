@@ -888,9 +888,11 @@ const getEventsQuoted = (event: NostrEvent) => {
 			const f: LazyFilter = {
 				kinds: [ap.kind],
 				authors: [ap.pubkey],
-				'#d': [ap.identifier],
 				until: unixNow()
 			};
+			if (ap.identifier.length > 0) {
+				f['#d'] = [ap.identifier];
+			}
 			rxReqBRp.emit(f);
 		}
 	}

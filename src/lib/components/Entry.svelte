@@ -266,9 +266,10 @@
 			{/if}
 		{:else}
 			{@const d = event.tags.find((tag) => tag.length >= 2 && tag[0] === 'd')?.at(1)}
+			{@const kind = event.kind}
 			{@const link =
-				d !== undefined
-					? `/entry/${nip19.naddrEncode({ identifier: d, pubkey: event.pubkey, kind: event.kind })}`
+				[0, 3].includes(kind) || (10000 <= kind && kind < 20000) || (30000 <= kind && kind < 40000)
+					? `/entry/${nip19.naddrEncode({ identifier: d ?? '', pubkey: event.pubkey, kind: event.kind })}`
 					: `/entry/${nip19.neventEncode({ ...event, author: event.pubkey })}`}
 			<div class="Entry__main">
 				<div class="Entry__profile">

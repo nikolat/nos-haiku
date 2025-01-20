@@ -728,10 +728,11 @@
 								<span>↳</span>
 								{#each eventsReplying as ev (ev.id)}
 									{@const prof = profileMap.get(ev.pubkey)}
-									{@const picture = URL.canParse(prof?.picture ?? '') ? prof?.picture : undefined}
-									{#if picture !== undefined}
-										<img alt="" loading="lazy" src={picture} class="Avatar" />
-									{/if}
+									<img
+										src={prof?.picture ?? getRoboHashURL(nip19.npubEncode(ev.pubkey))}
+										alt={getProfileName(prof)}
+										class="Avatar"
+									/>
 								{/each}
 							</div>
 						{/if}

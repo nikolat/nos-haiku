@@ -355,7 +355,7 @@ export const setRelaysToUseSelected = async (relaysSelected: string): Promise<vo
 };
 
 export const clearCache = (
-	filters: Filter[] = [{ kinds: [1, 3, 6, 7, 16, 42, 10000, 30002, 30078] }]
+	filters: Filter[] = [{ kinds: [1, 3, 6, 7, 16, 42, 10000, 10030, 30002, 30078] }]
 ) => {
 	for (const ev of eventStore.getAll(filters)) {
 		eventStore.database.deleteEvent(ev);
@@ -371,6 +371,7 @@ export const clearCache = (
 	eventFollowList = undefined;
 	eventMuteList = undefined;
 	eventMyPublicChatsList = undefined;
+	eventEmojiSetList = undefined;
 	eventsRelaySets = [];
 	eventRead = undefined;
 	mutedPubkeys = [];

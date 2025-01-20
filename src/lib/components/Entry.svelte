@@ -459,35 +459,37 @@
 									)}
 									{@const aTagStr = `${event.kind}:${event.pubkey}:${dTagName}`}
 									<div class="emoji-set">
-										<div>
-											{#if aTagStrs.includes(aTagStr)}
-												<div
-													title="お気に入りから削除"
-													class="FavoriteButton FavoriteButton--active"
-												>
-													<!-- svelte-ignore a11y_click_events_have_key_events -->
-													<!-- svelte-ignore a11y_no_static_element_interactions -->
-													<span
-														class="fa-fw fas fa-heart"
-														onclick={() => {
-															unbookmarkEmojiSets(aTagStr);
-														}}
-													></span>
-												</div>
-											{:else}
-												<div title="お気に入りに追加" class="FavoriteButton">
-													<!-- svelte-ignore a11y_click_events_have_key_events -->
-													<!-- svelte-ignore a11y_no_static_element_interactions -->
-													<span
-														class="fa-fw fas fa-heart"
-														onclick={() => {
-															const recommendedRelay = getSeenOn(event.id).at(0);
-															bookmarkEmojiSets(aTagStr, recommendedRelay);
-														}}
-													></span>
-												</div>
-											{/if}
-										</div>
+										{#if loginPubkey !== undefined}
+											<div>
+												{#if aTagStrs.includes(aTagStr)}
+													<div
+														title="お気に入りから削除"
+														class="FavoriteButton FavoriteButton--active"
+													>
+														<!-- svelte-ignore a11y_click_events_have_key_events -->
+														<!-- svelte-ignore a11y_no_static_element_interactions -->
+														<span
+															class="fa-fw fas fa-heart"
+															onclick={() => {
+																unbookmarkEmojiSets(aTagStr);
+															}}
+														></span>
+													</div>
+												{:else}
+													<div title="お気に入りに追加" class="FavoriteButton">
+														<!-- svelte-ignore a11y_click_events_have_key_events -->
+														<!-- svelte-ignore a11y_no_static_element_interactions -->
+														<span
+															class="fa-fw fas fa-heart"
+															onclick={() => {
+																const recommendedRelay = getSeenOn(event.id).at(0);
+																bookmarkEmojiSets(aTagStr, recommendedRelay);
+															}}
+														></span>
+													</div>
+												{/if}
+											</div>
+										{/if}
 										<p>{dTagName}</p>
 										{#each emojiTags as emojiTag (emojiTag[1])}
 											<img

@@ -1148,6 +1148,17 @@ const _subTimeline = eventStore
 						rxReqBRp.emit(filters);
 					}
 				}
+				const ap: nip19.AddressPointer = {
+					identifier: '',
+					pubkey: event.pubkey,
+					kind: event.kind
+				};
+				rxReqBRp.emit({
+					kinds: [7],
+					'#a': [`${ap.kind}:${ap.pubkey}:${ap.identifier}`],
+					limit: 10,
+					until: unixNow()
+				});
 				break;
 			}
 			case 30023:

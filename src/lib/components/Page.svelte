@@ -489,6 +489,11 @@
 													}}><i class="fa-fw fas fa-eye-slash"></i> {idView} をミュートする</a
 												>
 											{/if}
+											<a
+												title={`${idView} の使用カスタム絵文字を見る`}
+												href={`/entry/${nip19.naddrEncode({ identifier: '', pubkey: currentPubkey, kind: 10030 })}`}
+												><i class="fa-fw fas fa-smile"></i> {idView} の使用カスタム絵文字を見る</a
+											>
 										</div>
 									</div>
 								</div>

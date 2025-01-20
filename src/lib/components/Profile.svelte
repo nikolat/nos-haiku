@@ -150,6 +150,16 @@
 										をミュートする</a
 									>
 								{/if}
+								<a
+									title={`${getProfileName(prof)} の使用カスタム絵文字を見る`}
+									href={`/entry/${nip19.naddrEncode({ identifier: '', pubkey: currentPubkey, kind: 10030 })}`}
+									><i class="fa-fw fas fa-smile"></i>
+									<Content
+										content={getProfileName(prof)}
+										tags={prof?.event.tags ?? []}
+										isAbout={true}
+									/> の使用カスタム絵文字を見る</a
+								>
 							</div>
 						</div>
 						{#if followingPubkeys.includes(currentPubkey)}

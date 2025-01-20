@@ -1144,8 +1144,16 @@ const _subTimeline = eventStore
 							.fill(undefined)
 							.map((_, i) => array.slice(i * number, (i + 1) * number));
 					};
+					const relayHints: string[] = Array.from(
+						new Set<string>(
+							event.tags
+								.filter((tag) => tag.length >= 3 && tag[0] === 'a' && URL.canParse(tag[2]))
+								.map((tag) => normalizeURL(tag[2]))
+						)
+					);
+					const relays: string[] = Array.from(new Set<string>([...relaysToRead, ...relayHints]));
 					for (const filters of sliceByNumber(margedFilters, 10)) {
-						rxReqBRp.emit(filters);
+						rxReqBRp.emit(filters, { relays });
 					}
 				}
 				const ap: nip19.AddressPointer = {

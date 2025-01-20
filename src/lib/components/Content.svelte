@@ -18,6 +18,7 @@
 		mutedHashTags = [],
 		eventsTimeline = [],
 		eventsReaction = [],
+		eventsEmojiSet = [],
 		uploaderSelected = '',
 		channelToPost = $bindable(),
 		currentChannelId,
@@ -38,6 +39,7 @@
 		mutedHashTags?: string[];
 		eventsTimeline?: NostrEvent[];
 		eventsReaction?: NostrEvent[];
+		eventsEmojiSet?: NostrEvent[];
 		uploaderSelected?: string;
 		channelToPost?: ChannelContent;
 		currentChannelId?: string;
@@ -179,6 +181,7 @@
 					{mutedHashTags}
 					{eventsTimeline}
 					{eventsReaction}
+					{eventsEmojiSet}
 					{uploaderSelected}
 					bind:channelToPost
 					{currentChannelId}
@@ -208,6 +211,7 @@
 					{mutedHashTags}
 					{eventsTimeline}
 					{eventsReaction}
+					{eventsEmojiSet}
 					{uploaderSelected}
 					bind:channelToPost
 					{currentChannelId}
@@ -236,6 +240,7 @@
 					{mutedHashTags}
 					{eventsTimeline}
 					{eventsReaction}
+					{eventsEmojiSet}
 					{uploaderSelected}
 					bind:channelToPost
 					{currentChannelId}

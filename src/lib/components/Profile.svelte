@@ -23,6 +23,7 @@
 		channelMap,
 		eventsTimeline,
 		eventsReaction,
+		eventsEmojiSet,
 		mutedPubkeys,
 		mutedChannelIds,
 		mutedWords,
@@ -36,6 +37,7 @@
 		channelMap: Map<string, ChannelContent>;
 		eventsTimeline: NostrEvent[];
 		eventsReaction: NostrEvent[];
+		eventsEmojiSet: NostrEvent[];
 		mutedPubkeys: string[];
 		mutedChannelIds: string[];
 		mutedWords: string[];
@@ -220,6 +222,7 @@
 					{mutedHashTags}
 					{eventsTimeline}
 					{eventsReaction}
+					{eventsEmojiSet}
 					uploaderSelected={''}
 					channelToPost={undefined}
 					currentChannelId={undefined}

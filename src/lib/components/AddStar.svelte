@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { expansionThreshold } from '$lib/config';
 	import { getEmoji, isValidEmoji } from '$lib/utils';
-	import { getEventEmojiSet, sendReaction } from '$lib/resource.svelte';
+	import { getEventsEmojiSet, sendReaction } from '$lib/resource.svelte';
 	import Reaction from '$lib/components/Reaction.svelte';
 	import type { NostrEvent } from 'nostr-tools/pure';
 	import type { ProfileContent } from 'applesauce-core/helpers';
@@ -33,10 +33,10 @@
 
 	let isAllowedExpand: boolean = $state(false);
 
-	const eventEmojiSet: NostrEvent[] = $derived(getEventEmojiSet());
+	const eventsEmojiSet: NostrEvent[] = $derived(getEventsEmojiSet());
 	const emojiMap: Map<string, string> = $derived.by(() => {
 		const r = new Map<string, string>();
-		for (const ev of eventEmojiSet) {
+		for (const ev of eventsEmojiSet) {
 			const emojiTags: string[][] = ev.tags.filter(
 				(tag) =>
 					tag.length >= 3 && tag[0] === 'emoji' && /^\w+$/.test(tag[1]) && URL.canParse(tag[2])

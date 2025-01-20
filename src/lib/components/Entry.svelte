@@ -8,13 +8,15 @@
 		type ProfileContentEvent
 	} from '$lib/utils';
 	import {
+		bookmarkEmojiSets,
 		getEventById,
 		getEventsReplying,
 		getProfileName,
 		getRelaysToUse,
 		getSeenOn,
 		sendDeletion,
-		sendRepost
+		sendRepost,
+		unbookmarkEmojiSets
 	} from '$lib/resource.svelte';
 	import Reaction from '$lib/components/Reaction.svelte';
 	import AddStar from '$lib/components/AddStar.svelte';
@@ -36,6 +38,7 @@
 		mutedHashTags,
 		eventsTimeline,
 		eventsReaction,
+		eventsEmojiSet,
 		uploaderSelected,
 		channelToPost = $bindable(),
 		currentChannelId,
@@ -54,6 +57,7 @@
 		mutedHashTags: string[];
 		eventsTimeline: NostrEvent[];
 		eventsReaction: NostrEvent[];
+		eventsEmojiSet: NostrEvent[];
 		uploaderSelected: string;
 		channelToPost: ChannelContent | undefined;
 		currentChannelId: string | undefined;
@@ -388,6 +392,7 @@
 												{mutedHashTags}
 												{eventsTimeline}
 												{eventsReaction}
+												{eventsEmojiSet}
 												{uploaderSelected}
 												bind:channelToPost
 												{currentChannelId}
@@ -420,6 +425,7 @@
 											{mutedHashTags}
 											{eventsTimeline}
 											{eventsReaction}
+											{eventsEmojiSet}
 											{uploaderSelected}
 											bind:channelToPost
 											{currentChannelId}
@@ -447,7 +453,41 @@
 											/^\w+$/.test(tag[1]) &&
 											URL.canParse(tag[2])
 									)}
+									{@const aTagStrs = eventsEmojiSet.map(
+										(ev) =>
+											`${ev.kind}:${ev.pubkey}:${ev.tags.find((tag) => tag.length >= 2 && tag[0] === 'd')?.at(1) ?? ''}`
+									)}
+									{@const aTagStr = `${event.kind}:${event.pubkey}:${dTagName}`}
 									<div class="emoji-set">
+										<div>
+											{#if aTagStrs.includes(aTagStr)}
+												<div
+													title="お気に入りから削除"
+													class="FavoriteButton FavoriteButton--active"
+												>
+													<!-- svelte-ignore a11y_click_events_have_key_events -->
+													<!-- svelte-ignore a11y_no_static_element_interactions -->
+													<span
+														class="fa-fw fas fa-heart"
+														onclick={() => {
+															unbookmarkEmojiSets(aTagStr);
+														}}
+													></span>
+												</div>
+											{:else}
+												<div title="お気に入りに追加" class="FavoriteButton">
+													<!-- svelte-ignore a11y_click_events_have_key_events -->
+													<!-- svelte-ignore a11y_no_static_element_interactions -->
+													<span
+														class="fa-fw fas fa-heart"
+														onclick={() => {
+															const recommendedRelay = getSeenOn(event.id).at(0);
+															bookmarkEmojiSets(aTagStr, recommendedRelay);
+														}}
+													></span>
+												</div>
+											{/if}
+										</div>
 										<p>{dTagName}</p>
 										{#each emojiTags as emojiTag (emojiTag[1])}
 											<img
@@ -501,6 +541,7 @@
 											{mutedWords}
 											{eventsTimeline}
 											{eventsReaction}
+											{eventsEmojiSet}
 											{uploaderSelected}
 											bind:channelToPost
 											{currentChannelId}
@@ -842,6 +883,7 @@
 								{mutedHashTags}
 								{eventsTimeline}
 								{eventsReaction}
+								{eventsEmojiSet}
 								{uploaderSelected}
 								{channelToPost}
 								{currentChannelId}
@@ -950,6 +992,10 @@
 	.Post span {
 		font-size: 12px;
 		margin-right: 3px;
+	}
+	.Post .FavoriteButton > span {
+		font-size: 16px;
+		margin-right: unset;
 	}
 	.Post span > button {
 		border: none;

@@ -135,6 +135,7 @@
 										channelMap={new Map<string, ChannelContent>()}
 										eventsTimeline={[]}
 										eventsReaction={[]}
+										eventsEmojiSet={[]}
 										{followingPubkeys}
 										{mutedPubkeys}
 										{mutedChannelIds}

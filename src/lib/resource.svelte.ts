@@ -160,7 +160,7 @@ let eventMuteList: NostrEvent | undefined;
 let eventRelayList: NostrEvent | undefined;
 let eventMyPublicChatsList: NostrEvent | undefined;
 let eventEmojiSetList: NostrEvent | undefined;
-let eventEmojiSet: NostrEvent[] = $state([]);
+let eventsEmojiSet: NostrEvent[] = $state([]);
 let eventsDeletion: NostrEvent[] = [];
 let eventsAll: NostrEvent[] = $state([]);
 let mutedPubkeys: string[] = $state([]);
@@ -422,8 +422,8 @@ export const getEventsReaction = (): NostrEvent[] => {
 	return eventsReaction;
 };
 
-export const getEventEmojiSet = (): NostrEvent[] => {
-	return eventEmojiSet;
+export const getEventsEmojiSet = (): NostrEvent[] => {
+	return eventsEmojiSet;
 };
 
 export const getEventById = (id: string): NostrEvent | undefined => {
@@ -607,9 +607,9 @@ const nextOnSubscribeEventStore = (event: NostrEvent | null, kindToDelete?: numb
 				const aTags = eventEmojiSetList.tags
 					.filter((tag) => tag.length >= 2 && tag[0] === 'a')
 					.map((tag) => tag[1]);
-				eventEmojiSet = events30030.filter((ev) =>
+				eventsEmojiSet = events30030.filter((ev) =>
 					aTags.includes(
-						`${ev.kind}:${ev.pubkey}:${ev.tags.find((tag) => tag.length >= 2 && tag[0] === 'd')?.at(1)}`
+						`${ev.kind}:${ev.pubkey}:${ev.tags.find((tag) => tag.length >= 2 && tag[0] === 'd')?.at(1) ?? ''}`
 					)
 				);
 			}
@@ -1812,6 +1812,73 @@ export const unbookmarkChannel = async (channelId: string, loginPubkey: string):
 			);
 	const eventTemplate: EventTemplate = $state.snapshot({
 		kind: eventMyPublicChatsList.kind,
+		tags,
+		content,
+		created_at: unixNow()
+	});
+	const eventToSend = await window.nostr.signEvent(eventTemplate);
+	const options: Partial<RxNostrSendOptions> = { on: { relays: relaysToWrite } };
+	sendEvent(eventToSend, options);
+};
+
+export const bookmarkEmojiSets = async (
+	aTagStr: string,
+	recommendedRelay: string | undefined
+): Promise<void> => {
+	if (window.nostr === undefined) {
+		return;
+	}
+	const kind = 10030;
+	let tags: string[][];
+	let content: string;
+	const aTagStrs = eventEmojiSetList?.tags
+		.filter((tag) => tag.length >= 2 && tag[0] === 'a')
+		.map((tag) => tag[1]);
+	const aTag = ['a', aTagStr];
+	if (recommendedRelay !== undefined) {
+		aTag.push(recommendedRelay);
+	}
+	if (eventEmojiSetList === undefined || aTagStrs === undefined) {
+		tags = [aTag];
+		content = '';
+	} else if (aTagStrs.includes(aTagStr)) {
+		console.warn('already bookmarked');
+		return;
+	} else {
+		tags = [...eventEmojiSetList.tags, aTag];
+		content = eventEmojiSetList.content;
+	}
+	const eventTemplate: EventTemplate = $state.snapshot({
+		kind,
+		tags,
+		content,
+		created_at: unixNow()
+	});
+	const eventToSend = await window.nostr.signEvent(eventTemplate);
+	const options: Partial<RxNostrSendOptions> = { on: { relays: relaysToWrite } };
+	sendEvent(eventToSend, options);
+};
+
+export const unbookmarkEmojiSets = async (aTagStr: string): Promise<void> => {
+	if (window.nostr === undefined) {
+		return;
+	}
+	const aTags = eventEmojiSetList?.tags
+		.filter((tag) => tag.length >= 2 && tag[0] === 'a')
+		.map((tag) => tag[1]);
+	if (eventEmojiSetList === undefined || aTags === undefined) {
+		console.warn('kind:10030 event does not exist');
+		return;
+	} else if (!aTags.includes(aTagStr)) {
+		console.warn('not bookmarked yet');
+		return;
+	}
+	const tags: string[][] = eventEmojiSetList.tags.filter(
+		(tag) => !(tag.length >= 2 && tag[0] === 'a' && tag[1] === aTagStr)
+	);
+	const content: string = eventEmojiSetList.content;
+	const eventTemplate: EventTemplate = $state.snapshot({
+		kind: eventEmojiSetList.kind,
 		tags,
 		content,
 		created_at: unixNow()

@@ -14,6 +14,7 @@
 		getChannelBookmarkMap,
 		getEventByAddressPointer,
 		getEventById,
+		getEventsEmojiSet,
 		getEventsChannel,
 		getEventsFirst,
 		getEventsReaction,
@@ -155,6 +156,7 @@
 		).filter((pubkey) => !mutedPubkeys.includes(pubkey))
 	);
 	const eventsReaction: NostrEvent[] = $derived(getEventsReaction());
+	const eventsEmojiSet: NostrEvent[] = $derived(getEventsEmojiSet());
 
 	let countToShow: number = $state(10);
 
@@ -390,6 +392,7 @@
 							{channelMap}
 							{eventsTimeline}
 							{eventsReaction}
+							{eventsEmojiSet}
 							{mutedPubkeys}
 							{mutedChannelIds}
 							{mutedWords}
@@ -838,6 +841,7 @@
 							{mutedHashTags}
 							{eventsTimeline}
 							{eventsReaction}
+							{eventsEmojiSet}
 							{uploaderSelected}
 							bind:channelToPost
 							{currentChannelId}

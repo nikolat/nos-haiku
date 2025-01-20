@@ -2,7 +2,7 @@
 	import { defaultAccountUri, getRoboHashURL } from '$lib/config';
 	import { getEmoji, type ChannelContent } from '$lib/utils';
 	import { uploadFile } from '$lib/nip96';
-	import { getChannelEventMap, getEventEmojiSet, sendNote } from '$lib/resource.svelte';
+	import { getChannelEventMap, getEventsEmojiSet, sendNote } from '$lib/resource.svelte';
 	import type { EventTemplate, NostrEvent } from 'nostr-tools/pure';
 	import * as nip19 from 'nostr-tools/nip19';
 	import {
@@ -38,11 +38,10 @@
 	let inputFile: HTMLInputElement;
 	let textArea: HTMLTextAreaElement;
 
-	const channelEventMap: Map<string, NostrEvent> = $derived(getChannelEventMap());
-	const eventEmojiSet: NostrEvent[] = $derived(getEventEmojiSet());
+	const eventsEmojiSet: NostrEvent[] = $derived(getEventsEmojiSet());
 	const emojiMap: Map<string, string> = $derived.by(() => {
 		const r = new Map<string, string>();
-		for (const ev of eventEmojiSet) {
+		for (const ev of eventsEmojiSet) {
 			const emojiTags: string[][] = ev.tags.filter(
 				(tag) =>
 					tag.length >= 3 && tag[0] === 'emoji' && /^\w+$/.test(tag[1]) && URL.canParse(tag[2])
@@ -134,7 +133,7 @@
 		const targetEventToReply =
 			channelToPost?.eventkind40 ??
 			eventToReply ??
-			(currentChannelId !== undefined ? channelEventMap.get(currentChannelId) : undefined);
+			(currentChannelId !== undefined ? getChannelEventMap().get(currentChannelId) : undefined);
 		const contentWarningReason = addContentWarning
 			? reasonContentWarning.length > 0
 				? reasonContentWarning

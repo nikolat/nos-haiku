@@ -1091,4 +1091,21 @@
 	.Entry.future {
 		display: none;
 	}
+	article {
+		animation: show 2s both;
+	}
+	@keyframes show {
+		0% {
+			max-height: 1em;
+			opacity: 0.2;
+		}
+		50% {
+			max-height: 30em;
+			opacity: 1;
+		}
+		100% {
+			max-height: 50em;
+			opacity: 1;
+		}
+	}
 </style>

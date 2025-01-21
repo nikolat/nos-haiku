@@ -1001,6 +1001,7 @@
 
 <style>
 	.SettingButton.SettingButton--active > .SettingButton__Dropdown {
+		white-space: nowrap;
 		z-index: 2;
 	}
 	.Card--kofi button {

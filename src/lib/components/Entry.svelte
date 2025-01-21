@@ -795,8 +795,8 @@
 							{/if}
 						</div>
 					</div>
-					<div class="Entry__replyline">
-						{#if eventsReplying.length > 0 && !showReplies}
+					{#if eventsReplying.length > 0 && !showReplies}
+						<div class="Entry__replyline">
 							<!-- svelte-ignore a11y_click_events_have_key_events -->
 							<!-- svelte-ignore a11y_no_static_element_interactions -->
 							<div
@@ -816,8 +816,8 @@
 									/>
 								{/each}
 							</div>
-						{/if}
-					</div>
+						</div>
+					{/if}
 					<div class="Entry__MobileActions">
 						<div class="TabList">
 							<!-- svelte-ignore a11y_click_events_have_key_events -->
@@ -855,87 +855,89 @@
 					</div>
 				</div>
 			</div>
-			<div class="Extra">
-				{#if showJson}
-					{@const d = event.tags.find((tag) => tag.length >= 2 && tag[0] === 'd')?.at(1)}
-					{@const eventIdEncoded =
-						d === undefined
-							? nip19.neventEncode({ ...event, author: event.pubkey })
-							: nip19.naddrEncode({
-									identifier: d,
-									pubkey: event.pubkey,
-									kind: event.kind
-								})}
-					{@const channel = channelMap.get(event.id)}
-					{@const events =
-						event.kind === 40 && channel?.eventkind41 !== undefined
-							? [channel.eventkind41, event]
-							: [event]}
-					<aside class="Entry__json">
-						{#each events as event, i (event.id)}
-							{#if i > 0}<hr />{/if}
-							<dl class="details">
-								<dt>User ID</dt>
-								<dd><code>{nip19.npubEncode(event.pubkey)}</code></dd>
-								<dt>Event ID</dt>
-								<dd><code>{eventIdEncoded}</code></dd>
-								<dt>Event JSON</dt>
-								<dd>
-									<pre class="json-view"><code>{JSON.stringify(event, undefined, 2)}</code></pre>
-								</dd>
-								<dt>Relays seen on</dt>
-								<dd>
-									<ul>
-										{#each getSeenOn(event.id) as relay (relay)}
-											<li>{relay}</li>
-										{/each}
-									</ul>
-								</dd>
-							</dl>
-						{/each}
-					</aside>
-				{/if}
-				<div class="Entry__composeReply">
-					{#if showForm}
-						<CreateEntry
-							{loginPubkey}
-							currentChannelId={undefined}
-							eventToReply={event}
-							isTopPage={false}
-							{profileMap}
-							{uploaderSelected}
-							channelToPost={undefined}
-							bind:showForm
-						/>
+			{#if showJson || showForm || showReplies}
+				<div class="Extra">
+					{#if showJson}
+						{@const d = event.tags.find((tag) => tag.length >= 2 && tag[0] === 'd')?.at(1)}
+						{@const eventIdEncoded =
+							d === undefined
+								? nip19.neventEncode({ ...event, author: event.pubkey })
+								: nip19.naddrEncode({
+										identifier: d,
+										pubkey: event.pubkey,
+										kind: event.kind
+									})}
+						{@const channel = channelMap.get(event.id)}
+						{@const events =
+							event.kind === 40 && channel?.eventkind41 !== undefined
+								? [channel.eventkind41, event]
+								: [event]}
+						<aside class="Entry__json">
+							{#each events as event, i (event.id)}
+								{#if i > 0}<hr />{/if}
+								<dl class="details">
+									<dt>User ID</dt>
+									<dd><code>{nip19.npubEncode(event.pubkey)}</code></dd>
+									<dt>Event ID</dt>
+									<dd><code>{eventIdEncoded}</code></dd>
+									<dt>Event JSON</dt>
+									<dd>
+										<pre class="json-view"><code>{JSON.stringify(event, undefined, 2)}</code></pre>
+									</dd>
+									<dt>Relays seen on</dt>
+									<dd>
+										<ul>
+											{#each getSeenOn(event.id) as relay (relay)}
+												<li>{relay}</li>
+											{/each}
+										</ul>
+									</dd>
+								</dl>
+							{/each}
+						</aside>
 					{/if}
-				</div>
-				<div class="Entry__replies">
-					{#if showReplies}
-						{#each eventsReplying as ev (ev.id)}
-							<Entry
-								event={ev}
-								{channelMap}
-								{profileMap}
+					<div class="Entry__composeReply">
+						{#if showForm}
+							<CreateEntry
 								{loginPubkey}
-								{mutedPubkeys}
-								{mutedChannelIds}
-								{mutedWords}
-								{mutedHashTags}
-								{eventsTimeline}
-								{eventsReaction}
-								{eventsEmojiSet}
+								currentChannelId={undefined}
+								eventToReply={event}
+								isTopPage={false}
+								{profileMap}
 								{uploaderSelected}
-								{channelToPost}
-								{currentChannelId}
-								{isEnabledRelativeTime}
-								{nowRealtime}
-								level={level + 1}
-								isNested={true}
+								channelToPost={undefined}
+								bind:showForm
 							/>
-						{/each}
-					{/if}
+						{/if}
+					</div>
+					<div class="Entry__replies">
+						{#if showReplies}
+							{#each eventsReplying as ev (ev.id)}
+								<Entry
+									event={ev}
+									{channelMap}
+									{profileMap}
+									{loginPubkey}
+									{mutedPubkeys}
+									{mutedChannelIds}
+									{mutedWords}
+									{mutedHashTags}
+									{eventsTimeline}
+									{eventsReaction}
+									{eventsEmojiSet}
+									{uploaderSelected}
+									{channelToPost}
+									{currentChannelId}
+									{isEnabledRelativeTime}
+									{nowRealtime}
+									level={level + 1}
+									isNested={true}
+								/>
+							{/each}
+						{/if}
+					</div>
 				</div>
-			</div>
+			{/if}
 		{/if}
 	{:else}
 		<div class="Entry__main muted">
@@ -996,6 +998,9 @@
 	}
 	.Entry__content > p {
 		white-space: pre-wrap;
+	}
+	.Entry__content :not(p) {
+		white-space: pre-line;
 	}
 	.Entry.Quote .Entry__profile img.Avatar {
 		width: 36px;
@@ -1092,7 +1097,7 @@
 		display: none;
 	}
 	article {
-		animation: show 2s both;
+		animation: show 2s backwards;
 	}
 	@keyframes show {
 		0% {

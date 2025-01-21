@@ -994,6 +994,9 @@
 		max-height: 30em;
 		overflow-y: auto;
 	}
+	.Entry__content > p {
+		white-space: pre-wrap;
+	}
 	.Entry.Quote .Entry__profile img.Avatar {
 		width: 36px;
 		height: 36px;

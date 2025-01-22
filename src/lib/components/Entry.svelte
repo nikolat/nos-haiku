@@ -1091,7 +1091,7 @@
 		font-size: x-small;
 	}
 	.Entry__json dl dd {
-		text-indent: 1em;
+		padding-left: 1em;
 	}
 	.Entry.future {
 		display: none;

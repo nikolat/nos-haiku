@@ -2,6 +2,9 @@
 	"App": {
 		"title": {
 			"home": "ホーム",
+			"search": "お題を探す",
+			"antenna": "アンテナ",
+			"entry": "エントリー",
 			"settings": "設定"
 		}
 	},

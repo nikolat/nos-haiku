@@ -117,11 +117,11 @@
 		if (isSettings) {
 			title = $_('App.title.settings');
 		} else if (query !== undefined) {
-			title = 'お題を探す';
+			title = $_('App.title.search');
 		} else if (isAntenna) {
-			title = 'アンテナ';
+			title = $_('App.title.antenna');
 		} else if (currentNoteId !== undefined || currentAddressPointer !== undefined) {
-			title = 'Entry';
+			title = $_('App.title.entry');
 		} else if (currentPubkey !== undefined) {
 			const prof = profileMap.get(currentPubkey);
 			title = `${prof?.display_name ?? ''} (id:${prof?.name ?? `${currentPubkey.slice(0, 15)}...`})`;

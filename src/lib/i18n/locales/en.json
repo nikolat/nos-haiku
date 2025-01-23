@@ -2,6 +2,9 @@
 	"App": {
 		"title": {
 			"home": "Home",
+			"search": "Search",
+			"antenna": "Antenna",
+			"entry": "Entry",
 			"settings": "Settings"
 		}
 	},

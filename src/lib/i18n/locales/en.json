@@ -47,6 +47,16 @@
 			"hot-keywords": "Hot Keywords"
 		}
 	},
+	"Header": {
+		"search": "Search",
+		"keyword": "Keyword",
+		"post": "Post",
+		"my-page": "My Page",
+		"antenna": "Antenna",
+		"recent": "Recent",
+		"settings": "Settings",
+		"notifications": "Notifications"
+	},
 	"Settings": {
 		"menu": {
 			"settings": "Settings",

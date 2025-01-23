@@ -14,6 +14,7 @@
 	import type { NostrEvent } from 'nostr-tools/pure';
 	import * as nip19 from 'nostr-tools/nip19';
 	import { unixNow } from 'applesauce-core/helpers';
+	import { _ } from 'svelte-i18n';
 
 	let {
 		loginPubkey,
@@ -239,7 +240,7 @@
 			>
 				<input
 					type="search"
-					placeholder="検索"
+					placeholder={$_('Header.search')}
 					class="Input"
 					bind:value={queryInput}
 					onclick={(event) => {
@@ -261,7 +262,7 @@
 						value="channel"
 						bind:group={searchType}
 					/>
-					<label for="search-channel">キーワード</label>
+					<label for="search-channel">{$_('Header.keywprd')}</label>
 				</li>
 				<li class="NavGroup__item">
 					<input
@@ -271,7 +272,7 @@
 						value="note"
 						bind:group={searchType}
 					/>
-					<label for="search-note">投稿</label>
+					<label for="search-note">{$_('Header.post')}</label>
 				</li>
 			</ul>
 			<ul class="NavGroup">
@@ -283,21 +284,24 @@
 								src={prof?.picture ?? getRoboHashURL(nip19.npubEncode(loginPubkey))}
 								class="Avatar"
 								alt=""
-							/>マイページ</a
+							/>{$_('Header.my-page')}</a
 						>
 					</li>
 					<li class="NavGroup__item">
-						<a href="/antenna" class=""> <i class="fa-fw fas fa-broadcast-tower"></i> アンテナ</a>
+						<a href="/antenna" class="">
+							<i class="fa-fw fas fa-broadcast-tower"></i> {$_('Header.antenna')}</a
+						>
 					</li>
 				{/if}
 				<li class="NavGroup__item">
 					<a href="/" class="router-link-exact-active router-link-active" aria-current="page">
-						<i class="fa-fw fas fa-sparkles"></i> 最新の投稿</a
+						<i class="fa-fw fas fa-sparkles"></i> {$_('Header.recent')}</a
 					>
 				</li>
 				{#if loginPubkey !== undefined}
 					<li class="NavGroup__item">
-						<a href="/settings" class=""><i class="fa-fw fas fa-cog"></i> 設定</a>
+						<a href="/settings" class=""><i class="fa-fw fas fa-cog"></i> {$_('Header.settings')}</a
+						>
 					</li>
 				{/if}
 			</ul>
@@ -345,7 +349,7 @@
 			<div class={showNotice ? 'NoticeList' : 'NoticeList hide'}>
 				<div class="NoticeList__head">
 					<span class="NoticeList__title">
-						通知{#if countUnread > 0}{`(${countUnread})`}{/if}</span
+						{$_('Header.notifications')}{#if countUnread > 0}{`(${countUnread})`}{/if}</span
 					>
 					<!-- svelte-ignore a11y_click_events_have_key_events -->
 					<!-- svelte-ignore a11y_no_static_element_interactions -->
@@ -386,7 +390,19 @@
 											isAbout={true}
 										/>
 									</a>
-									さんが
+									{#if ev.kind === 7}
+										added a <a href="/entry/{nip19.neventEncode({ ...ev, author: ev.pubkey })}"
+											><Reaction reactionEvent={ev} profile={undefined} isAuthor={false} /></a
+										>
+									{:else if [1, 42].includes(ev.kind)}
+										<a href="/entry/{nip19.neventEncode({ ...ev, author: ev.pubkey })}">mentioned</a
+										>
+									{:else if [6, 16].includes(ev.kind)}
+										<a href="/entry/{nip19.neventEncode({ ...ev, author: ev.pubkey })}">reposted</a>
+									{:else if ev.kind === 9734}
+										Zapped
+									{/if}
+									to
 									<br />
 									{#if evTo !== undefined}
 										{@const d = evTo.tags.find((tag) => tag.length >= 2 && tag[0] === 'd')?.at(1)}
@@ -403,21 +419,7 @@
 												enableAutoLink={false}
 											/>
 										</a>
-										{[6, 16].includes(ev.kind) ? 'を' : 'に'}
 									{/if}
-									<br />
-									{#if ev.kind === 7}
-										<a href="/entry/{nip19.neventEncode({ ...ev, author: ev.pubkey })}"
-											><Reaction reactionEvent={ev} profile={undefined} isAuthor={false} /></a
-										>
-									{:else if [1, 42].includes(ev.kind)}
-										<a href="/entry/{nip19.neventEncode({ ...ev, author: ev.pubkey })}">コメント</a>
-									{:else if [6, 16].includes(ev.kind)}
-										<a href="/entry/{nip19.neventEncode({ ...ev, author: ev.pubkey })}">リポスト</a>
-									{:else if ev.kind === 9734}
-										Zap
-									{/if}
-									しました
 								</p>
 								<span class="NoticeItem__foot"
 									>{#if evTo !== undefined}<a

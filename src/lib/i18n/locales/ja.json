@@ -47,6 +47,16 @@
 			"hot-keywords": "注目のキーワード"
 		}
 	},
+	"Header": {
+		"search": "検索",
+		"keyword": "キーワード",
+		"post": "投稿",
+		"my-page": "マイページ",
+		"antenna": "アンテナ",
+		"recent": "最新の投稿",
+		"settings": "設定",
+		"notifications": "通知"
+	},
 	"Settings": {
 		"menu": {
 			"settings": "設定",

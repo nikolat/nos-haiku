@@ -81,7 +81,6 @@
 		);
 	};
 	onMount(async () => {
-		locale.set(lang);
 		document.addEventListener('nlAuth', (e) => {
 			clearTimeout(idTimeout);
 			const ce: CustomEvent = e as CustomEvent;
@@ -106,6 +105,9 @@
 	});
 	afterNavigate(() => {
 		idTimeout = setTimeout(getEventsFirstWithLoading, loginPubkey === undefined ? 1000 : 10);
+		setTimeout(() => {
+			locale.set(lang);
+		}, 10);
 		intervalID = setInterval(() => {
 			nowRealtime = 1000 * unixNow();
 		}, 5000);

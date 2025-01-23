@@ -27,6 +27,7 @@
 	import CreateEntry from '$lib/components/CreateEntry.svelte';
 	import type { NostrEvent } from 'nostr-tools/pure';
 	import * as nip19 from 'nostr-tools/nip19';
+	import { _ } from 'svelte-i18n';
 
 	let {
 		event,
@@ -501,7 +502,7 @@
 											<div>
 												{#if aTagStrs.includes(aTagStr)}
 													<div
-														title="お気に入りから削除"
+														title={$_('Entry.remove-from-favorites')}
 														class="FavoriteButton FavoriteButton--active"
 													>
 														<!-- svelte-ignore a11y_click_events_have_key_events -->
@@ -514,7 +515,7 @@
 														></span>
 													</div>
 												{:else}
-													<div title="お気に入りに追加" class="FavoriteButton">
+													<div title={$_('Entry.add-to-favorites')} class="FavoriteButton">
 														<!-- svelte-ignore a11y_click_events_have_key_events -->
 														<!-- svelte-ignore a11y_no_static_element_interactions -->
 														<span
@@ -698,7 +699,7 @@
 									<span
 										class="DeleteButton"
 										onclick={() => {
-											if (confirm('このエントリーを削除しますか？')) {
+											if (confirm($_('Entry.confirm-delete'))) {
 												sendDeletion(event);
 											}
 										}}><i class="far fa-times-circle"></i></span
@@ -790,7 +791,7 @@
 									class="Entry__reply"
 									onclick={() => {
 										showForm = !showForm;
-									}}><i class="fal fa-comment-lines"></i> 返信</span
+									}}><i class="fal fa-comment-lines"></i> {$_('Entry.reply')}</span
 								>
 							{/if}
 						</div>
@@ -800,7 +801,7 @@
 							<!-- svelte-ignore a11y_click_events_have_key_events -->
 							<!-- svelte-ignore a11y_no_static_element_interactions -->
 							<div
-								title="返信を表示"
+								title={$_('Entry.show-replies')}
 								class="ReplyAvatars noselect"
 								onclick={() => {
 									showReplies = true;
@@ -823,7 +824,7 @@
 							<!-- svelte-ignore a11y_click_events_have_key_events -->
 							<!-- svelte-ignore a11y_no_static_element_interactions -->
 							<span
-								title="返信"
+								title={$_('Entry.reply')}
 								class="Action Action--reply"
 								onclick={() => {
 									showForm = !showForm;
@@ -835,7 +836,7 @@
 								<!-- svelte-ignore a11y_click_events_have_key_events -->
 								<!-- svelte-ignore a11y_no_static_element_interactions -->
 								<span
-									title="返信を表示"
+									title={$_('Entry.show-replies')}
 									class="Action Action--replies noselect"
 									onclick={() => {
 										showReplies = true;

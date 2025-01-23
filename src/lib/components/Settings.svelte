@@ -95,19 +95,19 @@
 				<div class="Card__head">
 					<h3 class="Card__title">
 						<i class="fa-fw fas fa-cog"></i>
-						{$_('Settings.left.settings')}
+						{$_('Settings.menu.settings')}
 					</h3>
 				</div>
 				<div class="Card__body Card__body--nopad">
 					<ul class="Settings__groupList">
-						<li title="アカウント" class="Settings__groupListItem current">
-							<span><i class="fa-fw fas fa-user-circle"></i> アカウント</span>
+						<li title={$_('Settings.menu.account')} class="Settings__groupListItem current">
+							<span><i class="fa-fw fas fa-user-circle"></i> {$_('Settings.menu.account')}</span>
 						</li>
-						<li title="安全" class="Settings__groupListItem">
-							<span><i class="fa-fw fas fa-user-shield"></i> 安全</span>
+						<li title={$_('Settings.menu.safety')} class="Settings__groupListItem">
+							<span><i class="fa-fw fas fa-user-shield"></i> {$_('Settings.menu.safety')}</span>
 						</li>
-						<li title="ログアウト" class="Settings__groupListItem">
-							<span><i class="fa-fw fas fa-sign-out-alt"></i> ログアウト</span>
+						<li title={$_('Settings.menu.logout')} class="Settings__groupListItem">
+							<span><i class="fa-fw fas fa-sign-out-alt"></i> {$_('Settings.menu.logout')}</span>
 						</li>
 					</ul>
 				</div>
@@ -118,19 +118,22 @@
 				<div data-settings-group="account" class="Card Settings">
 					<div class="Settings__head">
 						<div class="Settings__info">
-							<h1 class="Settings__title"><i class="fa-fw fas fa-user-circle"></i> アカウント</h1>
+							<h1 class="Settings__title">
+								<i class="fa-fw fas fa-user-circle"></i>
+								{$_('Settings.menu.account')}
+							</h1>
 						</div>
 					</div>
 					<div class="Settings__body">
 						<div class="Settings__section">
 							<div class="Label">
-								<span>プロフィール</span>
+								<span>{$_('Settings.account.profile')}</span>
 								<a
 									href={urlToLinkProfileEditor}
 									target="_blank"
 									rel="noreferrer"
-									aria-label="プロフィールを編集する"
-									title="プロフィールを編集する"><i class="far fa-edit"></i></a
+									aria-label={$_('Settings.account.profile-edit')}
+									title={$_('Settings.account.profile-edit')}><i class="far fa-edit"></i></a
 								>
 							</div>
 							<div class="Control">
@@ -154,7 +157,7 @@
 							</div>
 						</div>
 						<div class="Settings__section">
-							<div class="Label"><span>Language</span></div>
+							<div class="Label"><span>{$_('Settings.account.language')}</span></div>
 							<div class="Control">
 								<input
 									type="radio"
@@ -183,7 +186,7 @@
 							</div>
 						</div>
 						<div class="Settings__section">
-							<div class="Label"><span>ダークモード</span></div>
+							<div class="Label"><span>{$_('Settings.account.darkmode')}</span></div>
 							<div class="Control">
 								<label class="SliderSwitch"
 									><input
@@ -199,7 +202,7 @@
 							</div>
 						</div>
 						<div class="Settings__section">
-							<div class="Label"><span>相対時刻表示</span></div>
+							<div class="Label"><span>{$_('Settings.account.relative-time')}</span></div>
 							<div class="Control">
 								<label class="SliderSwitch"
 									><input
@@ -215,7 +218,7 @@
 							</div>
 						</div>
 						<div class="Settings__section">
-							<div class="Label"><span>kind:1 をスキップ</span></div>
+							<div class="Label"><span>{$_('Settings.account.skip-kind-1')}</span></div>
 							<div class="Control">
 								<label class="SliderSwitch"
 									><input
@@ -233,7 +236,7 @@
 							</div>
 						</div>
 						<div class="Settings__section">
-							<div class="Label"><span>clientタグ</span></div>
+							<div class="Label"><span>{$_('Settings.account.client-tag')}</span></div>
 							<div class="Control">
 								<label class="SliderSwitch"
 									><input
@@ -249,9 +252,9 @@
 							</div>
 						</div>
 						<div class="Settings__section">
-							<div class="Label"><span>接続リレー</span></div>
+							<div class="Label"><span>{$_('Settings.account.relays')}</span></div>
 							<div class="Control">
-								<label for="select-relay-list">Select Relay List: </label>
+								<label for="select-relay-list">{$_('Settings.account.select-relay-set')}: </label>
 								<select
 									id="select-relay-list"
 									bind:value={relaysSelected}
@@ -330,9 +333,9 @@
 							</div>
 						</div>
 						<div class="Settings__section">
-							<div class="Label"><span>アップローダー選択</span></div>
+							<div class="Label"><span>{$_('Settings.account.uploader')}</span></div>
 							<div class="Control">
-								<label for="select-uploader">Select Uploader: </label>
+								<label for="select-uploader">{$_('Settings.account.select-uploader')}: </label>
 								<select
 									id="select-uploader"
 									bind:value={uploaderSelected}
@@ -351,16 +354,18 @@
 				<div data-settings-group="safety" class="Card Settings">
 					<div class="Settings__head">
 						<div class="Settings__info">
-							<h1 class="Settings__title"><i class="fa-fw fas fa-user-shield"></i> 安全</h1>
+							<h1 class="Settings__title">
+								<i class="fa-fw fas fa-user-shield"></i>
+								{$_('Settings.menu.safety')}
+							</h1>
 						</div>
 					</div>
 					<div class="Settings__body">
 						<div class="Settings__section">
 							<div class="Label">
-								<i class="fa-fw fas fa-user-minus"></i> <span>ミュート中のユーザー</span>
-								<p class="Tip">
-									ミュートされたユーザーはタイムラインから除外されます。ただし、直接ユーザーのページを開くと見ることができます。
-								</p>
+								<i class="fa-fw fas fa-user-minus"></i>
+								<span>{$_('Settings.safety.muted-users')}</span>
+								<p class="Tip">{$_('Settings.safety.muted-users-tips')}</p>
 							</div>
 							<div class="Control">
 								<div class="BlockList">
@@ -384,7 +389,7 @@
 													<div>
 														<button
 															class="Button Button--warn"
-															aria-label="ミュート解除"
+															aria-label={$_('Settings.safety.unmute')}
 															onclick={() => {
 																if (loginPubkey !== undefined) {
 																	unmuteUser(pubkey, loginPubkey);
@@ -394,7 +399,7 @@
 													</div>
 												</li>
 											{:else}
-												<li>ミュートしていません</li>
+												<li>{$_('Settings.safety.nothing-muted')}</li>
 											{/each}
 										</ul>
 									</div>
@@ -403,10 +408,9 @@
 						</div>
 						<div class="Settings__section">
 							<div class="Label">
-								<i class="fa-fw fas fa-tags"></i> <span>ミュート中のキーワード</span>
-								<p class="Tip">
-									ミュートされたキーワードはタイムラインから除外されます。ただし、直接キーワードのページを開くと見ることができます。
-								</p>
+								<i class="fa-fw fas fa-tags"></i>
+								<span>{$_('Settings.safety.muted-keywords')}</span>
+								<p class="Tip">{$_('Settings.safety.muted-keywords-tips')}</p>
 							</div>
 							<div class="Control">
 								<div class="BlockList">
@@ -430,7 +434,7 @@
 													<div>
 														<button
 															class="Button Button--warn"
-															aria-label="ミュート解除"
+															aria-label={$_('Settings.safety.unmute')}
 															onclick={() => {
 																if (loginPubkey !== undefined) {
 																	unmuteChannel(channel.id, loginPubkey);
@@ -440,7 +444,7 @@
 													</div>
 												</li>
 											{:else}
-												<li>ミュートしていません</li>
+												<li>{$_('Settings.safety.nothing-muted')}</li>
 											{/each}
 										</ul>
 									</div>
@@ -450,10 +454,8 @@
 						{#if mutedWords.length > 0}
 							<div class="Settings__section">
 								<div class="Label">
-									<i class="fa-fw fas fa-tags"></i> <span>ミュート中のワード</span>
-									<p class="Tip">
-										ミュートされたワードを含む投稿・キーワード・リアクションはタイムラインから除外されます。
-									</p>
+									<i class="fa-fw fas fa-tags"></i> <span>{$_('Settings.safety.muted-words')}</span>
+									<p class="Tip">{$_('Settings.safety.muted-words-tips')}</p>
 								</div>
 								<div class="Control">
 									<div class="BlockList">
@@ -467,7 +469,7 @@
 														<div>
 															<button
 																class="Button Button--warn"
-																aria-label="ミュート解除"
+																aria-label={$_('Settings.safety.unmute')}
 																onclick={() => {
 																	if (loginPubkey !== undefined) {
 																		unmuteWord(word, loginPubkey);
@@ -487,10 +489,8 @@
 							<div class="Settings__section">
 								<div class="Label">
 									<i class="fa-fw fas fa-tags"></i>
-									<span>ミュート中のハッシュタグ</span>
-									<p class="Tip">
-										ミュートされたハッシュタグを含む投稿・カテゴリーに指定されたキーワードはタイムラインから除外されます。
-									</p>
+									<span>{$_('Settings.safety.muted-hashtags')}</span>
+									<p class="Tip">{$_('Settings.safety.muted-hashtags-tips')}</p>
 								</div>
 								<div class="Control">
 									<div class="BlockList">
@@ -504,7 +504,7 @@
 														<div>
 															<button
 																class="Button Button--warn"
-																aria-label="ミュート解除"
+																aria-label={$_('Settings.safety.unmute')}
 																onclick={() => {
 																	if (loginPubkey !== undefined) {
 																		unmuteHashTag(hashTag, loginPubkey);
@@ -525,7 +525,10 @@
 				<div data-settings-group="logout" class="Card Settings">
 					<div class="Settings__head">
 						<div class="Settings__info">
-							<h1 class="Settings__title"><i class="fa-fw fas fa-sign-out-alt"></i> ログアウト</h1>
+							<h1 class="Settings__title">
+								<i class="fa-fw fas fa-sign-out-alt"></i>
+								{$_('Settings.menu.logout')}
+							</h1>
 						</div>
 					</div>
 					<div class="Settings__body">
@@ -536,7 +539,7 @@
 									onclick={() => {
 										document.dispatchEvent(new Event('nlLogout'));
 									}}
-									class="Button Button--warn"><span>ログアウト</span></button
+									class="Button Button--warn"><span>{$_('Settings.menu.logout')}</span></button
 								>
 							</div>
 						</div>

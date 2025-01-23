@@ -30,7 +30,7 @@
 	import type { NostrEvent } from 'nostr-tools/pure';
 	import { unixNow } from 'applesauce-core/helpers';
 	import '$lib/haiku.css';
-	import { _ } from 'svelte-i18n';
+	import { _, locale } from 'svelte-i18n';
 
 	const urlParams: UrlParams = $props();
 	const {
@@ -81,6 +81,7 @@
 		);
 	};
 	onMount(async () => {
+		locale.set(lang);
 		document.addEventListener('nlAuth', (e) => {
 			clearTimeout(idTimeout);
 			const ce: CustomEvent = e as CustomEvent;

@@ -6,8 +6,36 @@
 		}
 	},
 	"Settings": {
-		"left": {
-			"settings": "Settings"
+		"menu": {
+			"settings": "Settings",
+			"account": "Account",
+			"safety": "Safety",
+			"logout": "Log Out"
+		},
+		"account": {
+			"profile": "Profile",
+			"profile-edit": "Edit your profile details",
+			"language": "Language",
+			"darkmode": "Dark mode",
+			"relative-time": "Relative time",
+			"skip-kind-1": "Skip kind:1",
+			"client-tag": "Client tag",
+			"relays": "Relays",
+			"select-relay-set": "Select relay set",
+			"uploader": "Uploader",
+			"select-uploader": "Select uploader"
+		},
+		"safety": {
+			"unmute": "Unmute",
+			"nothing-muted": "There's nothing here.",
+			"muted-users": "Muted users",
+			"muted-users-tips": "Muted users are excluded from the timeline. However, they can be viewed by opening the user's page directly.",
+			"muted-keywords": "Muted keywords",
+			"muted-keywords-tips": "Muted keywords are excluded from the timeline. However, they can be viewed by opening the keyword's page directly.",
+			"muted-words": "Muted words",
+			"muted-words-tips": "Posts, keywords, and reactions containing muted words will be excluded from the timeline.",
+			"muted-hashtags": "Muted hashtags",
+			"muted-hashtags-tips": "Posts and keywords specified in the category containing muted hashtags will be excluded from the timeline."
 		}
 	}
 }

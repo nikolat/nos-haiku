@@ -313,7 +313,7 @@ export const getLang = (): string => {
 
 export const setLang = (value: string): void => {
 	lang = value;
-	locale.set(value ?? initialLocale);
+	locale.set(value);
 	savelocalStorage();
 };
 

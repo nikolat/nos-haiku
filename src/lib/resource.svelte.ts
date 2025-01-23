@@ -24,10 +24,12 @@ import type { RelayRecord } from 'nostr-tools/relay';
 import type { WindowNostr } from 'nostr-tools/nip07';
 import * as nip19 from 'nostr-tools/nip19';
 import type { FileUploadResponse } from 'nostr-tools/nip96';
+import { locale } from 'svelte-i18n';
 import {
 	clientTag,
 	defaultReactionToAdd,
 	defaultRelays,
+	initialLocale,
 	profileRelays,
 	searchRelays,
 	subRelaysForChannel,
@@ -48,6 +50,7 @@ import {
 } from '$lib/utils';
 
 let loginPubkey: string | undefined = $state();
+let lang: string = $state(initialLocale);
 let isEnabledDarkMode: boolean = $state(true);
 let isEnabledRelativeTime: boolean = $state(true);
 let isEnabledSkipKind1: boolean = $state(false);
@@ -81,6 +84,7 @@ const relaysToWrite: string[] = $derived(
 preferences.subscribe(
 	(value: {
 		loginPubkey: string | undefined;
+		lang: string;
 		isEnabledDarkMode: boolean;
 		isEnabledRelativeTime: boolean;
 		isEnabledSkipKind1: boolean;
@@ -91,6 +95,9 @@ preferences.subscribe(
 	}) => {
 		if (loginPubkey !== value.loginPubkey) {
 			loginPubkey = value.loginPubkey;
+		}
+		if (lang !== value.lang) {
+			lang = value.lang;
 		}
 		if (isEnabledDarkMode !== value.isEnabledDarkMode) {
 			isEnabledDarkMode = value.isEnabledDarkMode;
@@ -118,6 +125,7 @@ preferences.subscribe(
 const savelocalStorage = () => {
 	preferences.set({
 		loginPubkey,
+		lang,
 		isEnabledDarkMode,
 		isEnabledRelativeTime,
 		isEnabledSkipKind1,
@@ -296,6 +304,16 @@ export const getUploaderSelected = (): string => {
 
 export const setUploaderSelected = (value: string): void => {
 	uploaderSelected = value;
+	savelocalStorage();
+};
+
+export const getLang = (): string => {
+	return lang;
+};
+
+export const setLang = (value: string): void => {
+	lang = value;
+	locale.set(value);
 	savelocalStorage();
 };
 

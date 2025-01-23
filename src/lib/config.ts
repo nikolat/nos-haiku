@@ -1,6 +1,15 @@
 import * as nip19 from 'nostr-tools/nip19';
 import { generateSecretKey, getPublicKey } from 'nostr-tools/pure';
 import type { RelayRecord } from 'nostr-tools/relay';
+import { browser } from '$app/environment';
+
+const defaultLocale = 'en';
+const languages = ['en', 'ja'];
+const currentLang: string = (() => {
+	return browser ? window.navigator.language : defaultLocale;
+})();
+export const initialLocale: string =
+	browser && languages.includes(currentLang) ? currentLang : defaultLocale;
 
 export const defaultRelays: RelayRecord = {
 	'wss://nrelay-jp.c-stellar.net/': { read: true, write: true },

@@ -1,0 +1,13 @@
+{
+	"App": {
+		"title": {
+			"home": "ホーム",
+			"settings": "設定"
+		}
+	},
+	"Settings": {
+		"left": {
+			"settings": "設定"
+		}
+	}
+}

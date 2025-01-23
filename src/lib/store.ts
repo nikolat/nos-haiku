@@ -1,10 +1,11 @@
 import { persisted } from 'svelte-persisted-store';
-import { defaultRelays, uploaderURLs } from '$lib/config';
+import { defaultRelays, initialLocale, uploaderURLs } from '$lib/config';
 import type { RelayRecord } from 'nostr-tools/relay';
 
 export const preferences = persisted<
 	{
 		loginPubkey: string | undefined;
+		lang: string;
 		isEnabledDarkMode: boolean;
 		isEnabledRelativeTime: boolean;
 		isEnabledSkipKind1: boolean;
@@ -15,6 +16,7 @@ export const preferences = persisted<
 	},
 	{
 		loginPubkey: string | undefined;
+		lang: string;
 		isEnabledDarkMode: boolean;
 		isEnabledRelativeTime: boolean;
 		isEnabledSkipKind1: boolean;
@@ -25,6 +27,7 @@ export const preferences = persisted<
 	}
 >('preferences', {
 	loginPubkey: undefined,
+	lang: initialLocale,
 	isEnabledDarkMode: true,
 	isEnabledRelativeTime: true,
 	isEnabledSkipKind1: false,

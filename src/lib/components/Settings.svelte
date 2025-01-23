@@ -9,6 +9,7 @@
 		setIsEnabledRelativeTime,
 		setIsEnabledSkipKind1,
 		setIsEnabledUseClientTag,
+		setLang,
 		setRelaysSelected,
 		setRelaysToUseSelected,
 		setUploaderSelected,
@@ -20,15 +21,18 @@
 	import Header from '$lib/components/Header.svelte';
 	import Profile from '$lib/components/Profile.svelte';
 	import { goto } from '$app/navigation';
+	import { browser } from '$app/environment';
 	import type { NostrEvent } from 'nostr-tools/pure';
 	import type { RelayRecord } from 'nostr-tools/relay';
 	import * as nip11 from 'nostr-tools/nip11';
 	import * as nip19 from 'nostr-tools/nip19';
+	import { _ } from 'svelte-i18n';
 
 	let {
 		loginPubkey,
 		query,
 		urlSearchParams,
+		lang,
 		isEnabledDarkMode,
 		isEnabledRelativeTime,
 		isEnabledSkipKind1,
@@ -47,6 +51,7 @@
 		loginPubkey: string | undefined;
 		query: string | undefined;
 		urlSearchParams: URLSearchParams | undefined;
+		lang: string;
 		isEnabledDarkMode: boolean;
 		isEnabledRelativeTime: boolean;
 		isEnabledSkipKind1: boolean;
@@ -88,7 +93,10 @@
 		<div class="Column Column--left">
 			<div class="Card">
 				<div class="Card__head">
-					<h3 class="Card__title"><i class="fa-fw fas fa-cog"></i> 設定</h3>
+					<h3 class="Card__title">
+						<i class="fa-fw fas fa-cog"></i>
+						{$_('Settings.left.settings')}
+					</h3>
 				</div>
 				<div class="Card__body Card__body--nopad">
 					<ul class="Settings__groupList">
@@ -143,6 +151,35 @@
 										{mutedHashTags}
 									/>
 								{/if}
+							</div>
+						</div>
+						<div class="Settings__section">
+							<div class="Label"><span>Language</span></div>
+							<div class="Control">
+								<input
+									type="radio"
+									id="language-ja"
+									name="language"
+									value="ja"
+									disabled={loginPubkey === undefined}
+									bind:group={lang}
+									onchange={() => {
+										setLang(lang);
+									}}
+								/>
+								<label for="language-ja">日本語</label>
+								<input
+									type="radio"
+									id="language-en"
+									name="language"
+									value="en"
+									disabled={loginPubkey === undefined}
+									bind:group={lang}
+									onchange={() => {
+										setLang(lang);
+									}}
+								/>
+								<label for="language-en">English</label>
 							</div>
 						</div>
 						<div class="Settings__section">
@@ -254,15 +291,20 @@
 										{#each Object.entries(relaysToUse) as relay (relay[0])}
 											<tr>
 												<td>
-													{#await nip11.fetchRelayInformation(relay[0]) then r}
-														{#if URL.canParse(r.icon ?? '')}
-															<img src={r.icon} alt={r.name} />
-														{:else if r.pubkey !== undefined}
-															<img src={getRoboHashURL(nip19.npubEncode(r.pubkey))} alt={r.name} />
-														{/if}
-													{:catch error}
-														{console.warn(error.message)}
-													{/await}
+													{#if browser}
+														{#await nip11.fetchRelayInformation(relay[0]) then r}
+															{#if URL.canParse(r.icon ?? '')}
+																<img src={r.icon} alt={r.name} />
+															{:else if r.pubkey !== undefined}
+																<img
+																	src={getRoboHashURL(nip19.npubEncode(r.pubkey))}
+																	alt={r.name}
+																/>
+															{/if}
+														{:catch error}
+															{console.warn(error.message)}
+														{/await}
+													{/if}
 												</td>
 												<td>{relay[0]}</td>
 												<td

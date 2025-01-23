@@ -9,6 +9,7 @@
 		getIsEnabledRelativeTime,
 		getIsEnabledSkipKind1,
 		getIsEnabledUseClientTag,
+		getLang,
 		getLoginPubkey,
 		getMutedChannelIds,
 		getMutedHashTags,
@@ -29,6 +30,7 @@
 	import type { NostrEvent } from 'nostr-tools/pure';
 	import { unixNow } from 'applesauce-core/helpers';
 	import '$lib/haiku.css';
+	import { _ } from 'svelte-i18n';
 
 	const urlParams: UrlParams = $props();
 	const {
@@ -43,6 +45,7 @@
 		isAntenna
 	}: UrlParams = $derived(urlParams);
 	const loginPubkey: string | undefined = $derived(getLoginPubkey());
+	const lang: string = $derived(getLang());
 	const isEnabledDarkMode: boolean = $derived(getIsEnabledDarkMode());
 	const isEnabledRelativeTime: boolean = $derived(getIsEnabledRelativeTime());
 	const isEnabledSkipKind1: boolean = $derived(getIsEnabledSkipKind1());
@@ -111,7 +114,7 @@
 	const title: string = $derived.by(() => {
 		let title: string | undefined;
 		if (isSettings) {
-			title = '設定';
+			title = $_('App.title.settings');
 		} else if (query !== undefined) {
 			title = 'お題を探す';
 		} else if (isAntenna) {
@@ -129,7 +132,7 @@
 		} else if (category !== undefined) {
 			title = `#${category}`;
 		} else if (page.url.pathname === '/') {
-			title = 'ホーム';
+			title = $_('App.title.home');
 		}
 		return title !== undefined ? `${title} / Nos Haiku` : 'Nos Haiku';
 	});
@@ -152,6 +155,7 @@
 			{loginPubkey}
 			{query}
 			{urlSearchParams}
+			{lang}
 			{isEnabledDarkMode}
 			{isEnabledRelativeTime}
 			{isEnabledSkipKind1}

@@ -8,6 +8,45 @@
 			"settings": "Settings"
 		}
 	},
+	"Page": {
+		"left": {
+			"recent-users": "Recent Users"
+		},
+		"main": {
+			"antenna-title": "Antenna",
+			"antenna-subtitle": "Your favorite people and keywords",
+			"entry-of": "'s entry",
+			"entry": "Entry",
+			"feed-of": "'s feed",
+			"feed-subtitle-entry": "View entries about {idView}",
+			"remove-from-favorites": "Remove from favorites",
+			"add-to-favorites": "Add to favorites",
+			"settings": "Settings",
+			"unmute-it": "Unmute {idView}",
+			"mute-it": "Mute {idView}",
+			"view-custom-emoji": "View custom emoji used by {idView}",
+			"add": "Add",
+			"send": "Send",
+			"cancel": "Cancel",
+			"muted-entries-keyword": "You've muted entries from this keyword.",
+			"unmute": "Unmute",
+			"edit-it": "Edit {idEdit}",
+			"delete-it": "Delete {idDelete}",
+			"confirm-channel-delete": "Do you want to delete this channel?",
+			"muted-entries-hashtag": "You've muted entries from this hashtag.",
+			"feed-subtitle-keyword": "View keywords about {idView}",
+			"muted-keywords-category": "You've muted keywords in this category.",
+			"latest-posts-title": "Latest Posts",
+			"latest-posts-subtitle": "Everybody Haiku!",
+			"login-with-nostr": "Login with Nostr"
+		},
+		"right": {
+			"favorite-keywords": "Favorite Keywords",
+			"channel-info": "Channel Info",
+			"support-nos-haiku": "Support Nos Haiku",
+			"hot-keywords": "Hot Keywords"
+		}
+	},
 	"Settings": {
 		"menu": {
 			"settings": "Settings",

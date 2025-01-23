@@ -42,6 +42,7 @@
 	import type { NostrEvent } from 'nostr-tools/pure';
 	import * as nip19 from 'nostr-tools/nip19';
 	import { unixNow } from 'applesauce-core/helpers';
+	import { _ } from 'svelte-i18n';
 
 	let {
 		loginPubkey,
@@ -363,7 +364,9 @@
 			<div class={currentPubkey === undefined ? 'Card' : 'Card Card--nomargin'}>
 				{#if currentPubkey === undefined}
 					<div class="Card__head">
-						<h3 class="Card__title"><i class="fa-fw fas fa-users"></i>ユーザー一覧</h3>
+						<h3 class="Card__title">
+							<i class="fa-fw fas fa-users"></i>{$_('Page.left.recent-users')}
+						</h3>
 					</div>
 				{/if}
 				<div class={currentPubkey === undefined ? 'Card__body' : 'Card__body Card__body--nopad'}>
@@ -408,8 +411,11 @@
 				<div class="Feed__head">
 					<div class="Feed__info">
 						{#if isAntenna}
-							<h1 class="Feed__title"><i class="fa-fw fas fa-broadcast-tower"></i> アンテナ</h1>
-							<h3 class="Feed__subtitle">お気に入りの人たちとキーワード</h3>
+							<h1 class="Feed__title">
+								<i class="fa-fw fas fa-broadcast-tower"></i>
+								{$_('Page.main.antenna-title')}
+							</h1>
+							<h3 class="Feed__subtitle">{$_('Page.main.antenna-subtitle')}</h3>
 						{:else if currentNoteId !== undefined}
 							{#if currentPubkey !== undefined}
 								{@const profile = profileMap.get(currentPubkey)}
@@ -419,10 +425,10 @@
 										tags={profile?.event.tags ?? []}
 										isAbout={true}
 									/>
-									さんのエントリー
+									{$_('Page.main.entry-of')}
 								</h1>
 							{:else}
-								<h1 class="Feed__title">エントリー</h1>
+								<h1 class="Feed__title">{$_('Page.main.entry')}</h1>
 							{/if}
 						{:else if currentPubkey !== undefined}
 							{@const profile = profileMap.get(currentPubkey)}
@@ -434,13 +440,18 @@
 									tags={profile?.event.tags ?? []}
 									isAbout={true}
 								/>
-								のフィード
+								{$_('Page.main.feed-of')}
 							</h1>
-							<h3 class="Feed__subtitle">{idView} についてのエントリーを見る</h3>
+							<h3 class="Feed__subtitle">
+								{$_('Page.main.feed-subtitle-entry').replace('{idView}', idView)}
+							</h3>
 							{#if loginPubkey !== undefined}
 								<div class="Actions">
 									{#if followingPubkeys.includes(currentPubkey)}
-										<div title="お気に入りから削除" class="FavoriteButton FavoriteButton--active">
+										<div
+											title={$_('Page.main.remove-from-favorites')}
+											class="FavoriteButton FavoriteButton--active"
+										>
 											<!-- svelte-ignore a11y_click_events_have_key_events -->
 											<!-- svelte-ignore a11y_no_static_element_interactions -->
 											<span
@@ -451,7 +462,7 @@
 											></span>
 										</div>
 									{:else}
-										<div title="お気に入りに追加" class="FavoriteButton">
+										<div title={$_('Page.main.add-to-favorites')} class="FavoriteButton">
 											<!-- svelte-ignore a11y_click_events_have_key_events -->
 											<!-- svelte-ignore a11y_no_static_element_interactions -->
 											<span
@@ -465,7 +476,7 @@
 									<!-- svelte-ignore a11y_click_events_have_key_events -->
 									<!-- svelte-ignore a11y_no_static_element_interactions -->
 									<div
-										title="設定"
+										title={$_('Page.main.settings')}
 										class={showSetting ? 'SettingButton SettingButton--active' : 'SettingButton'}
 										onclick={() => {
 											showSetting = !showSetting;
@@ -476,23 +487,28 @@
 											<!-- svelte-ignore a11y_missing_attribute -->
 											{#if mutedPubkeys.includes(currentPubkey)}
 												<a
-													title={`${idView} のミュートを解除`}
+													title={$_('Page.main.unmute-it').replace('{idView}', idView)}
 													onclick={() => {
 														unmuteUser(currentPubkey, loginPubkey);
-													}}><i class="fa-fw fas fa-eye"></i> {idView} のミュートを解除</a
+													}}
+													><i class="fa-fw fas fa-eye"></i>
+													{$_('Page.main.unmute-it').replace('{idView}', idView)}</a
 												>
 											{:else}
 												<a
-													title={`${idView} をミュートする`}
+													title={$_('Page.main.mute-it').replace('{idView}', idView)}
 													onclick={() => {
 														muteUser(currentPubkey, loginPubkey);
-													}}><i class="fa-fw fas fa-eye-slash"></i> {idView} をミュートする</a
+													}}
+													><i class="fa-fw fas fa-eye-slash"></i>
+													{$_('Page.main.mute-it').replace('{idView}', idView)}</a
 												>
 											{/if}
 											<a
-												title={`${idView} の使用カスタム絵文字を見る`}
+												title={$_('Page.main.view-custom-emoji').replace('{idView}', idView)}
 												href={`/entry/${nip19.naddrEncode({ identifier: '', pubkey: currentPubkey, kind: 10030 })}`}
-												><i class="fa-fw fas fa-smile"></i> {idView} の使用カスタム絵文字を見る</a
+												><i class="fa-fw fas fa-smile"></i>
+												{$_('Page.main.view-custom-emoji').replace('{idView}', idView)}</a
 											>
 										</div>
 									</div>
@@ -502,7 +518,9 @@
 							{@const channel = channelMap.get(currentChannelId)}
 							{#if channel !== undefined}
 								<h1 class="Feed__title"><i class="fa-fw fas fa-tags"></i> {channel.name}</h1>
-								<h3 class="Feed__subtitle">{channel.name} についてのエントリーを見る</h3>
+								<h3 class="Feed__subtitle">
+									{$_('Page.main.feed-subtitle-entry').replace('{idView}', channel.name)}
+								</h3>
 								{#if channel.categories.length > 0}
 									<div class="categories">
 										{#each channel.categories as category (category)}
@@ -587,7 +605,7 @@
 											onclick={() => {
 												editChannelTags.push(editChannelTag.toLowerCase());
 												editChannelTag = '';
-											}}><span>追加</span></button
+											}}><span>{$_('Page.main.add')}</span></button
 										>
 									</dl>
 									<div class="CreateEntry__actions">
@@ -596,13 +614,13 @@
 											disabled={editChannelName.length === 0}
 											onclick={() => {
 												callSendChannelEdit(channel);
-											}}><span>送信</span></button
+											}}><span>{$_('Page.main.send')}</span></button
 										>
 										<button
 											class="Button Button--cancel"
 											onclick={() => {
 												isEnabledToEditChannel = false;
-											}}><span>キャンセル</span></button
+											}}><span>{$_('Page.main.cancel')}</span></button
 										>
 									</div>
 								{/if}
@@ -610,19 +628,22 @@
 									{#if mutedChannelIds.includes(currentChannelId)}
 										<span class="Feed__muted"
 											><i class="fa-fw fas fa-eye-slash"></i>
+											{$_('Page.main.muted-entries-keyword')}
 											<!-- svelte-ignore a11y_click_events_have_key_events -->
 											<!-- svelte-ignore a11y_no_static_element_interactions -->
-											このキーワードのエントリーはミュート中です。
 											<span
 												onclick={() => {
 													unmuteChannel(currentChannelId, loginPubkey);
-												}}>ミュートを解除</span
+												}}>{$_('Page.main.unmute')}</span
 											></span
 										>
 									{/if}
 									<div class="Actions">
 										{#if followingChannelIds.includes(currentChannelId)}
-											<div title="お気に入りから削除" class="FavoriteButton FavoriteButton--active">
+											<div
+												title={$_('Page.main.remove-from-favorites')}
+												class="FavoriteButton FavoriteButton--active"
+											>
 												<!-- svelte-ignore a11y_click_events_have_key_events -->
 												<!-- svelte-ignore a11y_no_static_element_interactions -->
 												<span
@@ -633,7 +654,7 @@
 												></span>
 											</div>
 										{:else}
-											<div title="お気に入りに追加" class="FavoriteButton">
+											<div title={$_('Page.main.add-to-favorites')} class="FavoriteButton">
 												<!-- svelte-ignore a11y_click_events_have_key_events -->
 												<!-- svelte-ignore a11y_no_static_element_interactions -->
 												<span
@@ -647,7 +668,7 @@
 										<!-- svelte-ignore a11y_click_events_have_key_events -->
 										<!-- svelte-ignore a11y_no_static_element_interactions -->
 										<div
-											title="設定"
+											title={$_('Page.main.settings')}
 											class={showSetting ? 'SettingButton SettingButton--active' : 'SettingButton'}
 											onclick={() => {
 												showSetting = !showSetting;
@@ -660,39 +681,45 @@
 											<div class="SettingButton__Dropdown Dropdown--left">
 												{#if mutedChannelIds.includes(currentChannelId)}
 													<a
-														title={`${channel.name} のミュートを解除`}
+														title={$_('Page.main.unmute-it').replace('{idView}', channel.name)}
 														onclick={() => {
 															unmuteChannel(currentChannelId, loginPubkey);
-														}}><i class="fa-fw fas fa-eye"></i> {channel.name} のミュートを解除</a
+														}}
+														><i class="fa-fw fas fa-eye"></i>
+														{$_('Page.main.unmute-it').replace('{idView}', channel.name)}</a
 													>
 												{:else}
 													<a
-														title={`${channel.name} をミュートする`}
+														title={$_('Page.main.mute-it').replace('{idView}', channel.name)}
 														onclick={() => {
 															muteChannel(currentChannelId, loginPubkey);
 														}}
-														><i class="fa-fw fas fa-eye-slash"></i> {channel.name} をミュートする</a
+														><i class="fa-fw fas fa-eye-slash"></i>
+														{$_('Page.main.mute-it').replace('{idView}', channel.name)}</a
 													>
 												{/if}
 												{#if channel.pubkey === loginPubkey}
 													<a
-														title={`${channel.name} を編集する`}
+														title={$_('Page.main.edit-it').replace('{idEdit}', channel.name)}
 														onclick={() => {
 															isEnabledToEditChannel = true;
 															editChannelName = channel.name;
 															editChannelAbout = channel.about ?? '';
 															editChannelPicture = channel.picture ?? '';
 															editChannelTags = channel.categories;
-														}}><i class="fa-fw fas fa-edit"></i> {channel.name} を編集する</a
+														}}
+														><i class="fa-fw fas fa-edit"></i>
+														{$_('Page.main.edit-it').replace('{idEdit}', channel.name)}</a
 													>
 													<a
-														title={`${channel.name} を削除する`}
+														title={$_('Page.main.delete-it').replace('{idDelete}', channel.name)}
 														onclick={() => {
-															if (confirm('このチャンネルを削除しますか？')) {
+															if (confirm($_('confirm-channel-delete'))) {
 																sendDeletion(channel.eventkind40);
 															}
 														}}
-														><i class="fa-fw fas fa-times-circle"></i> {channel.name} を削除する</a
+														><i class="fa-fw fas fa-times-circle"></i>
+														{$_('Page.main.delete-it').replace('{idDelete}', channel.name)}</a
 													>
 												{/if}
 											</div>
@@ -702,18 +729,20 @@
 							{/if}
 						{:else if hashtag !== undefined}
 							<h1 class="Feed__title"><i class="fa-fw fas fa-tags"></i> #{hashtag}</h1>
-							<h3 class="Feed__subtitle">#{hashtag} についてのエントリーを見る</h3>
+							<h3 class="Feed__subtitle">
+								{$_('Page.main.feed-subtitle-entry').replace('{idView}', `#${hashtag}`)}
+							</h3>
 							{#if loginPubkey !== undefined}
 								{#if mutedHashTags.includes(hashtag)}
 									<span class="Feed__muted"
 										><i class="fa-fw fas fa-eye-slash"></i>
+										{$_('Page.main.muted-entries-hashtag')}
 										<!-- svelte-ignore a11y_click_events_have_key_events -->
 										<!-- svelte-ignore a11y_no_static_element_interactions -->
-										このハッシュタグのエントリーはミュート中です。
 										<span
 											onclick={() => {
 												unmuteHashTag(hashtag, loginPubkey);
-											}}>ミュートを解除</span
+											}}>{$_('Page.main.unmute')}</span
 										></span
 									>
 								{/if}
@@ -721,7 +750,7 @@
 									<!-- svelte-ignore a11y_click_events_have_key_events -->
 									<!-- svelte-ignore a11y_no_static_element_interactions -->
 									<div
-										title="設定"
+										title={$_('Page.main.settings')}
 										class={showSetting ? 'SettingButton SettingButton--active' : 'SettingButton'}
 										onclick={() => {
 											showSetting = !showSetting;
@@ -734,17 +763,21 @@
 										<div class="SettingButton__Dropdown Dropdown--left">
 											{#if mutedHashTags.includes(hashtag)}
 												<a
-													title={`${hashtag} のミュートを解除`}
+													title={$_('Page.main.unmute-it').replace('{idView}', `#${hashtag}`)}
 													onclick={() => {
 														unmuteHashTag(hashtag, loginPubkey);
-													}}><i class="fa-fw fas fa-eye"></i> #{hashtag} のミュートを解除</a
+													}}
+													><i class="fa-fw fas fa-eye"></i>
+													{$_('Page.main.unmute-it').replace('{idView}', `#${hashtag}`)}</a
 												>
 											{:else}
 												<a
-													title={`${hashtag} をミュートする`}
+													title={$_('Page.main.mute-it').replace('{idView}', `#${hashtag}`)}
 													onclick={() => {
 														muteHashTag(hashtag, loginPubkey);
-													}}><i class="fa-fw fas fa-eye-slash"></i> #{hashtag} をミュートする</a
+													}}
+													><i class="fa-fw fas fa-eye-slash"></i>
+													{$_('Page.main.mute-it').replace('{idView}', `#${hashtag}`)}</a
 												>
 											{/if}
 										</div>
@@ -753,18 +786,20 @@
 							{/if}
 						{:else if category !== undefined}
 							<h1 class="Feed__title"><i class="fa-fw fas fa-tags"></i> #{category}</h1>
-							<h3 class="Feed__subtitle">#{category} についてのキーワードを見る</h3>
+							<h3 class="Feed__subtitle">
+								{$_('Page.main.feed-subtitle-keyword').replace('{idView}', `#${category}`)}
+							</h3>
 							{#if loginPubkey !== undefined}
 								{#if mutedHashTags.includes(category)}
 									<span class="Feed__muted"
 										><i class="fa-fw fas fa-eye-slash"></i>
+										{$_('Page.main.muted-keywords-category')}
 										<!-- svelte-ignore a11y_click_events_have_key_events -->
 										<!-- svelte-ignore a11y_no_static_element_interactions -->
-										このカテゴリーのキーワードはミュート中です。
 										<span
 											onclick={() => {
 												unmuteHashTag(category, loginPubkey);
-											}}>ミュートを解除</span
+											}}>{$_('Page.main.unmute')}</span
 										></span
 									>
 								{/if}
@@ -772,7 +807,7 @@
 									<!-- svelte-ignore a11y_click_events_have_key_events -->
 									<!-- svelte-ignore a11y_no_static_element_interactions -->
 									<div
-										title="設定"
+										title={$_('Page.main.settings')}
 										class={showSetting ? 'SettingButton SettingButton--active' : 'SettingButton'}
 										onclick={() => {
 											showSetting = !showSetting;
@@ -785,17 +820,21 @@
 										<div class="SettingButton__Dropdown Dropdown--left">
 											{#if mutedHashTags.includes(category)}
 												<a
-													title={`${category} のミュートを解除`}
+													title={$_('Page.main.unmute-it').replace('{idView}', `#${category}`)}
 													onclick={() => {
 														unmuteHashTag(category, loginPubkey);
-													}}><i class="fa-fw fas fa-eye"></i> #{category} のミュートを解除</a
+													}}
+													><i class="fa-fw fas fa-eye"></i>
+													{$_('Page.main.unmute-it').replace('{idView}', `#${category}`)}</a
 												>
 											{:else}
 												<a
-													title={`${category} をミュートする`}
+													title={$_('Page.main.mute-it').replace('{idView}', `#${category}`)}
 													onclick={() => {
 														muteHashTag(category, loginPubkey);
-													}}><i class="fa-fw fas fa-eye-slash"></i> #{category} をミュートする</a
+													}}
+													><i class="fa-fw fas fa-eye-slash"></i>
+													{$_('Page.main.mute-it').replace('{idView}', `#${category}`)}</a
 												>
 											{/if}
 										</div>
@@ -803,8 +842,8 @@
 								</div>
 							{/if}
 						{:else}
-							<h1 class="Feed__title">最新の投稿</h1>
-							<h3 class="Feed__subtitle">みんなでハイク</h3>
+							<h1 class="Feed__title">{$_('Page.main.latest-posts-title')}</h1>
+							<h3 class="Feed__subtitle">{$_('Page.main.latest-posts-subtitle')}</h3>
 						{/if}
 					</div>
 				</div>
@@ -817,7 +856,7 @@
 									class="Button Button--hatena"
 									onclick={() => {
 										document.dispatchEvent(new CustomEvent('nlLaunch', { detail: '' }));
-									}}><span>Nostrでログイン</span></button
+									}}><span>{$_('Page.main.login-with-nostr')}</span></button
 								>
 							</div>
 						</div>
@@ -872,7 +911,10 @@
 				)}
 				<div class="Card">
 					<div class="Card__head">
-						<h3 class="Card__title"><i class="fa-fw fas fa-tags"></i> お気に入りキーワード</h3>
+						<h3 class="Card__title">
+							<i class="fa-fw fas fa-tags"></i>
+							{$_('Page.right.favorite-keywords')}
+						</h3>
 					</div>
 					<div class="Card__body">
 						<div class="KeywordList">
@@ -925,7 +967,7 @@
 				{#if channel !== undefined}
 					<div class="Card BlogTagsInfo">
 						<div class="Card__head">
-							<h3 class="Card__title">チャンネル情報</h3>
+							<h3 class="Card__title">{$_('Page.right.channel-info')}</h3>
 						</div>
 						<ChannelMeta {channel} />
 					</div>
@@ -940,14 +982,15 @@
 						}}
 					>
 						<img alt="Zap" src={zapImageUri} />
-						<span>Nos Haikuをサポート</span>
+						<span>{$_('Page.right.support-nos-haiku')}</span>
 					</button>
 					<div class="zap-window-container" bind:this={zapWindowContainer}></div>
 				</div>
 				<div class="Card">
 					<div class="Card__head">
 						<h3 class="Card__title">
-							<i class="fa-fw fas fa-tags"></i> 注目のキーワード
+							<i class="fa-fw fas fa-tags"></i>
+							{$_('Page.right.hot-keywords')}
 						</h3>
 					</div>
 					<div class="Card__body">

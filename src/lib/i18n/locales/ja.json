@@ -8,6 +8,45 @@
 			"settings": "設定"
 		}
 	},
+	"Page": {
+		"left": {
+			"recent-users": "ユーザー一覧"
+		},
+		"main": {
+			"antenna-title": "アンテナ",
+			"antenna-subtitle": "お気に入りの人たちとキーワード",
+			"entry-of": "さんのエントリー",
+			"entry": "エントリー",
+			"feed-of": "のフィード",
+			"feed-subtitle-entry": "{idView} についてのエントリーを見る",
+			"remove-from-favorites": "お気に入りから削除",
+			"add-to-favorites": "お気に入りに追加",
+			"settings": "設定",
+			"unmute-it": "{idView} のミュートを解除",
+			"mute-it": "{idView} をミュートする",
+			"view-custom-emoji": "{idView} の使用カスタム絵文字を見る",
+			"add": "追加",
+			"send": "送信",
+			"cancel": "キャンセル",
+			"muted-entries-keyword": "このキーワードのエントリーはミュート中です。",
+			"unmute": "ミュートを解除",
+			"edit-it": "{idEdit} を編集する",
+			"delete-it": "{idDelete} を削除する",
+			"confirm-channel-delete": "このチャンネルを削除しますか？",
+			"muted-entries-hashtag": "このハッシュタグのエントリーはミュート中です。",
+			"feed-subtitle-keyword": "{idView} についてのキーワードを見る",
+			"muted-keywords-category": "このカテゴリーのキーワードはミュート中です。",
+			"latest-posts-title": "最新の投稿",
+			"latest-posts-subtitle": "みんなでハイク",
+			"login-with-nostr": "Nostrでログイン"
+		},
+		"right": {
+			"favorite-keywords": "お気に入りキーワード",
+			"channel-info": "チャンネル情報",
+			"support-nos-haiku": "Nos Haikuをサポート",
+			"hot-keywords": "注目のキーワード"
+		}
+	},
 	"Settings": {
 		"menu": {
 			"settings": "設定",

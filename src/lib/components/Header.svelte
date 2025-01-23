@@ -262,7 +262,7 @@
 						value="channel"
 						bind:group={searchType}
 					/>
-					<label for="search-channel">{$_('Header.keywprd')}</label>
+					<label for="search-channel">{$_('Header.keyword')}</label>
 				</li>
 				<li class="NavGroup__item">
 					<input

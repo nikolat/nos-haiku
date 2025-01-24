@@ -61,6 +61,18 @@
 		"settings": "設定",
 		"notifications": "通知"
 	},
+	"Profile": {
+		"profile-image-of": "{name}のプロフィール画像",
+		"settings": "設定",
+		"unmute-pre": " ",
+		"unmute-suf": " のミュートを解除",
+		"mute-pre": " ",
+		"mute-suf": " をミュートする",
+		"view-custom-emoji-pre": " ",
+		"view-custom-emoji-suf": " の使用カスタム絵文字を見る",
+		"remove-from-favorites": "お気に入りから削除",
+		"add-to-favorites": "お気に入りに追加"
+	},
 	"Entry": {
 		"remove-from-favorites": "お気に入りから削除",
 		"add-to-favorites": "お気に入りに追加",

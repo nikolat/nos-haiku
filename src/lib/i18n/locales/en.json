@@ -61,6 +61,18 @@
 		"settings": "Settings",
 		"notifications": "Notifications"
 	},
+	"Profile": {
+		"profile-image-of": "{name}'s profile image",
+		"settings": "Settings",
+		"unmute-pre": "Unmute ",
+		"unmute-suf": " ",
+		"mute-pre": "Mute ",
+		"mute-suf": " ",
+		"view-custom-emoji-pre": "View custom emoji used by ",
+		"view-custom-emoji-suf": " ",
+		"remove-from-favorites": "Remove from favorites",
+		"add-to-favorites": "Add to favorites"
+	},
 	"Entry": {
 		"remove-from-favorites": "Remove from favorites",
 		"add-to-favorites": "Add to favorites",

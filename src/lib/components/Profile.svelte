@@ -14,6 +14,7 @@
 	import type { NostrEvent } from 'nostr-tools/pure';
 	import * as nip05 from 'nostr-tools/nip05';
 	import * as nip19 from 'nostr-tools/nip19';
+	import { _ } from 'svelte-i18n';
 
 	const {
 		loginPubkey,
@@ -83,7 +84,7 @@
 				<div class="router-link-exact-active router-link-active">
 					<img
 						src={prof?.picture ?? getRoboHashURL(nip19.npubEncode(currentPubkey))}
-						alt="{getProfileName(prof)}のプロフィール画像"
+						alt={$_('Profile.profile-image-of').replace('{name}', getProfileName(prof))}
 					/>
 				</div>
 			</div>
@@ -93,7 +94,7 @@
 						<!-- svelte-ignore a11y_click_events_have_key_events -->
 						<!-- svelte-ignore a11y_no_static_element_interactions -->
 						<div
-							title="設定"
+							title={$_('Profile.settings')}
 							class={showSetting ? 'SettingButton SettingButton--active' : 'SettingButton'}
 							onclick={() => {
 								showSetting = !showSetting;
@@ -103,7 +104,10 @@
 								<span class="fa-fw fas fa-cog"></span>
 							</div>
 							<div class="SettingButton__Dropdown Dropdown--right">
-								<a href="/settings" class=""><i class="fa-fw fas fa-cog"></i> 設定</a>
+								<a href="/settings">
+									<i class="fa-fw fas fa-cog"></i>
+									{$_('Profile.settings')}
+								</a>
 							</div>
 						</div>
 					</div>
@@ -112,7 +116,7 @@
 						<!-- svelte-ignore a11y_click_events_have_key_events -->
 						<!-- svelte-ignore a11y_no_static_element_interactions -->
 						<div
-							title="設定"
+							title={$_('Profile.settings')}
 							class={showSetting ? 'SettingButton SettingButton--active' : 'SettingButton'}
 							onclick={() => {
 								showSetting = !showSetting;
@@ -128,42 +132,52 @@
 										onclick={() => {
 											unmuteUser(currentPubkey, loginPubkey);
 										}}
-										><i class="fa-fw fas fa-eye"></i>
+									>
+										<i class="fa-fw fas fa-eye"></i>
+										{$_('Profile.unmute-pre')}
 										<Content
 											content={getProfileName(prof)}
 											tags={prof?.event.tags ?? []}
 											isAbout={true}
 										/>
-										のミュートを解除</a
-									>
+										{$_('Profile.unmute-suf')}
+									</a>
 								{:else}
 									<a
 										onclick={() => {
 											muteUser(currentPubkey, loginPubkey);
 										}}
-										><i class="fa-fw fas fa-eye-slash"></i>
+									>
+										<i class="fa-fw fas fa-eye-slash"></i>
+										{$_('Profile.mute-pre')}
 										<Content
 											content={getProfileName(prof)}
 											tags={prof?.event.tags ?? []}
 											isAbout={true}
 										/>
-										をミュートする</a
-									>
+										{$_('Profile.mute-suf')}
+									</a>
 								{/if}
 								<a
-									title={`${getProfileName(prof)} の使用カスタム絵文字を見る`}
+									title={`${$_('Profile.view-custom-emoji-pre')}${getProfileName(prof)}${$_('Profile.view-custom-emoji-suf')}`}
 									href={`/entry/${nip19.naddrEncode({ identifier: '', pubkey: currentPubkey, kind: 10030 })}`}
-									><i class="fa-fw fas fa-smile"></i>
+								>
+									<i class="fa-fw fas fa-smile"></i>
+									{$_('Profile.view-custom-emoji-pre')}
 									<Content
 										content={getProfileName(prof)}
 										tags={prof?.event.tags ?? []}
 										isAbout={true}
-									/> の使用カスタム絵文字を見る</a
-								>
+									/>
+									{$_('Profile.view-custom-emoji-suf')}
+								</a>
 							</div>
 						</div>
 						{#if followingPubkeys.includes(currentPubkey)}
-							<div title="お気に入りから削除" class="FavoriteButton FavoriteButton--active">
+							<div
+								title={$_('Profile.remove-from-favorites')}
+								class="FavoriteButton FavoriteButton--active"
+							>
 								<!-- svelte-ignore a11y_click_events_have_key_events -->
 								<!-- svelte-ignore a11y_no_static_element_interactions -->
 								<span
@@ -174,7 +188,7 @@
 								></span>
 							</div>
 						{:else}
-							<div title="お気に入りに追加" class="FavoriteButton">
+							<div title={$_('Profile.add-to-favorites')} class="FavoriteButton">
 								<!-- svelte-ignore a11y_click_events_have_key_events -->
 								<!-- svelte-ignore a11y_no_static_element_interactions -->
 								<span

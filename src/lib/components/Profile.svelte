@@ -82,10 +82,12 @@
 				style="border-color: rgb(127, 127, 127); background-color: rgb(127, 127, 127);"
 			>
 				<div class="router-link-exact-active router-link-active">
-					<img
-						src={prof?.picture ?? getRoboHashURL(nip19.npubEncode(currentPubkey))}
-						alt={$_('Profile.profile-image-of').replace('{name}', getProfileName(prof))}
-					/>
+					<a href={`/${nip19.npubEncode(currentPubkey)}`}>
+						<img
+							src={prof?.picture ?? getRoboHashURL(nip19.npubEncode(currentPubkey))}
+							alt={$_('Profile.profile-image-of').replace('{name}', getProfileName(prof))}
+						/>
+					</a>
 				</div>
 			</div>
 			{#if loginPubkey !== undefined}
@@ -205,7 +207,9 @@
 		</div>
 		<div class="ProfileBox__content">
 			<h3 class="router-link-exact-active router-link-active">
-				<Content content={getProfileName(prof)} tags={prof?.event.tags ?? []} isAbout={true} />
+				<a href={`/${nip19.npubEncode(currentPubkey)}`}>
+					<Content content={getProfileName(prof)} tags={prof?.event.tags ?? []} isAbout={true} />
+				</a>
 			</h3>
 			<div class="HatenaID">
 				<a
@@ -260,6 +264,9 @@
 </div>
 
 <style>
+	.ProfileBox__content > h3 > a {
+		color: var(--text-color);
+	}
 	.SettingButton.SettingButton--active > .SettingButton__Dropdown {
 		white-space: nowrap;
 		z-index: 2;

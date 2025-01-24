@@ -12,6 +12,7 @@
 	} from 'nostr-tools/nip96';
 	import { getToken } from 'nostr-tools/nip98';
 	import type { ProfileContent } from 'applesauce-core/helpers';
+	import { _ } from 'svelte-i18n';
 
 	let {
 		loginPubkey,
@@ -181,7 +182,9 @@
 						class="input-wrapper"
 					>
 						<input
-							placeholder={isTopPage ? 'キーワードを新規作成' : 'キーワードを新規作成 (オプション)'}
+							placeholder={isTopPage
+								? $_('CreateEntry.create-new-keyword')
+								: `${$_('CreateEntry.create-new-keyword')} (${$_('CreateEntry.optional')})`}
 							disabled={channelToPost !== undefined}
 							class="default-input Input"
 							aria-autocomplete="list"
@@ -199,7 +202,7 @@
 										: getRoboHashURL(nip19.neventEncode({ id: channel.id }))}
 								/>
 							{:else}
-								<span class="channel-to-post">⚠️新規作成</span>
+								<span class="channel-to-post">⚠️{$_('CreateEntry.create-new')}</span>
 							{/if}
 							<span class="channel-clear">
 								<button
@@ -232,7 +235,7 @@
 				<div class="vue-simple-suggest Input CreateEntry__content_warning CreateEntry__keyword">
 					<div class="input-wrapper">
 						<input
-							placeholder="警告の理由 (オプション)"
+							placeholder={`${$_('CreateEntry.reason-for-warning')} (${$_('CreateEntry.optional')})`}
 							class="default-input-cw Input"
 							bind:value={reasonContentWarning}
 						/>
@@ -248,8 +251,8 @@
 					<span class="ql-formats">
 						<span class="ql-formats"
 							><button
-								aria-label="画像を追加"
-								title="画像を追加"
+								aria-label={$_('CreateEntry.add-image')}
+								title={$_('CreateEntry.add-image')}
 								class="ToolbarItem ql-image"
 								onclick={() => inputFile.click()}
 								disabled={isInProcess}
@@ -264,8 +267,8 @@
 								onchange={uploadFileExec}
 							/>
 							<button
-								aria-label="絵文字を追加"
-								title="絵文字を追加"
+								aria-label={$_('CreateEntry.add-emoji')}
+								title={$_('CreateEntry.add-emoji')}
 								class="ToolbarItem ql-emoji"
 								type="button"
 								onclick={callGetEmoji}><i class="fa-fw far fa-smile-plus"></i></button
@@ -308,15 +311,19 @@
 			<button
 				class="Button"
 				disabled={contentToSend.length === 0 || (isTopPage && channelNameToCreate.length === 0)}
-				onclick={callSendNote}><span>投稿</span></button
+				onclick={callSendNote}
 			>
+				<span>{$_('CreateEntry.post')}</span>
+			</button>
 			{#if eventToReply !== undefined}
 				<button
 					class="Button Button--cancel"
 					onclick={() => {
 						showForm = false;
-					}}><span> キャンセル </span></button
+					}}
 				>
+					<span>{$_('CreateEntry.cancel')}</span>
+				</button>
 			{/if}
 		</div>
 	</div>

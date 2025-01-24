@@ -64,6 +64,16 @@
 		"reply": "Reply",
 		"show-replies": "Show replies"
 	},
+	"CreateEntry": {
+		"create-new-keyword": "Create new keyword",
+		"optional": "optional",
+		"create-new": "Create new",
+		"reason-for-warning": "Reason for warning",
+		"add-image": "Add image",
+		"add-emoji": "Add emoji",
+		"post": "Post",
+		"cancel": "Cancel"
+	},
 	"Settings": {
 		"menu": {
 			"settings": "Settings",

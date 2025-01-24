@@ -64,6 +64,16 @@
 		"reply": "返信",
 		"show-replies": "返信を表示"
 	},
+	"CreateEntry": {
+		"create-new-keyword": "キーワードを新規作成",
+		"optional": "オプション",
+		"create-new": "新規作成",
+		"reason-for-warning": "警告の理由",
+		"add-image": "画像を追加",
+		"add-emoji": "絵文字を追加",
+		"post": "投稿",
+		"cancel": "キャンセル"
+	},
 	"Settings": {
 		"menu": {
 			"settings": "設定",

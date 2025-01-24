@@ -47,6 +47,10 @@
 			"hot-keywords": "注目のキーワード"
 		}
 	},
+	"Search": {
+		"search-for": "お題を探す",
+		"nothing-found-for": "'{query}' が見つかりませんでした"
+	},
 	"Header": {
 		"search": "検索",
 		"keyword": "キーワード",

@@ -47,6 +47,10 @@
 			"hot-keywords": "Hot Keywords"
 		}
 	},
+	"Search": {
+		"search-for": "Search for",
+		"nothing-found-for": "Nothing found for '{query}'"
+	},
 	"Header": {
 		"search": "Search",
 		"keyword": "Keyword",

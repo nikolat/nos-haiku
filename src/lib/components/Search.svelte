@@ -2,6 +2,7 @@
 	import type { ChannelContent, ProfileContentEvent } from '$lib/utils';
 	import Header from '$lib/components/Header.svelte';
 	import * as nip19 from 'nostr-tools/nip19';
+	import { _ } from 'svelte-i18n';
 
 	const {
 		loginPubkey,
@@ -55,22 +56,22 @@
 			<div class="Search__results">
 				<div class="Search__head">
 					<div class="Search__info">
-						<span class="Search__title"
-							><input type="search" placeholder="キーワード" value={query} />
-							<span class="Search__leader"
-								><i class="fa-fw fas fa-search"></i> お題を探す:
-							</span></span
-						>
+						<span class="Search__title">
+							<span class="Search__leader">
+								<i class="fa-fw fas fa-search"></i>
+								{$_('Search.search-for')}:{query}
+							</span>
+						</span>
 					</div>
 				</div>
 				<div class="Search__body">
 					<ul>
 						{#each channelMapSearched.values() as channel (channel.id)}
 							<li>
-								<a href="/keyword/{nip19.neventEncode(channel)}" class=""> {channel.name} </a>
+								<a href="/keyword/{nip19.neventEncode(channel)}" class="">{channel.name}</a>
 							</li>
 						{:else}
-							<li>0件</li>
+							<li>{$_('Search.nothing-found-for').replace('{query}', query)}</li>
 						{/each}
 					</ul>
 				</div>

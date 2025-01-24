@@ -280,7 +280,7 @@
 		height: 14px;
 	}
 	.emoji {
-		height: 32px;
+		height: 1.5em;
 		vertical-align: top;
 	}
 </style>

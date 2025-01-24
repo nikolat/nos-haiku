@@ -96,5 +96,14 @@
 			"muted-hashtags": "Muted hashtags",
 			"muted-hashtags-tips": "Posts and keywords specified in the category containing muted hashtags will be excluded from the timeline."
 		}
+	},
+	"utils": {
+		"now": "now",
+		"seconds-ago": " seconds ago",
+		"minutes-ago": " minutes ago",
+		"hours-ago": " hours ago",
+		"days-ago": " days ago",
+		"months-ago": " months ago",
+		"years-ago": " years ago"
 	}
 }

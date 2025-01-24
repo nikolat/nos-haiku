@@ -7,6 +7,8 @@ import type { ProfileContent } from 'applesauce-core/helpers';
 import data from '@emoji-mart/data';
 // @ts-expect-error なんもわからんかも
 import type { BaseEmoji } from '@types/emoji-mart';
+import { _ } from 'svelte-i18n';
+import { get } from 'svelte/store';
 
 export interface ProfileContentEvent extends ProfileContent {
 	event: NostrEvent;
@@ -48,20 +50,21 @@ export const getAbsoluteTime = (unixTime: number): string => {
 
 export const getRelativeTime = (nowRealtime: number, unixTime: number): string => {
 	const diff = (nowRealtime - unixTime) / 1000;
+	const $_ = (s: string): string => get(_)(s);
 	if (diff <= 0) {
-		return '今';
+		return $_('utils.now');
 	} else if (diff < 60) {
-		return `${diff}秒前`;
+		return `${diff}${$_('utils.seconds-ago')}`;
 	} else if (diff < 60 * 60) {
-		return `${Math.floor(diff / 60)}分前`;
+		return `${Math.floor(diff / 60)}${$_('utils.minutes-ago')}`;
 	} else if (diff < 60 * 60 * 24) {
-		return `${Math.floor(diff / (60 * 60))}時間前`;
+		return `${Math.floor(diff / (60 * 60))}${$_('utils.hours-ago')}`;
 	} else if (diff < 60 * 60 * 24 * 30) {
-		return `${Math.floor(diff / (60 * 60 * 24))}日前`;
+		return `${Math.floor(diff / (60 * 60 * 24))}${$_('utils.days-ago')}`;
 	} else if (diff < 60 * 60 * 24 * 30 * 12) {
-		return `${Math.floor(diff / (60 * 60 * 24 * 30))}ヶ月前`;
+		return `${Math.floor(diff / (60 * 60 * 24 * 30))}${$_('utils.months-ago')}`;
 	} else {
-		return `${Math.floor(diff / (60 * 60 * 24 * 30 * 12))}年前`;
+		return `${Math.floor(diff / (60 * 60 * 24 * 30 * 12))}${$_('utils.years-ago')}`;
 	}
 };
 

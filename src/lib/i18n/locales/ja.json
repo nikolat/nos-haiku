@@ -96,5 +96,14 @@
 			"muted-hashtags": "ミュート中のハッシュタグ",
 			"muted-hashtags-tips": "ミュートされたハッシュタグを含む投稿・カテゴリーに指定されたキーワードはタイムラインから除外されます。"
 		}
+	},
+	"utils": {
+		"now": "今",
+		"seconds-ago": "秒前",
+		"minutes-ago": "分前",
+		"hours-ago": "時間前",
+		"days-ago": "日前",
+		"months-ago": "ヶ月前",
+		"years-ago": "年前"
 	}
 }

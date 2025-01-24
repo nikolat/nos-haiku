@@ -51,21 +51,34 @@ export const getAbsoluteTime = (unixTime: number): string => {
 export const getRelativeTime = (nowRealtime: number, unixTime: number): string => {
 	const diff = (nowRealtime - unixTime) / 1000;
 	const $_ = (s: string): string => get(_)(s);
+	let r: string;
+	let n: number;
 	if (diff <= 0) {
-		return $_('utils.now');
+		n = 0;
+		r = $_('utils.now');
 	} else if (diff < 60) {
-		return `${diff}${$_('utils.seconds-ago')}`;
+		n = diff;
+		r = `${n}${$_('utils.seconds-ago')}`;
 	} else if (diff < 60 * 60) {
-		return `${Math.floor(diff / 60)}${$_('utils.minutes-ago')}`;
+		n = Math.floor(diff / 60);
+		r = `${n}${$_('utils.minutes-ago')}`;
 	} else if (diff < 60 * 60 * 24) {
-		return `${Math.floor(diff / (60 * 60))}${$_('utils.hours-ago')}`;
+		n = Math.floor(diff / (60 * 60));
+		r = `${n}${$_('utils.hours-ago')}`;
 	} else if (diff < 60 * 60 * 24 * 30) {
-		return `${Math.floor(diff / (60 * 60 * 24))}${$_('utils.days-ago')}`;
+		n = Math.floor(diff / (60 * 60 * 24));
+		r = `${n}${$_('utils.days-ago')}`;
 	} else if (diff < 60 * 60 * 24 * 30 * 12) {
-		return `${Math.floor(diff / (60 * 60 * 24 * 30))}${$_('utils.months-ago')}`;
+		n = Math.floor(diff / (60 * 60 * 24 * 30));
+		r = `${n}${$_('utils.months-ago')}`;
 	} else {
-		return `${Math.floor(diff / (60 * 60 * 24 * 30 * 12))}${$_('utils.years-ago')}`;
+		n = Math.floor(diff / (60 * 60 * 24 * 30 * 12));
+		r = `${n}${$_('utils.years-ago')}`;
 	}
+	if (n === 1) {
+		r = r.replace('s ago', ' ago');
+	}
+	return r;
 };
 
 const getSats = (event9734: NostrEvent): number | null => {

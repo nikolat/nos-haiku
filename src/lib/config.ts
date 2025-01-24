@@ -1,7 +1,6 @@
 import * as nip19 from 'nostr-tools/nip19';
 import { generateSecretKey, getPublicKey } from 'nostr-tools/pure';
 import type { RelayRecord } from 'nostr-tools/relay';
-
 import { browser } from '$app/environment';
 
 const defaultLocale = 'en';

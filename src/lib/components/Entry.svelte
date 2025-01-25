@@ -255,13 +255,20 @@
 <article class={classNames.join(' ')}>
 	{#if (!isMutedPubkey || showMutedPubkey) && (!isMutedChannel || showMutedChannel) && (!isMutedContent || showMutedContent) && (!isMutedHashTag || showMutedHashTag)}
 		{#if event.kind === 42 && (channelId === undefined || channel === undefined || channel.name === undefined)}
-			{#if channelId === undefined}
-				kind:42 event without valid channel id
-			{:else if channel === undefined}
-				kind:42 event of unknown channel
-			{:else if channel.name === undefined}
-				kind:42 event with unnamed channel
-			{/if}
+			<details>
+				<summary>
+					{#if channelId === undefined}
+						kind:42 event without valid channel id
+					{:else if channel === undefined}
+						kind:42 event of unknown channel
+					{:else if channel.name === undefined}
+						kind:42 event with unnamed channel
+					{/if}
+				</summary>
+				<aside class="Entry__json">
+					<pre class="json-view"><code>{JSON.stringify(event, undefined, 2)}</code></pre>
+				</aside>
+			</details>
 		{:else}
 			{@const d = event.tags.find((tag) => tag.length >= 2 && tag[0] === 'd')?.at(1)}
 			{@const kind = event.kind}
@@ -1085,7 +1092,7 @@
 	.Entry__json dl * {
 		font-size: small;
 	}
-	.Entry__json dl code {
+	.Entry__json code {
 		font-size: x-small;
 	}
 	.Entry__json dl dd {

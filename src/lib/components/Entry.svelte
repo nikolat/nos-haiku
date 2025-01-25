@@ -73,12 +73,14 @@
 		if (event === undefined) {
 			return undefined;
 		}
-		const rootId = event.tags
-			.find((tag) => tag.length >= 4 && tag[0] === 'e' && tag[3] === 'root')
-			?.at(1);
-		if (rootId === undefined) {
+		const rootIds: string[] = event.tags
+			.filter((tag) => tag.length >= 4 && tag[0] === 'e' && tag[3] === 'root')
+			.map((tag) => tag.at(1))
+			.filter((id) => id !== undefined);
+		if (rootIds.length !== 1) {
 			return undefined;
 		}
+		const rootId = rootIds[0];
 		try {
 			nip19.neventEncode({ id: rootId });
 		} catch (_error) {
@@ -86,12 +88,7 @@
 		}
 		return rootId;
 	};
-	const channelId: string | undefined = $derived.by(() => {
-		if (event.kind !== 42) {
-			return undefined;
-		}
-		return getRootId(event);
-	});
+	const channelId: string | undefined = $derived(event.kind === 42 ? getRootId(event) : undefined);
 	const channel: ChannelContent | undefined = $derived(channelMap.get(channelId ?? ''));
 	const eventsReactionToTheEvent: NostrEvent[] = $derived(
 		eventsReaction.filter((ev) => {

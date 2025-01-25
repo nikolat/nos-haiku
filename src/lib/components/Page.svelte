@@ -177,13 +177,16 @@
 			tl = eventsTimeline.filter(
 				(ev) =>
 					(ev.kind === 42 &&
-						ev.tags.find((tag) => tag.length >= 4 && tag[0] === 'e' && tag[3] === 'root')?.at(1) ===
-							currentChannelId) ||
+						ev.tags
+							.filter((tag) => tag.length >= 4 && tag[0] === 'e' && tag[3] === 'root')
+							.map((tag) => tag[1])
+							.includes(currentChannelId)) ||
 					(ev.kind === 16 &&
 						ev.tags.some((tag) => tag.length >= 2 && tag[0] === 'k' && tag[1] === '42') &&
 						getEventById(ev.tags.findLast((tag) => tag.length >= 2 && tag[0] === 'e')?.at(1) ?? '')
-							?.tags.find((tag) => tag.length >= 4 && tag[0] === 'e' && tag[3] === 'root')
-							?.at(1) === currentChannelId)
+							?.tags.filter((tag) => tag.length >= 4 && tag[0] === 'e' && tag[3] === 'root')
+							.map((tag) => tag[1])
+							.includes(currentChannelId))
 			);
 		} else if (query !== undefined) {
 			if (urlSearchParams !== undefined) {
@@ -221,27 +224,34 @@
 	const timelineSliced = $derived(timelineAll.slice(0, countToShow));
 	const timelineToShow: NostrEvent[] = $derived(
 		timelineSliced.filter((ev) => {
-			const rootId = ev.tags
-				.find((tag) => tag.length >= 4 && tag[0] === 'e' && tag[3] === 'root')
-				?.at(1);
+			const rootIds: string[] = ev.tags
+				.filter((tag) => tag.length >= 4 && tag[0] === 'e' && tag[3] === 'root')
+				.map((tag) => tag.at(1))
+				.filter((id) => id !== undefined);
 			return (
 				!(currentPubkey === undefined && mutedPubkeys.includes(ev.pubkey)) &&
-				!(currentChannelId === undefined && mutedChannelIds.includes(rootId ?? '')) &&
+				!(
+					currentChannelId === undefined &&
+					rootIds.some((rootId) => mutedChannelIds.includes(rootId))
+				) &&
 				!mutedWords.some(
 					(word) =>
 						ev.content.toLowerCase().includes(word) ||
 						(ev.kind === 42 &&
-							(channelMap.get(rootId ?? '')?.name.toLowerCase() ?? '').includes(word))
+							rootIds.some((rootId) =>
+								(channelMap.get(rootId)?.name.toLowerCase() ?? '').includes(word)
+							))
 				) &&
 				!mutedHashTags.some(
 					(t) =>
 						ev.tags
 							.filter((tag) => tag.length >= 2 && tag[0] === 't')
-							.map((tag) => tag[1].toLowerCase())
+							.map((tag) => tag.at(1)?.toLowerCase())
+							.filter((s) => s !== undefined)
 							.includes(t) ||
-						(ev.kind === 42 && (channelMap.get(rootId ?? '')?.categories ?? []).includes(t))
-				) &&
-				!(ev.kind === 42 && rootId === undefined)
+						(ev.kind === 42 &&
+							rootIds.some((rootId) => (channelMap.get(rootId)?.categories ?? []).includes(t)))
+				)
 			);
 		})
 	);

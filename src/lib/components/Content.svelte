@@ -259,7 +259,7 @@
 			.filter((tag) => tag.length >= 2 && tag[0] === 't')
 			.map((tag) => tag[1].toLowerCase())}
 		{#if tTags.includes(hashTagText)}
-			<a href="/hashtag/{encodeURI(hashTagText.toLowerCase())}">{matchedText}</a>
+			<a href="/hashtag/{encodeURI(hashTagText)}">{matchedText}</a>
 		{:else}
 			{matchedText}
 		{/if}

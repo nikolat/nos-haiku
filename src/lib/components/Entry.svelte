@@ -258,16 +258,16 @@
 			<details>
 				<summary>
 					{#if channelId === undefined}
-						kind:42 event without valid channel id
+						{$_('Entry.kind42-event-without-valid-channel-id')}
 					{:else if channel === undefined}
-						kind:42 event of unknown channel
+						{$_('Entry.kind42-event-of-unknown-channel')}
 					{:else if channel.name === undefined}
-						kind:42 event with unnamed channel
+						{$_('Entry.kind42-event-with-unnamed-channel')}
 					{/if}
 				</summary>
-				<aside class="Entry__json">
+				<div class="Entry__json">
 					<pre class="json-view"><code>{JSON.stringify(event, undefined, 2)}</code></pre>
-				</aside>
+				</div>
 			</details>
 		{:else}
 			{@const d = event.tags.find((tag) => tag.length >= 2 && tag[0] === 'd')?.at(1)}
@@ -411,7 +411,9 @@
 											/>
 										{:else}
 											<p class="warning-message">
-												{`⚠️Reposting a kind:${repostedEvent.kind} event is disallowed in kind:${event.kind} repost events.`}
+												{$_('Entry.invalid-repost')
+													.replace('{repostedEvent-kind}', `${repostedEvent.kind}`)
+													.replace('{event-kind}', `${event.kind}`)}
 											</p>
 										{/if}
 									{:else if repostedEventId !== undefined}
@@ -601,7 +603,7 @@
 										class="Button toggle-cw"
 										onclick={() => {
 											showCW = false;
-										}}><span>click to hide the CW content</span></button
+										}}><span>{$_('Entry.hide-cw')}</span></button
 									>
 								{/if}
 								{#if isMutedPubkey}
@@ -609,7 +611,7 @@
 										class="Button toggle-mute"
 										onclick={() => {
 											showMutedPubkey = false;
-										}}><span>click to hide the content by muted account</span></button
+										}}><span>{$_('Entry.hide-muted-account')}</span></button
 									>
 								{/if}
 								{#if isMutedChannel}
@@ -617,7 +619,7 @@
 										class="Button toggle-mute"
 										onclick={() => {
 											showMutedChannel = false;
-										}}><span>click to hide the content by muted channel</span></button
+										}}><span>{$_('Entry.hide-muted-channel')}</span></button
 									>
 								{/if}
 								{#if isMutedContent}
@@ -625,7 +627,7 @@
 										class="Button toggle-mute"
 										onclick={() => {
 											showMutedContent = false;
-										}}><span>click to hide the content by muted word</span></button
+										}}><span>{$_('Entry.hide-muted-word')}</span></button
 									>
 								{/if}
 								{#if isMutedHashTag}
@@ -633,19 +635,19 @@
 										class="Button toggle-mute"
 										onclick={() => {
 											showMutedHashTag = false;
-										}}><span>click to hide the content by muted hashtag</span></button
+										}}><span>{$_('Entry.hide-muted-hashtag')}</span></button
 									>
 								{/if}
 							{:else}
 								<p class="warning-message">
 									⚠️Content Warning⚠️
-									{#if contentWarningReason.length > 0}{'\n'}(Reason: {contentWarningReason}){/if}
+									{#if contentWarningReason.length > 0}{'\n'}({$_('Entry.reason')}: {contentWarningReason}){/if}
 								</p>
 								<button
 									class="Button toggle-cw"
 									onclick={() => {
 										showCW = true;
-									}}><span>click to show the CW content</span></button
+									}}><span>{$_('Entry.show-cw')}</span></button
 								>
 							{/if}
 						</div>
@@ -950,39 +952,39 @@
 				<div class="Entry__body">
 					<div class="Entry__content">
 						{#if isMutedPubkey && !showMutedPubkey}
-							<p class="muted-message">muted account</p>
+							<p class="muted-message">{$_('Entry.muted-account')}</p>
 							<button
 								class="Button toggle-mute"
 								onclick={() => {
 									showMutedPubkey = true;
-								}}><span>click to show the content by muted account</span></button
+								}}><span>{$_('Entry.show-muted-account')}</span></button
 							>
 						{/if}
 						{#if isMutedChannel && !showMutedChannel}
-							<p class="muted-message">muted channel</p>
+							<p class="muted-message">{$_('Entry.muted-channel')}</p>
 							<button
 								class="Button toggle-mute"
 								onclick={() => {
 									showMutedChannel = true;
-								}}><span>click to show the content in muted channel</span></button
+								}}><span>{$_('Entry.show-muted-channel')}</span></button
 							>
 						{/if}
 						{#if isMutedContent && !showMutedContent}
-							<p class="muted-message">muted word</p>
+							<p class="muted-message">{$_('Entry.muted-word')}</p>
 							<button
 								class="Button toggle-mute"
 								onclick={() => {
 									showMutedContent = true;
-								}}><span>click to show the content by muted word</span></button
+								}}><span>{$_('Entry.show-muted-word')}</span></button
 							>
 						{/if}
 						{#if isMutedHashTag && !showMutedHashTag}
-							<p class="muted-message">muted hashtag</p>
+							<p class="muted-message">{$_('Entry.muted-hashtag')}</p>
 							<button
 								class="Button toggle-mute"
 								onclick={() => {
 									showMutedHashTag = true;
-								}}><span>click to show the content by muted hashtag</span></button
+								}}><span>{$_('Entry.show-muted-hashtag')}</span></button
 							>
 						{/if}
 					</div>

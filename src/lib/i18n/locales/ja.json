@@ -74,11 +74,30 @@
 		"add-to-favorites": "お気に入りに追加"
 	},
 	"Entry": {
+		"kind42-event-without-valid-channel-id": "チャンネルIDが不正な kind:42 イベント",
+		"kind42-event-of-unknown-channel": "チャンネルが不明な kind:42 イベント",
+		"kind42-event-with-unnamed-channel": "チャンネル名が未定義の kind:42 イベント",
+		"invalid-repost": "⚠️kind:{event-kind} イベントで kind:{repostedEvent-kind} イベントをリポストすることは認められていません。",
 		"remove-from-favorites": "お気に入りから削除",
 		"add-to-favorites": "お気に入りに追加",
+		"hide-cw": "クリックしてCW付き投稿を隠す",
+		"hide-muted-account": "クリックしてミュート済アカウントの投稿を隠す",
+		"hide-muted-channel": "クリックしてミュート済チャンネルの投稿を隠す",
+		"hide-muted-word": "クリックしてミュート済ワードの投稿を隠す",
+		"hide-muted-hashtag": "クリックしてミュート済ハッシュタグの投稿を隠す",
+		"reason": "理由",
+		"show-cw": "クリックしてCW付き投稿を表示する",
 		"confirm-delete": "このエントリーを削除しますか？",
 		"reply": "返信",
-		"show-replies": "返信を表示"
+		"show-replies": "返信を表示",
+		"muted-account": "ミュートされたアカウント",
+		"show-muted-account": "クリックしてミュート済アカウントの投稿を表示する",
+		"muted-channel": "ミュートされたチャンネル",
+		"show-muted-channel": "クリックしてミュート済チャンネルの投稿を表示する",
+		"muted-word": "ミュートされたワード",
+		"show-muted-word": "クリックしてミュート済ワードを含む投稿を表示する",
+		"muted-hashtag": "ミュートされたハッシュタグ",
+		"show-muted-hashtag": "クリックしてミュート済ハッシュタグを含む投稿を表示する"
 	},
 	"CreateEntry": {
 		"create-new-keyword": "キーワードを新規作成",

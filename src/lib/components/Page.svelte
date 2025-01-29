@@ -222,7 +222,7 @@
 		return tl;
 	});
 	const timelineSliced = $derived(timelineAll.slice(0, countToShow));
-	const timelineToShow: NostrEvent[] = $derived(
+	const timelineMuted: NostrEvent[] = $derived(
 		timelineSliced.filter((ev) => {
 			const rootIds: string[] = ev.tags
 				.filter((tag) => tag.length >= 4 && tag[0] === 'e' && tag[3] === 'root')
@@ -255,6 +255,12 @@
 			);
 		})
 	);
+	const maxToShow = 30;
+	const startToShow = $derived(
+		timelineMuted.length <= maxToShow ? 0 : timelineMuted.length - maxToShow
+	);
+	const endToShow = $derived(timelineMuted.length);
+	const timelineToShow = $derived(timelineMuted.slice(startToShow, endToShow));
 
 	let isScrolledBottom = false;
 	const scrollThreshold = 300;
@@ -277,6 +283,7 @@
 			document.documentElement.clientHeight
 		);
 		const pageMostBottom = scrollHeight - window.innerHeight;
+		const pageMostTop = 0;
 		const scrollTop = window.scrollY || document.documentElement.scrollTop;
 		if (scrollTop > pageMostBottom - scrollThreshold) {
 			if (isEnabledScrollInfinitely && !isScrolledBottom && !isLoading) {
@@ -293,13 +300,29 @@
 					() => {
 						console.log('[Loading Complete]');
 						countToShow += 10 - correctionCount; //unitlと同時刻のイベントは被って取得されるので補正
-						isLoading = false;
+						if (countToShow > maxToShow) {
+							const lastChild = document.querySelector('.FeedList > .Entry:last-child');
+							setTimeout(() => {
+								lastChild?.scrollIntoView({ block: 'end' });
+								isLoading = false;
+							}, 10);
+						} else {
+							isLoading = false;
+						}
 					},
 					false
 				);
 			}
 		} else if (isScrolledBottom && scrollTop < pageMostBottom + scrollThreshold) {
 			isScrolledBottom = false;
+		}
+		if (scrollTop === pageMostTop) {
+			countToShow = countToShow - 10 < 10 ? 10 : countToShow - 10;
+			if (countToShow > 10) {
+				setTimeout(() => {
+					window.scrollBy({ top: 10, behavior: 'smooth' });
+				}, 100);
+			}
 		}
 	};
 

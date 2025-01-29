@@ -255,7 +255,11 @@
 	let isEmojiPickerOpened: boolean = $state(false);
 </script>
 
-<article class={classNames.join(' ')}>
+<article
+	class={classNames.join(' ')}
+	data-nevent={nip19.neventEncode({ ...event, author: event.pubkey })}
+	data-npub={nip19.npubEncode(event.pubkey)}
+>
 	{#if (!isMutedPubkey || showMutedPubkey) && (!isMutedChannel || showMutedChannel) && (!isMutedContent || showMutedContent) && (!isMutedHashTag || showMutedHashTag)}
 		{#if event.kind === 42 && (channelId === undefined || channel === undefined || channel.name === undefined)}
 			<details>
@@ -1130,7 +1134,7 @@
 			opacity: 1;
 		}
 		100% {
-			max-height: 50em;
+			max-height: 60em;
 			opacity: 1;
 		}
 	}

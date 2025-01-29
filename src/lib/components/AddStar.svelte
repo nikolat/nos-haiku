@@ -6,18 +6,20 @@
 	import type { NostrEvent } from 'nostr-tools/pure';
 	import type { ProfileContent } from 'applesauce-core/helpers';
 
-	const {
+	let {
 		event,
 		loginPubkey,
 		profileMap,
 		eventsReactionToTheEvent,
-		mutedWords
+		mutedWords,
+		isEmojiPickerOpened = $bindable()
 	}: {
 		event: NostrEvent;
 		loginPubkey: string | undefined;
 		profileMap: Map<string, ProfileContent>;
 		eventsReactionToTheEvent: NostrEvent[];
 		mutedWords: string[];
+		isEmojiPickerOpened: boolean;
 	} = $props();
 
 	const reactionValidEvents = $derived(
@@ -53,7 +55,10 @@
 		if (emojiPickerContainer === undefined) {
 			return;
 		}
-		const r = await getEmoji(emojiPickerContainer, $state.snapshot(emojiMap));
+		isEmojiPickerOpened = true;
+		const r = await getEmoji(emojiPickerContainer, $state.snapshot(emojiMap), () => {
+			isEmojiPickerOpened = false;
+		});
 		if (r === null) {
 			return;
 		}

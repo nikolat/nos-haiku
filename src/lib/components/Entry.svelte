@@ -251,6 +251,8 @@
 	};
 
 	const eventsReplying = $derived(getEventsReplying(event.id));
+
+	let isEmojiPickerOpened: boolean = $state(false);
 </script>
 
 <article class={classNames.join(' ')}>
@@ -289,7 +291,7 @@
 						</a>
 					</div>
 				</div>
-				<div class="Post">
+				<div class={isEmojiPickerOpened ? 'Post emoji-picker-opened' : 'Post'}>
 					<div class="Entry__head">
 						<h3 class="Entry__keyword">
 							{#if event.kind === 42 && channel !== undefined}
@@ -358,7 +360,14 @@
 								{`unsupported kind:${event.kind} event`}
 							{/if}
 						</h3>
-						<AddStar {event} {loginPubkey} {profileMap} {eventsReactionToTheEvent} {mutedWords} />
+						<AddStar
+							{event}
+							{loginPubkey}
+							{profileMap}
+							{eventsReactionToTheEvent}
+							{mutedWords}
+							bind:isEmojiPickerOpened
+						/>
 					</div>
 					<div class="Entry__body">
 						{#if idReplyTo !== undefined}
@@ -1003,6 +1012,10 @@
 		padding: 3px 1px;
 		max-height: 30em;
 		overflow-y: auto;
+	}
+	/* ↑の overflow-y: auto の影響で引用内の絵文字ピッカーが隠れてしまうため 本当は overflow-y: visible にしたい… */
+	.Quote .emoji-picker-opened .Entry__content {
+		min-height: 435px;
 	}
 	.Entry__content > p {
 		white-space: pre-wrap;

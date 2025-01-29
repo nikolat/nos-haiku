@@ -392,7 +392,8 @@ export const zap = async (
 
 export const getEmoji = async (
 	emojiPickerContainer: HTMLElement,
-	emojiMap: Map<string, string>
+	emojiMap: Map<string, string>,
+	onClose: () => void = () => {}
 ): Promise<{ emojiStr: string; emojiUrl: string | undefined } | null> => {
 	const { Picker } = await import('emoji-mart');
 	return new Promise((resolve) => {
@@ -402,6 +403,7 @@ export const getEmoji = async (
 		}
 		const close = () => {
 			emojiPickerContainer.firstChild?.remove();
+			onClose();
 		};
 		const onEmojiSelect = (emoji: MyBaseEmoji) => {
 			close();

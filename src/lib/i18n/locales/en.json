@@ -6,6 +6,10 @@
 			"antenna": "Antenna",
 			"entry": "Entry",
 			"settings": "Settings"
+		},
+		"nostr-login": {
+			"title": "Welcome to Nos Haiku!",
+			"description": "Nos Haiku is a mini-blog built with Nostr. Log in with your Nostr profile or sign up to join."
 		}
 	},
 	"Page": {

@@ -6,6 +6,10 @@
 			"antenna": "アンテナ",
 			"entry": "エントリー",
 			"settings": "設定"
+		},
+		"nostr-login": {
+			"title": "ノスハイクへようこそ！",
+			"description": "ノスハイクはNostrで構築されたミニブログです。Nostrの鍵を設定してご利用ください。"
 		}
 	},
 	"Page": {

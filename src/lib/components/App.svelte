@@ -97,7 +97,10 @@
 			}
 		});
 		const { init } = await import('nostr-login');
-		init({});
+		init({
+			title: $_('App.nostr-login.title'),
+			description: $_('App.nostr-login.description')
+		});
 		// @ts-expect-error 型なんて定義されてないよ
 		const { injectCSS } = await import('nostr-zap/src/view');
 		injectCSS();

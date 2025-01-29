@@ -1021,6 +1021,10 @@
 	.Quote .emoji-picker-opened .Entry__content {
 		min-height: 435px;
 	}
+	/* スクロールは外側だけ */
+	.Quote .Entry__content {
+		max-height: unset;
+	}
 	.Entry__content > p {
 		white-space: pre-wrap;
 	}

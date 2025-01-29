@@ -27,6 +27,7 @@
 	import CreateEntry from '$lib/components/CreateEntry.svelte';
 	import type { NostrEvent } from 'nostr-tools/pure';
 	import * as nip19 from 'nostr-tools/nip19';
+	import { isParameterizedReplaceableKind, isReplaceableKind } from 'nostr-tools/kinds';
 	import { _ } from 'svelte-i18n';
 
 	let {
@@ -273,7 +274,7 @@
 			{@const d = event.tags.find((tag) => tag.length >= 2 && tag[0] === 'd')?.at(1)}
 			{@const kind = event.kind}
 			{@const link =
-				[0, 3].includes(kind) || (10000 <= kind && kind < 20000) || (30000 <= kind && kind < 40000)
+				isReplaceableKind(kind) || isParameterizedReplaceableKind(kind)
 					? `/entry/${nip19.naddrEncode({ identifier: d ?? '', pubkey: event.pubkey, kind: event.kind })}`
 					: `/entry/${nip19.neventEncode({ ...event, author: event.pubkey })}`}
 			<div class="Entry__main">

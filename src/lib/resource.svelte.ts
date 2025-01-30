@@ -614,7 +614,7 @@ const nextOnSubscribeEventStore = (event: NostrEvent | null, kindToDelete?: numb
 					.map((ev) => ev.tags.find((tag) => tag.length >= 2 && tag[0] === 'd')?.at(1))
 					.filter((d) => d !== undefined);
 				const events: NostrEvent[] = [];
-				for (const d of new Set<string>(ds)) {
+				for (const d of new Set(ds)) {
 					const event = eventStore.getReplaceable(30002, loginPubkey, d);
 					if (event !== undefined) {
 						events.push(event);

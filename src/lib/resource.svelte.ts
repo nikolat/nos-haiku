@@ -1131,6 +1131,9 @@ const _subTimeline = eventStore
 				break;
 			}
 			case 10030: {
+				if (!profileMap.has(event.pubkey)) {
+					rxReqB0.emit({ kinds: [0], authors: [event.pubkey], until: unixNow() });
+				}
 				const atags = event.tags
 					.filter((tag) => tag.length >= 2 && tag[0] === 'a')
 					.map((tag) => tag[1]);

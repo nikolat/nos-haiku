@@ -190,7 +190,13 @@ const profileMap: Map<string, ProfileContentEvent> = $derived.by(() => {
 		const event = eventMap.get(ev.pubkey);
 		if (event === undefined || (event !== undefined && event.created_at < ev.created_at)) {
 			eventMap.set(ev.pubkey, ev);
-			profileMap.set(ev.pubkey, { ...getProfileContent(ev), event: ev });
+			let pc: ProfileContent;
+			try {
+				pc = getProfileContent(ev);
+			} catch (_error) {
+				continue;
+			}
+			profileMap.set(ev.pubkey, { ...pc, event: ev });
 		}
 	}
 	return profileMap;

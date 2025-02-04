@@ -122,11 +122,36 @@
 				(channel !== undefined && channel.categories.includes(t))
 		)
 	);
-	const urlViaAP: string | undefined = $derived(
-		event.tags
-			.find((tag) => tag.length >= 3 && tag[0] === 'proxy' && tag[2] === 'activitypub')
+	const getUrlViaProxy = (
+		event: NostrEvent,
+		protocol: string,
+		validate: boolean = true
+	): string | undefined => {
+		const url = event.tags
+			.find((tag) => tag.length >= 3 && tag[0] === 'proxy' && tag[2] === protocol)
 			?.at(1)
-	);
+			?.replace(/#.*$/, '');
+		if (validate) {
+			return URL.canParse(url ?? '') ? url : undefined;
+		} else {
+			return url;
+		}
+	};
+	const urlViaAP: string | undefined = $derived(getUrlViaProxy(event, 'activitypub'));
+	const urlViaRSS: string | undefined = $derived(getUrlViaProxy(event, 'rss'));
+	const urlViaWeb: string | undefined = $derived(getUrlViaProxy(event, 'web'));
+	const urlViaATP: string | undefined = $derived.by(() => {
+		const uri = getUrlViaProxy(event, 'atproto', false);
+		if (uri === undefined) {
+			return undefined;
+		}
+		const m = uri.match(/^at:\/\/([^/]+)\/app\.bsky\.feed\.post\/([^/]+)$/);
+		if (m === null) {
+			return undefined;
+		}
+		const url = `https://bsky.app/profile/${m[1]}/post/${m[2]}`;
+		return url;
+	});
 	const clientInfo: { name: string; url: string } | undefined = $derived.by(() => {
 		const tag = event.tags.find((tag) => tag.length >= 3 && tag[0] === 'client');
 		if (tag === undefined || tag[2] === undefined) {
@@ -666,10 +691,45 @@
 							{/if}
 						</div>
 						<dvi class="via">
-							{#if urlViaAP !== undefined && URL.canParse(urlViaAP)}
+							{#if urlViaAP !== undefined}
 								<span class="proxy"
 									>via <a href={urlViaAP} target="_blank" rel="noopener noreferrer"
-										><img src="/ActivityPub-logo-symbol.svg" alt="ActivityPub-logo-symbol" /></a
+										><img src="/ActivityPub-logo-symbol.svg" alt="ActivityPub" /></a
+									></span
+								>
+							{/if}
+							{#if urlViaRSS !== undefined}
+								<span class="proxy"
+									>via <a href={urlViaRSS} target="_blank" rel="noopener noreferrer"
+										><img src="/Rss_Shiny_Icon.svg" alt="RSS" /></a
+									></span
+								>
+							{/if}
+							{#if urlViaWeb !== undefined}
+								<span class="proxy"
+									>via <a
+										href={urlViaWeb}
+										target="_blank"
+										rel="noopener noreferrer"
+										aria-label="web"
+										><svg
+											xmlns="http://www.w3.org/2000/svg"
+											width="24"
+											height="24"
+											viewBox="0 0 24 24"
+										>
+											<path
+												fill-rule="evenodd"
+												d="M14,9 L14,7 L18,7 C20.7614237,7 23,9.23857625 23,12 C23,14.7614237 20.7614237,17 18,17 L14,17 L14,15 L18,15 C19.6568542,15 21,13.6568542 21,12 C21,10.3431458 19.6568542,9 18,9 L14,9 Z M10,15 L10,17 L6,17 C3.23857625,17 1,14.7614237 1,12 C1,9.23857625 3.23857625,7 6,7 L10,7 L10,9 L6,9 C4.34314575,9 3,10.3431458 3,12 C3,13.6568542 4.34314575,15 6,15 L10,15 Z M7,13 L7,11 L17,11 L17,13 L7,13 Z"
+											/>
+										</svg>
+									</a></span
+								>
+							{/if}
+							{#if urlViaATP !== undefined}
+								<span class="proxy"
+									>via <a href={urlViaATP} target="_blank" rel="noopener noreferrer"
+										><img src="/Bluesky_butterfly-logo.svg" alt="Bluesky" /></a
 									></span
 								>
 							{/if}
@@ -1061,9 +1121,11 @@
 		width: 100%;
 		text-align: right;
 	}
-	.proxy img {
+	.proxy img,
+	.proxy svg {
 		width: 16px;
 		height: 16px;
+		fill: var(--secondary-text-color);
 		vertical-align: top;
 	}
 	.Post span {

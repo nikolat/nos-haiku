@@ -1085,6 +1085,7 @@
 	.Quote .Entry__content {
 		max-height: unset;
 	}
+	div.Entry__json > pre.json-view > code,
 	.Entry__content > p {
 		white-space: pre-wrap;
 	}

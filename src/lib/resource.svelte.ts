@@ -1956,7 +1956,7 @@ export const sendRepost = async (targetEvent: NostrEvent): Promise<void> => {
 	const content: string = ''; //魚拓リポストはしない
 	const recommendedRelay: string = getSeenOn(targetEvent.id).at(0) ?? '';
 	const tags: string[][] = [
-		['e', targetEvent.id, recommendedRelay, 'mention', targetEvent.pubkey],
+		['e', targetEvent.id, recommendedRelay],
 		['p', targetEvent.pubkey]
 	];
 	if (targetEvent.kind !== 1) {
@@ -2160,11 +2160,12 @@ export const sendNote = async (
 			quoteIds.add(d.data);
 		} else if (d.type === 'nevent') {
 			quoteIds.add(d.data.id);
-		} else if (d.type === 'naddr') {
-			const str = `${d.data.kind}:${d.data.pubkey}:${d.data.identifier}`;
-			if (!apsStr.has(str)) {
-				apsStr.add(str);
+			if (d.data.author !== undefined) {
+				mentionPubkeys.add(d.data.author);
 			}
+		} else if (d.type === 'naddr') {
+			apsStr.add(`${d.data.kind}:${d.data.pubkey}:${d.data.identifier}`);
+			mentionPubkeys.add(d.data.pubkey);
 		}
 	}
 	const matchesIteratorPubkey = content.matchAll(
@@ -2232,6 +2233,10 @@ export const sendNote = async (
 			}
 		}
 		tags.push(qTag);
+		const ev = getEventById(id);
+		if (ev !== undefined) {
+			mentionPubkeys.add(ev.pubkey);
+		}
 	}
 	for (const a of apsStr) {
 		tags.push(['a', a]);

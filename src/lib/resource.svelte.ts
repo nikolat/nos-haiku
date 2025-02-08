@@ -2156,7 +2156,7 @@ export const sendNote = async (
 	}
 	if (targetEventToReply === undefined) {
 		//do nothing
-	} else if ([1, 42].includes(targetEventToReply.kind)) {
+	} else if ([1, 40, 42].includes(targetEventToReply.kind)) {
 		const rootTag = targetEventToReply.tags.find(
 			(tag) => tag.length >= 4 && tag[0] === 'e' && tag[3] === 'root'
 		);

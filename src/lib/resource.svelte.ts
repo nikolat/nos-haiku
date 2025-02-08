@@ -2252,8 +2252,8 @@ export const sendNote = async (
 			tags.push(['k', String(targetEventToReply.kind)]);
 		}
 	}
-	const quoteIds: Set<string> = new Set();
-	const apsStr: Set<string> = new Set();
+	const quoteIds: Set<string> = new Set<string>();
+	const apsMap: Map<string, nip19.AddressPointer> = new Map<string, nip19.AddressPointer>();
 	const matchesIteratorId = content.matchAll(
 		/(^|\W|\b)(nostr:(note1\w{58}|nevent1\w+|naddr1\w+))($|\W|\b)/g
 	);
@@ -2274,7 +2274,7 @@ export const sendNote = async (
 				mentionPubkeys.add(d.data.author);
 			}
 		} else if (d.type === 'naddr') {
-			apsStr.add(`${d.data.kind}:${d.data.pubkey}:${d.data.identifier}`);
+			apsMap.set(`${d.data.kind}:${d.data.pubkey}:${d.data.identifier}`, d.data);
 			mentionPubkeys.add(d.data.pubkey);
 		}
 	}
@@ -2348,8 +2348,16 @@ export const sendNote = async (
 			mentionPubkeys.add(ev.pubkey);
 		}
 	}
-	for (const a of apsStr) {
-		tags.push(['a', a]);
+	for (const [a, ap] of apsMap) {
+		const aTag: string[] = ['a', a];
+		const ev: NostrEvent | undefined = eventStore.getReplaceable(ap.kind, ap.pubkey, ap.identifier);
+		const recommendedRelayForQuote: string | undefined =
+			getSeenOn(ev?.id ?? '').at(0) ?? ap.relays?.at(0);
+		if (recommendedRelayForQuote !== undefined) {
+			aTag.push(recommendedRelayForQuote);
+		}
+		tags.push(aTag);
+		mentionPubkeys.add(ap.pubkey);
 	}
 	for (const p of mentionPubkeys) {
 		tags.push(['p', p]);

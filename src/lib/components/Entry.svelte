@@ -235,9 +235,10 @@
 			return getId('reply') ?? getId('root') ?? undefined;
 		} else if (event.kind === 42) {
 			return getId('reply');
-		} else {
-			return getId('reply') ?? getId('root') ?? undefined;
+		} else if (event.kind === 1111) {
+			return event.tags.find((tag) => tag.length >= 4 && tag[0] === 'e')?.at(1);
 		}
+		return undefined;
 	});
 	const addressReplyTo: nip19.AddressPointer | undefined = $derived.by(() => {
 		const a = event.tags.find((tag) => tag.length >= 2 && tag[0] === 'a')?.at(1);

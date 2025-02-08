@@ -18,6 +18,7 @@ import { verifier } from 'rx-nostr-crypto';
 import { EventStore } from 'applesauce-core';
 import { unixNow, getProfileContent, type ProfileContent } from 'applesauce-core/helpers';
 import { sortEvents, type EventTemplate, type NostrEvent } from 'nostr-tools/pure';
+import { isParameterizedReplaceableKind, isReplaceableKind } from 'nostr-tools/kinds';
 import { normalizeURL } from 'nostr-tools/utils';
 import type { Filter } from 'nostr-tools/filter';
 import type { RelayRecord } from 'nostr-tools/relay';
@@ -2118,29 +2119,66 @@ export const sendNote = async (
 	const tags: string[][] = [];
 	const mentionPubkeys: Set<string> = new Set();
 	let pubkeyToReply: string | undefined;
-	let kind = targetEventToReply?.kind ?? 1;
-	if (kind === 40) {
+	let kind: number;
+	if (targetEventToReply === undefined) {
+		kind = 1;
+	} else if (targetEventToReply.kind === 40) {
 		kind = 42;
 	} else {
-		pubkeyToReply = targetEventToReply?.pubkey;
-		if (![1, 42].includes(kind)) {
-			kind = 1; //暫定
+		pubkeyToReply = targetEventToReply.pubkey;
+		if ([1, 42].includes(targetEventToReply.kind)) {
+			kind = targetEventToReply.kind;
+		} else {
+			kind = 1111;
 		}
 	}
-	const rootTag = targetEventToReply?.tags.find(
-		(tag) => tag.length >= 4 && tag[0] === 'e' && tag[3] === 'root'
-	);
-	if (rootTag !== undefined) {
-		tags.push(rootTag);
-		tags.push(['e', targetEventToReply!.id, recommendedRelay, 'reply', targetEventToReply!.pubkey]);
-		mentionPubkeys.add(targetEventToReply!.pubkey);
-	} else if (targetEventToReply !== undefined) {
-		tags.push(['e', targetEventToReply.id, recommendedRelay, 'root', targetEventToReply.pubkey]);
-	}
-	for (const p of (targetEventToReply?.tags ?? [])
-		.filter((tag) => tag.length >= 2 && tag[0] === 'p')
-		.map((tag) => tag[1])) {
-		mentionPubkeys.add(p);
+	if (targetEventToReply === undefined) {
+		//do nothing
+	} else if ([1, 42].includes(targetEventToReply.kind)) {
+		const rootTag = targetEventToReply.tags.find(
+			(tag) => tag.length >= 4 && tag[0] === 'e' && tag[3] === 'root'
+		);
+		if (rootTag !== undefined) {
+			tags.push(rootTag);
+			tags.push(['e', targetEventToReply.id, recommendedRelay, 'reply', targetEventToReply.pubkey]);
+			mentionPubkeys.add(targetEventToReply!.pubkey);
+		} else {
+			tags.push(['e', targetEventToReply.id, recommendedRelay, 'root', targetEventToReply.pubkey]);
+		}
+		for (const p of targetEventToReply.tags
+			.filter((tag) => tag.length >= 2 && tag[0] === 'p')
+			.map((tag) => tag[1])) {
+			mentionPubkeys.add(p);
+		}
+	} else {
+		if (targetEventToReply.kind === 1111) {
+			const tagsCopied = targetEventToReply.tags.filter(
+				(tag) => tag.length >= 2 && ['A', 'E', 'I', 'K', 'P'].includes(tag[0])
+			);
+			for (const tag of tagsCopied) {
+				tags.push(tag);
+			}
+			tags.push(['e', targetEventToReply.id, recommendedRelay, targetEventToReply.pubkey]);
+			tags.push(['k', String(targetEventToReply.kind)]);
+		} else if (
+			isReplaceableKind(targetEventToReply.kind) ||
+			isParameterizedReplaceableKind(targetEventToReply.kind)
+		) {
+			const d =
+				targetEventToReply.tags.find((tag) => tag.length >= 2 && tag[0] === 'd')?.at(1) ?? '';
+			const a = `${targetEventToReply.kind}:${targetEventToReply.pubkey}:${d}`;
+			tags.push(['A', a, recommendedRelay]);
+			tags.push(['K', String(targetEventToReply.kind)]);
+			tags.push(['P', targetEventToReply.pubkey]);
+			tags.push(['a', a, recommendedRelay]);
+			tags.push(['k', String(targetEventToReply.kind)]);
+		} else {
+			tags.push(['E', targetEventToReply.id, recommendedRelay, targetEventToReply.pubkey]);
+			tags.push(['K', String(targetEventToReply.kind)]);
+			tags.push(['P', targetEventToReply.pubkey]);
+			tags.push(['e', targetEventToReply.id, recommendedRelay, targetEventToReply.pubkey]);
+			tags.push(['k', String(targetEventToReply.kind)]);
+		}
 	}
 	const quoteIds: Set<string> = new Set();
 	const apsStr: Set<string> = new Set();

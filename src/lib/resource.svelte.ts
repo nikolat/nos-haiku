@@ -672,11 +672,11 @@ const nextOnSubscribeEventStore = (event: NostrEvent | null, kindToDelete?: numb
 				eventStore.getAll(
 					isEnabledSkipKind1
 						? [
-								{ '#p': [loginPubkey], kinds: [42, 9734] },
+								{ '#p': [loginPubkey], kinds: [42, 1111, 9734] },
 								{ '#p': [loginPubkey], kinds: [7, 16], '#k': ['42'] }
 							]
 						: [
-								{ '#p': [loginPubkey], kinds: [1, 6, 7, 42, 9734] },
+								{ '#p': [loginPubkey], kinds: [1, 6, 7, 42, 1111, 9734] },
 								{ '#p': [loginPubkey], kinds: [16], '#k': ['42'] }
 							]
 				)
@@ -699,7 +699,7 @@ const nextOnSubscribeEventStore = (event: NostrEvent | null, kindToDelete?: numb
 						(tag) => tag.length >= 4 && tag[0] === 'e' && tag[3] === 'root' && ev.kind === 1
 					) ??
 					ev.tags.find(
-						(tag) => tag.length >= 2 && tag[0] === 'e' && [6, 16, 9734].includes(ev.kind)
+						(tag) => tag.length >= 2 && tag[0] === 'e' && [6, 16, 1111, 9734].includes(ev.kind)
 					) ??
 					ev.tags.findLast((tag) => tag.length >= 2 && tag[0] === 'e' && ev.kind === 7)
 				)?.at(1);
@@ -707,7 +707,7 @@ const nextOnSubscribeEventStore = (event: NostrEvent | null, kindToDelete?: numb
 				let targetEvent: NostrEvent | undefined;
 				if (id !== undefined) {
 					targetEvent = eventStore.getEvent(id ?? '');
-				} else if (a !== undefined && [7, 16].includes(ev.kind)) {
+				} else if (a !== undefined && [7, 16, 1111].includes(ev.kind)) {
 					const ary = a.split(':');
 					const ap: nip19.AddressPointer = {
 						identifier: ary[2],

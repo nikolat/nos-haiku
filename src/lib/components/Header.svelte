@@ -394,7 +394,7 @@
 										added a <a href="/entry/{nip19.neventEncode({ ...ev, author: ev.pubkey })}"
 											><Reaction reactionEvent={ev} profile={undefined} isAuthor={false} /></a
 										>
-									{:else if [1, 42].includes(ev.kind)}
+									{:else if [1, 42, 1111].includes(ev.kind)}
 										<a href="/entry/{nip19.neventEncode({ ...ev, author: ev.pubkey })}">mentioned</a
 										>
 									{:else if [6, 16].includes(ev.kind)}

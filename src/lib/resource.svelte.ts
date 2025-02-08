@@ -643,6 +643,10 @@ const nextOnSubscribeEventStore = (event: NostrEvent | null, kindToDelete?: numb
 			}
 			break;
 		}
+		case 30023: {
+			//eventsAllの更新だけが目的
+			break;
+		}
 		case 30030: {
 			if (loginPubkey !== undefined && eventEmojiSetList !== undefined) {
 				const events30030 = sortEvents(Array.from(eventStore.getAll([{ kinds: [30030] }])));
@@ -727,8 +731,8 @@ eventStore
 	.stream([
 		{
 			kinds: [
-				0, 1, 3, 5, 6, 7, 16, 40, 41, 42, 1111, 9734, 10000, 10002, 10005, 10030, 30002, 30030,
-				30078
+				0, 1, 3, 5, 6, 7, 16, 40, 41, 42, 1111, 9734, 10000, 10002, 10005, 10030, 30002, 30023,
+				30030, 30078
 			]
 		}
 	])
@@ -897,28 +901,69 @@ rxNostr.use(rxReqBRp).pipe(tie).subscribe({
 });
 
 const getEventsByIdWithRelayHint = (event: NostrEvent, tagNameToGet: string) => {
-	const eTags = event.tags.filter((tag) => tag.length >= 3 && tag[0] === tagNameToGet);
-	for (const eTag of eTags) {
-		const id = eTag[1];
-		const relayHint = eTag[2];
-		if (eventStore.hasEvent(id) || relayHint === undefined || !URL.canParse(relayHint)) {
-			continue;
+	if (['e', 'q'].includes(tagNameToGet)) {
+		const eTags = event.tags.filter((tag) => tag.length >= 3 && tag[0] === tagNameToGet);
+		for (const eTag of eTags) {
+			const id = eTag[1];
+			const relayHint = eTag[2];
+			if (eventStore.hasEvent(id) || relayHint === undefined || !URL.canParse(relayHint)) {
+				continue;
+			}
+			const relay = normalizeURL(relayHint);
+			if (relaysToRead.includes(relay)) {
+				continue;
+			}
+			const rxReqBIdCustom = createRxBackwardReq();
+			const batchedReqIdCustom = rxReqBIdCustom.pipe(
+				bufferTime(secBufferTime),
+				batch(mergeFilterId)
+			);
+			rxNostr
+				.use(batchedReqIdCustom, { relays: [relay] })
+				.pipe(tie, completeOnTimeout(secOnCompleteTimeout))
+				.subscribe({
+					next,
+					complete
+				});
+			rxReqBIdCustom.emit({ ids: [id], until: unixNow() });
+			rxReqBIdCustom.over();
 		}
-		const relay = normalizeURL(relayHint);
-		if (relaysToRead.includes(relay)) {
-			continue;
+	} else if (tagNameToGet === 'a') {
+		const aTags = event.tags.filter((tag) => tag.length >= 3 && tag[0] === tagNameToGet);
+		for (const aTag of aTags) {
+			const sp = aTag[1].split(':');
+			const ap: nip19.AddressPointer = { identifier: sp[2], pubkey: sp[1], kind: parseInt(sp[0]) };
+			const relayHint = aTag[2];
+			if (
+				eventStore.hasReplaceable(ap.kind, ap.pubkey, ap.identifier) ||
+				relayHint === undefined ||
+				!URL.canParse(relayHint)
+			) {
+				continue;
+			}
+			const relay = normalizeURL(relayHint);
+			if (relaysToRead.includes(relay)) {
+				continue;
+			}
+			const rxReqBRpCustom = createRxBackwardReq();
+			rxNostr
+				.use(rxReqBRpCustom, { relays: [relay] })
+				.pipe(tie, completeOnTimeout(secOnCompleteTimeout))
+				.subscribe({
+					next,
+					complete
+				});
+			const filter: LazyFilter = {
+				kinds: [ap.kind],
+				authors: [ap.pubkey],
+				until: unixNow()
+			};
+			if (ap.identifier.length > 0) {
+				filter['#d'] = [ap.identifier];
+			}
+			rxReqBRpCustom.emit(filter);
+			rxReqBRpCustom.over();
 		}
-		const rxReqBIdCustom = createRxBackwardReq();
-		const batchedReqIdCustom = rxReqBIdCustom.pipe(bufferTime(secBufferTime), batch(mergeFilterId));
-		rxNostr
-			.use(batchedReqIdCustom, { relays: [relay] })
-			.pipe(tie, completeOnTimeout(secOnCompleteTimeout))
-			.subscribe({
-				next,
-				complete
-			});
-		rxReqBIdCustom.emit({ ids: [id], until: unixNow() });
-		rxReqBIdCustom.over();
 	}
 };
 
@@ -952,6 +997,7 @@ const getEventsQuoted = (event: NostrEvent) => {
 	}
 	//リレーヒント付き引用による取得
 	getEventsByIdWithRelayHint(event, 'q');
+	getEventsByIdWithRelayHint(event, 'a');
 };
 
 const _subTimeline = eventStore
@@ -1017,9 +1063,11 @@ const _subTimeline = eventStore
 							const filter: LazyFilter = {
 								kinds: [ap.kind],
 								authors: [ap.pubkey],
-								'#d': [ap.identifier],
 								until: unixNow()
 							};
+							if (ap.identifier.length > 0) {
+								filter['#d'] = [ap.identifier];
+							}
 							rxReqBRp.emit(filter);
 						}
 					}
@@ -1098,9 +1146,11 @@ const _subTimeline = eventStore
 						const filter: LazyFilter = {
 							kinds: [ap.kind],
 							authors: [ap.pubkey],
-							'#d': [ap.identifier],
 							until: unixNow()
 						};
+						if (ap.identifier.length > 0) {
+							filter['#d'] = [ap.identifier];
+						}
 						rxReqBRp.emit(filter);
 					} else if (
 						idReplyTo !== undefined &&

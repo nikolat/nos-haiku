@@ -221,6 +221,9 @@ const channelMap = $derived.by(() => {
 			console.warn(error);
 			continue;
 		}
+		channel.relays = channel.relays
+			?.filter((relay) => URL.canParse(relay))
+			.map((relay) => normalizeURL(relay));
 		channel.categories = getCategories(ev);
 		channel.eventkind40 = ev;
 		channel.id = ev.id;
@@ -246,6 +249,9 @@ const channelMap = $derived.by(() => {
 					console.warn(error);
 					continue;
 				}
+				channel.relays = channel.relays
+					?.filter((relay) => URL.canParse(relay))
+					.map((relay) => normalizeURL(relay));
 				channel.categories = getCategories(ev);
 				channel.eventkind40 = c.eventkind40;
 				channel.eventkind41 = ev;
@@ -2218,6 +2224,7 @@ export const sendNote = async (
 	if (window.nostr === undefined) {
 		return;
 	}
+	const relaysToAdd: Set<string> = new Set<string>();
 	//チャンネル作成
 	let eventChannelToSend: NostrEvent | undefined;
 	if (targetEventToReply === undefined && channelNameToCreate.length > 0) {
@@ -2234,6 +2241,17 @@ export const sendNote = async (
 		});
 		eventChannelToSend = await window.nostr.signEvent(eventTemplateChannel);
 		targetEventToReply = eventChannelToSend;
+	} else if (targetEventToReply !== undefined && [40, 42].includes(targetEventToReply.kind)) {
+		const channelId: string | undefined =
+			targetEventToReply.kind === 40
+				? targetEventToReply.id
+				: targetEventToReply.tags
+						.find((tag) => tag.length >= 4 && tag[0] === 'e' && tag[3] === 'root')
+						?.at(1);
+		const channel: ChannelContent | undefined = channelMap.get(channelId ?? '');
+		for (const relay of channel?.relays ?? []) {
+			relaysToAdd.add(relay);
+		}
 	}
 	//投稿作成
 	const recommendedRelay: string =
@@ -2263,7 +2281,7 @@ export const sendNote = async (
 		if (rootTag !== undefined) {
 			tags.push(rootTag);
 			tags.push(['e', targetEventToReply.id, recommendedRelay, 'reply', targetEventToReply.pubkey]);
-			mentionPubkeys.add(targetEventToReply!.pubkey);
+			mentionPubkeys.add(targetEventToReply.pubkey);
 		} else {
 			tags.push(['e', targetEventToReply.id, recommendedRelay, 'root', targetEventToReply.pubkey]);
 		}
@@ -2441,7 +2459,10 @@ export const sendNote = async (
 		created_at: unixNow()
 	});
 	const eventToSend = await window.nostr.signEvent(eventTemplate);
-	const options: Partial<RxNostrSendOptions> = { on: { relays: relaysToWrite } };
+	for (const relay of relaysToWrite) {
+		relaysToAdd.add(relay);
+	}
+	const options: Partial<RxNostrSendOptions> = { on: { relays: Array.from(relaysToAdd) } };
 	if (eventChannelToSend !== undefined) {
 		sendEvent(eventChannelToSend, options);
 	}

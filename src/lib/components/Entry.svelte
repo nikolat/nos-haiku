@@ -235,10 +235,22 @@
 			return getId('reply') ?? getId('root') ?? undefined;
 		} else if (event.kind === 42) {
 			return getId('reply');
+		} else {
+			return getId('reply') ?? getId('root') ?? undefined;
 		}
-		return undefined;
 	});
-	const pubkeyReplyTo: string | undefined = $derived(getEventById(idReplyTo ?? '')?.pubkey);
+	const addressReplyTo: nip19.AddressPointer | undefined = $derived.by(() => {
+		const a = event.tags.find((tag) => tag.length >= 2 && tag[0] === 'a')?.at(1);
+		if (a === undefined) {
+			return undefined;
+		}
+		const sp = a.split(':');
+		const ap: nip19.AddressPointer = { identifier: sp[2], pubkey: sp[1], kind: parseInt(sp[0]) };
+		return ap;
+	});
+	const pubkeyReplyTo: string | undefined = $derived(
+		getEventById(idReplyTo ?? '')?.pubkey ?? addressReplyTo?.pubkey
+	);
 	const profReplyTo: ProfileContentEvent | undefined = $derived(
 		pubkeyReplyTo === undefined ? undefined : profileMap.get(pubkeyReplyTo)
 	);
@@ -275,7 +287,7 @@
 		return obj;
 	};
 
-	const eventsReplying = $derived(getEventsReplying(event.id));
+	const eventsReplying = $derived(getEventsReplying(event));
 
 	let isEmojiPickerOpened: boolean = $state(false);
 </script>
@@ -377,6 +389,8 @@
 								Reaction <Reaction reactionEvent={event} profile={undefined} isAuthor={false} />
 							{:else if event.kind === 40}
 								Channel
+							{:else if event.kind === 1111}
+								Comment
 							{:else if event.kind === 10030}
 								User emoji list
 							{:else if event.kind === 30023}
@@ -399,12 +413,15 @@
 						/>
 					</div>
 					<div class="Entry__body">
-						{#if idReplyTo !== undefined}
+						{#if idReplyTo !== undefined || addressReplyTo !== undefined}
+							{@const link =
+								idReplyTo !== undefined
+									? nip19.neventEncode({ id: idReplyTo, author: pubkeyReplyTo })
+									: addressReplyTo !== undefined
+										? nip19.naddrEncode(addressReplyTo)
+										: undefined}
 							<div class="Entry__parentmarker">
-								<a
-									href="/entry/{nip19.neventEncode({ id: idReplyTo, author: pubkeyReplyTo })}"
-									class=""
-								>
+								<a href="/entry/{link}">
 									<i class="fa-fw fas fa-arrow-alt-from-right"></i>
 									<span class="Mention">
 										{#if pubkeyReplyTo !== undefined}

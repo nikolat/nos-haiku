@@ -455,23 +455,34 @@ export const getEventById = (id: string): NostrEvent | undefined => {
 	return eventsAll.find((ev) => ev.id === id);
 };
 
-export const getEventsReplying = (id: string): NostrEvent[] => {
+export const getEventsReplying = (event: NostrEvent): NostrEvent[] => {
+	const d = event.tags.find((tag) => tag.length >= 2 && tag[0] === 'd')?.at(1) ?? '';
 	return eventsAll
-		.filter((ev) =>
-			ev.tags.some(
-				(tag) =>
-					tag.length >= 4 &&
-					tag[0] === 'e' &&
-					tag[1] === id &&
-					((tag[3] === 'reply' && [1, 42].includes(ev.kind)) ||
-						(tag[3] === 'root' && ev.kind === 1))
-			)
+		.filter(
+			(ev) =>
+				([1, 42].includes(event.kind) &&
+					[1, 42].includes(ev.kind) &&
+					ev.tags.some(
+						(tag) =>
+							tag.length >= 4 &&
+							tag[0] === 'e' &&
+							tag[1] === event.id &&
+							(tag[3] === 'reply' || (tag[3] === 'root' && ev.kind === 1))
+					)) ||
+				(![1, 42].includes(event.kind) &&
+					ev.kind === 1111 &&
+					ev.tags.some(
+						(tag) =>
+							tag.length >= 2 &&
+							((tag[0] === 'a' && tag[1] === `${event.kind}:${event.pubkey}:${d}`) ||
+								(tag[0] === 'e' && tag[1] === event.id))
+					))
 		)
 		.filter(
 			(ev) =>
 				!(
 					ev.tags.some(
-						(tag) => tag.length >= 4 && tag[0] === 'e' && tag[1] === id && tag[3] === 'root'
+						(tag) => tag.length >= 4 && tag[0] === 'e' && tag[1] === event.id && tag[3] === 'root'
 					) && ev.tags.some((tag) => tag.length >= 4 && tag[0] === 'e' && tag[3] === 'reply')
 				)
 		);
@@ -562,7 +573,8 @@ const nextOnSubscribeEventStore = (event: NostrEvent | null, kindToDelete?: numb
 		case 1:
 		case 6:
 		case 16:
-		case 42: {
+		case 42:
+		case 1111: {
 			if (
 				kind === 16 &&
 				event?.tags.find((tag) => tag.length >= 2 && tag[0] === 'k')?.at(1) !== '42'
@@ -572,7 +584,7 @@ const nextOnSubscribeEventStore = (event: NostrEvent | null, kindToDelete?: numb
 			eventsTimeline = sortEvents(
 				Array.from(
 					eventStore.getAll([
-						{ kinds: isEnabledSkipKind1 ? [42] : [1, 6, 42] },
+						{ kinds: isEnabledSkipKind1 ? [42, 1111] : [1, 6, 42, 1111] },
 						{ kinds: [16], '#k': ['42'] }
 					])
 				)
@@ -715,7 +727,8 @@ eventStore
 	.stream([
 		{
 			kinds: [
-				0, 1, 3, 5, 6, 7, 16, 40, 41, 42, 9734, 10000, 10002, 10005, 10030, 30002, 30030, 30078
+				0, 1, 3, 5, 6, 7, 16, 40, 41, 42, 1111, 9734, 10000, 10002, 10005, 10030, 30002, 30030,
+				30078
 			]
 		}
 	])
@@ -1202,12 +1215,21 @@ const _subTimeline = eventStore
 					pubkey: event.pubkey,
 					kind: event.kind
 				};
-				rxReqBRp.emit({
-					kinds: [7],
-					'#a': [`${ap.kind}:${ap.pubkey}:${ap.identifier}`],
-					limit: 10,
-					until: unixNow()
-				});
+				const filters: LazyFilter[] = [
+					{
+						kinds: [1111],
+						'#A': [`${ap.kind}:${ap.pubkey}:${ap.identifier}`],
+						limit: 10,
+						until: unixNow()
+					},
+					{
+						kinds: [7],
+						'#a': [`${ap.kind}:${ap.pubkey}:${ap.identifier}`],
+						limit: 10,
+						until: unixNow()
+					}
+				];
+				rxReqBRp.emit(filters);
 				if (event.kind === 30023) {
 					getEventsQuoted(event);
 				}
@@ -1320,7 +1342,7 @@ export const getEventsFirst = (
 		eventFollowList?.tags.filter((tag) => tag.length >= 2 && tag[0] === 'p').map((tag) => tag[1]) ??
 		[];
 	if (currentNoteId === undefined && currentPubkey !== undefined) {
-		filters.push({ kinds: [1, 6, 16, 42], authors: [currentPubkey] });
+		filters.push({ kinds: [1, 6, 16, 42, 1111], authors: [currentPubkey] });
 	} else if (currentChannelId !== undefined) {
 		filters.push({ kinds: [42], '#e': [currentChannelId] });
 		filters.push({ kinds: [16], '#k': ['42'] });
@@ -1340,7 +1362,7 @@ export const getEventsFirst = (
 			});
 		}
 	} else if (hashtag !== undefined) {
-		filters.push({ kinds: [1, 42], '#t': [hashtag] });
+		filters.push({ kinds: [1, 42, 1111], '#t': [hashtag] });
 	} else if (category !== undefined) {
 		filters.push({ kinds: [40, 41], '#t': [category] });
 	} else if (query !== undefined) {
@@ -1364,7 +1386,7 @@ export const getEventsFirst = (
 		filters.push({ kinds, search: query, limit: 10 });
 	} else if (isAntenna) {
 		if (pubkeysFollowing.length > 0) {
-			filters.push({ kinds: [1, 6, 16, 42], authors: pubkeysFollowing });
+			filters.push({ kinds: [1, 6, 16, 42, 1111], authors: pubkeysFollowing });
 			//ブックマークしているチャンネルの投稿も取得したいが、limitで混ぜるのは難しいので考え中
 		}
 	} else if (isTopPage) {
@@ -1372,16 +1394,16 @@ export const getEventsFirst = (
 	}
 	if (isFirstFetch && loginPubkey !== undefined) {
 		if (isEnabledSkipKind1) {
-			filters.push({ kinds: [42, 9735], '#p': [loginPubkey] });
+			filters.push({ kinds: [42, 1111, 9735], '#p': [loginPubkey] });
 			filters.push({ kinds: [7, 16], '#p': [loginPubkey], '#k': ['42'] });
 		} else {
-			filters.push({ kinds: [1, 6, 7, 16, 42, 9735], '#p': [loginPubkey] });
+			filters.push({ kinds: [1, 6, 7, 16, 42, 1111, 9735], '#p': [loginPubkey] });
 		}
 	}
 	if (isEnabledSkipKind1) {
 		for (const f of filters) {
 			if (f.kinds !== undefined) {
-				f.kinds = f.kinds?.filter((kind) => ![1, 6].includes(kind));
+				f.kinds = f.kinds.filter((kind) => ![1, 6].includes(kind));
 			}
 		}
 	}
@@ -1421,7 +1443,7 @@ export const getEventsFirst = (
 	}
 	//ここから先はForwardReq用追加分(受信しっぱなし)
 	if (loginPubkey !== undefined) {
-		let kinds = [0, 1, 3, 5, 6, 7, 40, 41, 42, 9735, 10000, 10002, 10005, 10030, 30002];
+		let kinds = [0, 1, 3, 5, 6, 7, 40, 41, 42, 1111, 9735, 10000, 10002, 10005, 10030, 30002];
 		if (!pubkeysFollowing.includes(loginPubkey)) {
 			kinds = kinds.concat(16).toSorted((a, b) => a - b);
 		}

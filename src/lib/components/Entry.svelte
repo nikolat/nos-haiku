@@ -241,6 +241,9 @@
 		return undefined;
 	});
 	const addressReplyTo: nip19.AddressPointer | undefined = $derived.by(() => {
+		if (event.kind !== 1111) {
+			return undefined;
+		}
 		const a = event.tags.find((tag) => tag.length >= 2 && tag[0] === 'a')?.at(1);
 		if (a === undefined) {
 			return undefined;

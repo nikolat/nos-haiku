@@ -784,8 +784,16 @@ const mergeFilter0: MergeFilter = (a: LazyFilter[], b: LazyFilter[]) => {
 const mergeFilter7: MergeFilter = (a: LazyFilter[], b: LazyFilter[]) => {
 	const margedFilters = [...a, ...b];
 	const etags = Array.from(new Set<string>(margedFilters.map((f) => f['#e'] ?? []).flat()));
+	const atags = Array.from(new Set<string>(margedFilters.map((f) => f['#a'] ?? []).flat()));
 	const f = margedFilters.at(0);
-	return [{ kinds: [7], '#e': etags, limit: f?.limit, until: f?.until }];
+	const r: LazyFilter[] = [];
+	if (etags.length > 0) {
+		r.push({ kinds: [7], '#e': etags, limit: f?.limit, until: f?.until });
+	}
+	if (atags.length > 0) {
+		r.push({ kinds: [7], '#a': atags, limit: f?.limit, until: f?.until });
+	}
+	return r;
 };
 
 const mergeFilter40: MergeFilter = (a: LazyFilter[], b: LazyFilter[]) => {
@@ -948,7 +956,11 @@ const getEventsQuoted = (event: NostrEvent) => {
 
 const _subTimeline = eventStore
 	.stream([
-		{ kinds: [0, 1, 6, 7, 16, 40, 41, 42, 9734, 9735, 10000, 10005, 10030, 30030, 30023, 31990] }
+		{
+			kinds: [
+				0, 1, 6, 7, 16, 40, 41, 42, 1111, 9734, 9735, 10000, 10005, 10030, 30030, 30023, 31990
+			]
+		}
 	])
 	.subscribe(async (event) => {
 		switch (event.kind) {
@@ -1029,7 +1041,8 @@ const _subTimeline = eventStore
 				break;
 			}
 			case 1:
-			case 42: {
+			case 42:
+			case 1111: {
 				if (!profileMap.has(event.pubkey)) {
 					rxReqB0.emit({ kinds: [0], authors: [event.pubkey], until: unixNow() });
 				}
@@ -1060,6 +1073,43 @@ const _subTimeline = eventStore
 					) {
 						countThread.set(rootId, (countThread.get(rootId) ?? 0) + 1);
 						rxReqBId.emit({ ids: [idToGet], until: unixNow() });
+					}
+				} else if (event.kind === 1111) {
+					const idReplyTo: string | undefined = event.tags
+						.find((tag) => tag.length >= 2 && tag[0] === 'e')
+						?.at(1);
+					const idRoot: string | undefined = event.tags
+						.find((tag) => tag.length >= 2 && tag[0] === 'E')
+						?.at(1);
+					let ap: nip19.AddressPointer | undefined;
+					const a = event.tags.find((tag) => tag.length >= 2 && tag[0] === 'a')?.at(1);
+					const A = event.tags.find((tag) => tag.length >= 2 && tag[0] === 'A')?.at(1);
+					if (a !== undefined) {
+						const sp = a.split(':');
+						ap = { identifier: sp[2], pubkey: sp[1], kind: parseInt(sp[0]) };
+					}
+					if (
+						ap !== undefined &&
+						!eventStore.hasReplaceable(ap.kind, ap.pubkey, ap.identifier) &&
+						A !== undefined &&
+						(countThread.get(A) ?? 0) < countThreadLimit
+					) {
+						countThread.set(A, (countThread.get(A) ?? 0) + 1);
+						const filter: LazyFilter = {
+							kinds: [ap.kind],
+							authors: [ap.pubkey],
+							'#d': [ap.identifier],
+							until: unixNow()
+						};
+						rxReqBRp.emit(filter);
+					} else if (
+						idReplyTo !== undefined &&
+						!eventStore.hasEvent(idReplyTo) &&
+						idRoot !== undefined &&
+						(countThread.get(idRoot) ?? 0) < countThreadLimit
+					) {
+						countThread.set(idRoot, (countThread.get(idRoot) ?? 0) + 1);
+						rxReqBId.emit({ ids: [idRoot], until: unixNow() });
 					}
 				}
 				//自分が参照しているrootイベントまたは自分自身のidを参照しているイベントを取得する
@@ -1196,7 +1246,7 @@ const _subTimeline = eventStore
 					pubkey: event.pubkey,
 					kind: event.kind
 				};
-				rxReqBRp.emit({
+				rxReqB7.emit({
 					kinds: [7],
 					'#a': [`${ap.kind}:${ap.pubkey}:${ap.identifier}`],
 					limit: 10,

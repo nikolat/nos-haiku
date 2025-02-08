@@ -2008,15 +2008,15 @@ export const sendReaction = async (
 	if (window.nostr === undefined) {
 		return;
 	}
-	const d = targetEvent.tags.find((tag) => tag.length >= 2 && tag[0] === 'd')?.at(1);
+	const d = targetEvent.tags.find((tag) => tag.length >= 2 && tag[0] === 'd')?.at(1) ?? '';
 	const tags: string[][] = [
 		...targetEvent.tags.filter(
 			(tag) =>
 				tag.length >= 2 && (tag[0] === 'e' || (tag[0] === 'p' && tag[1] !== targetEvent.pubkey))
 		),
-		d === undefined
-			? ['e', targetEvent.id]
-			: ['a', `${targetEvent.kind}:${targetEvent.pubkey}:${d}`],
+		isReplaceableKind(targetEvent.kind) || isParameterizedReplaceableKind(targetEvent.kind)
+			? ['a', `${targetEvent.kind}:${targetEvent.pubkey}:${d}`]
+			: ['e', targetEvent.id],
 		['p', targetEvent.pubkey],
 		['k', String(targetEvent.kind)]
 	];

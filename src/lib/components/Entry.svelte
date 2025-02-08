@@ -1106,11 +1106,11 @@
 	.Quote .Entry__content {
 		max-height: unset;
 	}
-	div.Entry__json > pre.json-view > code,
-	.Entry__content > p {
+	.Entry__content > p,
+	.Entry__content code {
 		white-space: pre-wrap;
 	}
-	.Entry__content :not(p) {
+	.Entry__content :not(p):not(code) {
 		white-space: pre-line;
 	}
 	.Entry.Quote .Entry__profile img.Avatar {

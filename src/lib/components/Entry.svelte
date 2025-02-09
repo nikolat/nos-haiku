@@ -391,6 +391,8 @@
 								{/if}
 							{:else if event.kind === 7}
 								Reaction <Reaction reactionEvent={event} profile={undefined} isAuthor={false} />
+							{:else if event.kind === 20}
+								Picture
 							{:else if event.kind === 40}
 								Channel
 							{:else if event.kind === 1111}
@@ -507,6 +509,43 @@
 									{:else if reactedEventId !== undefined}
 										{`nostr:${nip19.neventEncode({ id: reactedEventId })}`}
 									{/if}
+								{:else if event.kind === 20}
+									{@const title = event.tags
+										.find((tag) => tag.length >= 2 && tag[0] === 'title')
+										?.at(1)}
+									{@const imetaTags = event.tags.filter(
+										(tag) => tag.length >= 2 && tag[0] === 'imeta'
+									)}
+									{@const urls = imetaTags
+										.flat()
+										.filter((s) => s.startsWith('url '))
+										.map((s) => s.split(' ').at(1))
+										.filter((s) => s !== undefined)
+										.filter((s) => URL.canParse(s))}
+									{#if title !== undefined}<p>{title}</p>{/if}
+									<p>
+										<Content
+											content={event.content.length > 0
+												? `${event.content}\n${urls.join(' ')}`
+												: urls.join(' ')}
+											tags={event.tags}
+											{channelMap}
+											{profileMap}
+											{loginPubkey}
+											{mutedPubkeys}
+											{mutedChannelIds}
+											{mutedWords}
+											{eventsTimeline}
+											{eventsReaction}
+											{eventsEmojiSet}
+											{uploaderSelected}
+											bind:channelToPost
+											{currentChannelId}
+											{isEnabledRelativeTime}
+											{nowRealtime}
+											{level}
+										/>
+									</p>
 								{:else if event.kind === 40}
 									{@const channel = channelMap.get(event.id)}
 									{#if channel !== undefined}

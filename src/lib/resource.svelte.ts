@@ -461,6 +461,10 @@ export const getEventById = (id: string): NostrEvent | undefined => {
 	return eventsAll.find((ev) => ev.id === id);
 };
 
+export const getEventsByKinds = (kindSet: Set<number>): NostrEvent[] => {
+	return eventsAll.filter((ev) => kindSet.has(ev.kind));
+};
+
 export const getEventsReplying = (event: NostrEvent): NostrEvent[] => {
 	const d = event.tags.find((tag) => tag.length >= 2 && tag[0] === 'd')?.at(1) ?? '';
 	return eventsAll
@@ -1447,8 +1451,18 @@ export const getEventsFirst = (
 	const pubkeysFollowing: string[] =
 		eventFollowList?.tags.filter((tag) => tag.length >= 2 && tag[0] === 'p').map((tag) => tag[1]) ??
 		[];
+	const kindSet: Set<number> = new Set<number>();
+	for (const [k, v] of urlSearchParams ?? []) {
+		if (k === 'kind' && /^\d+$/.test(v)) {
+			const kind = parseInt(v);
+			if (0 <= kind && kind <= 65535) {
+				kindSet.add(kind);
+			}
+		}
+	}
 	if (currentNoteId === undefined && currentPubkey !== undefined) {
-		filters.push({ kinds: [1, 6, 16, 42, 1111], authors: [currentPubkey] });
+		const kinds: number[] = kindSet.size === 0 ? [1, 6, 16, 42, 1111] : Array.from(kindSet);
+		filters.push({ kinds, authors: [currentPubkey] });
 	} else if (currentChannelId !== undefined) {
 		filters.push({ kinds: [42], '#e': [currentChannelId] });
 		filters.push({ kinds: [16], '#k': ['42'] });
@@ -1468,35 +1482,23 @@ export const getEventsFirst = (
 			});
 		}
 	} else if (hashtag !== undefined) {
-		filters.push({ kinds: [1, 42, 1111], '#t': [hashtag] });
+		const kinds: number[] = kindSet.size === 0 ? [1, 42, 1111] : Array.from(kindSet);
+		filters.push({ kinds, '#t': [hashtag] });
 	} else if (category !== undefined) {
 		filters.push({ kinds: [40, 41], '#t': [category] });
 	} else if (query !== undefined) {
 		options = { relays: searchRelays };
-		const kinds: number[] = [];
-		if (urlSearchParams !== undefined) {
-			kinds.length = 0;
-			for (const [k, v] of urlSearchParams) {
-				if (k === 'kind' && /^\d+$/.test(v)) {
-					const kind = parseInt(v);
-					if (0 <= kind && kind <= 65535) {
-						kinds.push(kind);
-					}
-				}
-			}
-		}
-		if (kinds.length === 0) {
-			kinds.push(40);
-			kinds.push(41);
-		}
+		const kinds: number[] = kindSet.size === 0 ? [40, 41] : Array.from(kindSet);
 		filters.push({ kinds, search: query, limit: 10 });
 	} else if (isAntenna) {
 		if (pubkeysFollowing.length > 0) {
-			filters.push({ kinds: [1, 6, 16, 42, 1111], authors: pubkeysFollowing });
+			const kinds: number[] = kindSet.size === 0 ? [1, 6, 16, 42, 1111] : Array.from(kindSet);
+			filters.push({ kinds, authors: pubkeysFollowing });
 			//ブックマークしているチャンネルの投稿も取得したいが、limitで混ぜるのは難しいので考え中
 		}
 	} else if (isTopPage) {
-		filters.push({ kinds: [16, 42] });
+		const kinds: number[] = kindSet.size === 0 ? [16, 42] : Array.from(kindSet);
+		filters.push({ kinds });
 	}
 	if (isFirstFetch && loginPubkey !== undefined) {
 		if (isEnabledSkipKind1) {

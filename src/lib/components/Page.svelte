@@ -14,8 +14,9 @@
 		getChannelBookmarkMap,
 		getEventByAddressPointer,
 		getEventById,
-		getEventsEmojiSet,
+		getEventsByKinds,
 		getEventsChannel,
+		getEventsEmojiSet,
 		getEventsFirst,
 		getEventsReaction,
 		getEventsTimelineTop,
@@ -74,7 +75,7 @@
 		currentNoteId: string | undefined;
 		currentAddressPointer: nip19.AddressPointer | undefined;
 		query: string | undefined;
-		urlSearchParams: URLSearchParams | undefined;
+		urlSearchParams: URLSearchParams;
 		hashtag: string | undefined;
 		category: string | undefined;
 		profileMap: Map<string, ProfileContentEvent>;
@@ -100,8 +101,21 @@
 			category
 		].every((q) => q === undefined) && !isAntenna
 	);
+	const kindSet: Set<number> = $derived.by(() => {
+		const kindSet: Set<number> = new Set<number>();
+		for (const [k, v] of urlSearchParams) {
+			if (k === 'kind' && /^\d+$/.test(v)) {
+				kindSet.add(parseInt(v));
+			}
+		}
+		return kindSet;
+	});
 	const eventsTimeline: NostrEvent[] = $derived(
-		category === undefined ? getEventsTimelineTop() : getEventsChannel()
+		category === undefined
+			? kindSet.size === 0
+				? getEventsTimelineTop()
+				: getEventsByKinds(kindSet)
+			: getEventsChannel()
 	);
 	const profileEventMap: Map<string, NostrEvent> = $derived(getProfileEventMap());
 	const channelBookmarkMap: Map<string, string[]> = $derived(getChannelBookmarkMap());
@@ -189,19 +203,7 @@
 							.includes(currentChannelId))
 			);
 		} else if (query !== undefined) {
-			if (urlSearchParams !== undefined) {
-				const kinds: number[] = [];
-				for (const [k, v] of urlSearchParams) {
-					if (k === 'kind' && /^\d+$/.test(v)) {
-						kinds.push(parseInt(v));
-					}
-				}
-				tl = eventsTimeline.filter(
-					(ev) => kinds.includes(ev.kind) && ev.content.toLowerCase().includes(query.toLowerCase())
-				);
-			} else {
-				tl = eventsTimeline.filter((ev) => ev.content.toLowerCase().includes(query.toLowerCase()));
-			}
+			tl = eventsTimeline.filter((ev) => ev.content.toLowerCase().includes(query.toLowerCase()));
 		} else if (hashtag !== undefined) {
 			tl = eventsTimeline.filter((ev) =>
 				ev.tags.some((tag) => tag.length >= 2 && tag[0] === 't' && tag[1].toLowerCase() === hashtag)
@@ -212,12 +214,19 @@
 				return channel?.categories.includes(category) === true;
 			});
 		} else {
-			tl = eventsTimeline.filter(
-				(ev) =>
-					ev.kind === 42 ||
-					(ev.kind === 16 &&
-						ev.tags.some((tag) => tag.length >= 2 && tag[0] === 'k' && tag[1].includes('42')))
-			);
+			if (kindSet.size === 0) {
+				tl = eventsTimeline.filter(
+					(ev) =>
+						ev.kind === 42 ||
+						(ev.kind === 16 &&
+							ev.tags.some((tag) => tag.length >= 2 && tag[0] === 'k' && tag[1].includes('42')))
+				);
+			} else {
+				tl = eventsTimeline;
+			}
+		}
+		if (kindSet.size > 0) {
+			tl = tl.filter((ev) => kindSet.has(ev.kind));
 		}
 		return tl;
 	});
@@ -270,7 +279,8 @@
 		currentChannelId,
 		currentNoteId,
 		currentAddressPointer,
-		isAntenna
+		isAntenna,
+		urlSearchParams
 	});
 
 	const handlerScroll = () => {

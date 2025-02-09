@@ -1001,15 +1001,6 @@
 			{#if showJson || showForm || showReplies}
 				<div class="Extra">
 					{#if showJson}
-						{@const d = event.tags.find((tag) => tag.length >= 2 && tag[0] === 'd')?.at(1)}
-						{@const eventIdEncoded =
-							d === undefined
-								? nip19.neventEncode({ ...event, author: event.pubkey })
-								: nip19.naddrEncode({
-										identifier: d,
-										pubkey: event.pubkey,
-										kind: event.kind
-									})}
 						{@const channel = channelMap.get(event.id)}
 						{@const events =
 							event.kind === 40 && channel?.eventkind41 !== undefined
@@ -1017,6 +1008,16 @@
 								: [event]}
 						<aside class="Entry__json">
 							{#each events as event, i (event.id)}
+								{@const d =
+									event.tags.find((tag) => tag.length >= 2 && tag[0] === 'd')?.at(1) ?? ''}
+								{@const eventIdEncoded =
+									isReplaceableKind(event.kind) || isParameterizedReplaceableKind(event.kind)
+										? nip19.naddrEncode({
+												identifier: d,
+												pubkey: event.pubkey,
+												kind: event.kind
+											})
+										: nip19.neventEncode({ ...event, author: event.pubkey })}
 								{#if i > 0}<hr />{/if}
 								<dl class="details">
 									<dt>User ID</dt>

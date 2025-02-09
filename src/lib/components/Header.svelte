@@ -11,6 +11,7 @@
 	import Reaction from '$lib/components/Reaction.svelte';
 	import Content from '$lib/components/Content.svelte';
 	import { afterNavigate, beforeNavigate, goto } from '$app/navigation';
+	import { page } from '$app/state';
 	import type { NostrEvent } from 'nostr-tools/pure';
 	import * as nip19 from 'nostr-tools/nip19';
 	import { unixNow } from 'applesauce-core/helpers';
@@ -30,7 +31,7 @@
 	}: {
 		loginPubkey: string | undefined;
 		query: string | undefined;
-		urlSearchParams: URLSearchParams | undefined;
+		urlSearchParams: URLSearchParams;
 		profileMap: Map<string, ProfileContentEvent>;
 		mutedPubkeys: string[];
 		mutedWords: string[];
@@ -87,14 +88,26 @@
 	let queryInput: string = $state('');
 	let searchType: string = $state('channel');
 	const goSearchUrl = () => {
+		let path: string;
 		let kinds: number[];
 		if (searchType === 'note') {
+			path = `/search/${encodeURI(queryInput)}`;
 			kinds = [1, 42];
+		} else if (searchType === 'kind') {
+			path = page.url.pathname;
+			if (!/^(\/|\/antenna|\/npub1\w+)$/.test(path)) {
+				path = '/';
+			}
+			kinds = queryInput
+				.split(',')
+				.filter((s) => /^\d+$/.test(s))
+				.map((s) => parseInt(s));
 		} else {
+			path = `/search/${encodeURI(queryInput)}`;
 			kinds = [40, 41];
 		}
 		const qp = kinds.map((k) => `kind=${k}`).join('&');
-		goto(`/search/${encodeURI(queryInput)}?${qp}`);
+		goto(`${path}?${qp}`);
 	};
 
 	let nav: HTMLElement;
@@ -175,11 +188,20 @@
 		}
 		if (urlSearchParams !== undefined) {
 			let type = 'channel';
-			//iPhone の Safari では URLSearchParamsIterator に every() は生えていないため for で回すしかない
-			for (const [k, v] of urlSearchParams.entries()) {
-				if (!(k === 'kind' && /^\d+$/.test(v) && [40, 41].includes(parseInt(v)))) {
-					type = 'note';
-					break;
+			if (!page.url.pathname.includes('/search/')) {
+				//iPhone の Safari では URLSearchParamsIterator に every() は生えていないため for で回すしかない
+				for (const [k, v] of urlSearchParams.entries()) {
+					if (k === 'kind' && /^\d+$/.test(v)) {
+						type = 'kind';
+						break;
+					}
+				}
+			} else {
+				for (const [k, v] of urlSearchParams.entries()) {
+					if (!(k === 'kind' && /^\d+$/.test(v) && [40, 41].includes(parseInt(v)))) {
+						type = 'note';
+						break;
+					}
 				}
 			}
 			searchType = type;
@@ -273,6 +295,16 @@
 						bind:group={searchType}
 					/>
 					<label for="search-note">{$_('Header.post')}</label>
+				</li>
+				<li class="NavGroup__item">
+					<input
+						type="radio"
+						id="search-kind"
+						name="search-type"
+						value="kind"
+						bind:group={searchType}
+					/>
+					<label for="search-kind">kind</label>
 				</li>
 			</ul>
 			<ul class="NavGroup">

@@ -50,7 +50,7 @@
 	}: {
 		loginPubkey: string | undefined;
 		query: string | undefined;
-		urlSearchParams: URLSearchParams | undefined;
+		urlSearchParams: URLSearchParams;
 		lang: string;
 		isEnabledDarkMode: boolean;
 		isEnabledRelativeTime: boolean;

@@ -18,7 +18,7 @@
 	}: {
 		loginPubkey: string | undefined;
 		query: string;
-		urlSearchParams: URLSearchParams | undefined;
+		urlSearchParams: URLSearchParams;
 		profileMap: Map<string, ProfileContentEvent>;
 		channelMap: Map<string, ChannelContent>;
 		mutedPubkeys: string[];

@@ -1049,33 +1049,28 @@ const _subTimeline = eventStore
 				if (!profileMap.has(event.pubkey)) {
 					rxReqB0.emit({ kinds: [0], authors: [event.pubkey], until: unixNow() });
 				}
-				if (
-					loginPubkey !== undefined &&
-					event.tags.some((tag) => tag.length >= 2 && tag[0] === 'p' && tag[1] === loginPubkey)
-				) {
-					const id = event.tags.findLast((tag) => tag.length >= 2 && tag[0] === 'e')?.at(1);
-					if (id !== undefined && !eventStore.hasEvent(id)) {
-						rxReqBId.emit({ ids: [id], until: unixNow() });
-					}
-					const a = event.tags.findLast((tag) => tag.length >= 2 && tag[0] === 'a')?.at(1);
-					if (a !== undefined) {
-						const ary = a.split(':');
-						const ap: nip19.AddressPointer = {
-							identifier: ary[2],
-							pubkey: ary[1],
-							kind: parseInt(ary[0])
+				const id = event.tags.findLast((tag) => tag.length >= 2 && tag[0] === 'e')?.at(1);
+				if (id !== undefined && !eventStore.hasEvent(id)) {
+					rxReqBId.emit({ ids: [id], until: unixNow() });
+				}
+				const a = event.tags.findLast((tag) => tag.length >= 2 && tag[0] === 'a')?.at(1);
+				if (a !== undefined) {
+					const ary = a.split(':');
+					const ap: nip19.AddressPointer = {
+						identifier: ary[2],
+						pubkey: ary[1],
+						kind: parseInt(ary[0])
+					};
+					if (!eventStore.hasReplaceable(ap.kind, ap.pubkey, ap.identifier)) {
+						const filter: LazyFilter = {
+							kinds: [ap.kind],
+							authors: [ap.pubkey],
+							until: unixNow()
 						};
-						if (!eventStore.hasReplaceable(ap.kind, ap.pubkey, ap.identifier)) {
-							const filter: LazyFilter = {
-								kinds: [ap.kind],
-								authors: [ap.pubkey],
-								until: unixNow()
-							};
-							if (ap.identifier.length > 0) {
-								filter['#d'] = [ap.identifier];
-							}
-							rxReqBRp.emit(filter);
+						if (ap.identifier.length > 0) {
+							filter['#d'] = [ap.identifier];
 						}
+						rxReqBRp.emit(filter);
 					}
 				}
 				break;

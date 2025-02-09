@@ -1014,7 +1014,7 @@ const _subTimeline = eventStore
 	.stream([
 		{
 			kinds: [
-				0, 1, 6, 7, 16, 40, 41, 42, 1111, 9734, 9735, 10000, 10005, 10030, 30030, 30023, 31990
+				0, 1, 6, 7, 16, 20, 40, 41, 42, 1111, 9734, 9735, 10000, 10005, 10030, 30030, 30023, 31990
 			]
 		}
 	])
@@ -1081,6 +1081,12 @@ const _subTimeline = eventStore
 							rxReqBRp.emit(filter);
 						}
 					}
+				}
+				break;
+			}
+			case 20: {
+				if (!profileMap.has(event.pubkey)) {
+					rxReqB0.emit({ kinds: [0], authors: [event.pubkey], until: unixNow() });
 				}
 				break;
 			}

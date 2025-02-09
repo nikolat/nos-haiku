@@ -291,6 +291,13 @@
 		return obj;
 	};
 
+	const getEncode = (event: NostrEvent): string => {
+		const d = event.tags.find((tag) => tag.length >= 2 && tag[0] === 'd')?.at(1) ?? '';
+		return isReplaceableKind(event.kind) || isParameterizedReplaceableKind(event.kind)
+			? nip19.naddrEncode({ identifier: d, pubkey: event.pubkey, kind: event.kind })
+			: nip19.neventEncode({ ...event, author: event.pubkey });
+	};
+
 	const eventsReplying = $derived(getEventsReplying(event));
 
 	let isEmojiPickerOpened: boolean = $state(false);
@@ -318,12 +325,6 @@
 				</div>
 			</details>
 		{:else}
-			{@const d = event.tags.find((tag) => tag.length >= 2 && tag[0] === 'd')?.at(1)}
-			{@const kind = event.kind}
-			{@const link =
-				isReplaceableKind(kind) || isParameterizedReplaceableKind(kind)
-					? `/entry/${nip19.naddrEncode({ identifier: d ?? '', pubkey: event.pubkey, kind: event.kind })}`
-					: `/entry/${nip19.neventEncode({ ...event, author: event.pubkey })}`}
 			<div class="Entry__main">
 				<div class="Entry__profile">
 					<div>
@@ -820,7 +821,7 @@
 							</span>
 							<span class="Separator">·</span>
 							<span class="Time">
-								<a href={link}>
+								<a href={`/entry/${getEncode(event)}`}>
 									<time
 										datetime={new Date(1000 * event.created_at).toISOString()}
 										title={new Date(1000 * event.created_at).toLocaleString()}
@@ -1008,22 +1009,12 @@
 								: [event]}
 						<aside class="Entry__json">
 							{#each events as event, i (event.id)}
-								{@const d =
-									event.tags.find((tag) => tag.length >= 2 && tag[0] === 'd')?.at(1) ?? ''}
-								{@const eventIdEncoded =
-									isReplaceableKind(event.kind) || isParameterizedReplaceableKind(event.kind)
-										? nip19.naddrEncode({
-												identifier: d,
-												pubkey: event.pubkey,
-												kind: event.kind
-											})
-										: nip19.neventEncode({ ...event, author: event.pubkey })}
 								{#if i > 0}<hr />{/if}
 								<dl class="details">
 									<dt>User ID</dt>
 									<dd><code>{nip19.npubEncode(event.pubkey)}</code></dd>
 									<dt>Event ID</dt>
-									<dd><code>{eventIdEncoded}</code></dd>
+									<dd><code>{getEncode(event)}</code></dd>
 									<dt>Event JSON</dt>
 									<dd>
 										<pre class="json-view"><code>{JSON.stringify(event, undefined, 2)}</code></pre>

@@ -445,10 +445,6 @@ export const getProfileMap = (): Map<string, ProfileContentEvent> => {
 	return profileMap;
 };
 
-export const getProfileEventMap = (): Map<string, NostrEvent> => {
-	return new Map<string, NostrEvent>(eventsProfile.map((ev) => [ev.pubkey, ev]));
-};
-
 export const getEventsReaction = (): NostrEvent[] => {
 	return eventsReaction;
 };

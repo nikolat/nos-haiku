@@ -20,7 +20,6 @@
 		loginPubkey,
 		currentPubkey,
 		profileMap,
-		profileEventMap,
 		channelMap,
 		eventsTimeline,
 		eventsReaction,
@@ -34,7 +33,6 @@
 		loginPubkey: string | undefined;
 		currentPubkey: string;
 		profileMap: Map<string, ProfileContentEvent>;
-		profileEventMap: Map<string, NostrEvent>;
 		channelMap: Map<string, ChannelContent>;
 		eventsTimeline: NostrEvent[];
 		eventsReaction: NostrEvent[];
@@ -240,7 +238,7 @@
 			<p>
 				<Content
 					content={prof?.about ?? ''}
-					tags={profileEventMap.get(currentPubkey)?.tags ?? []}
+					tags={profileMap.get(currentPubkey)?.event.tags ?? []}
 					{channelMap}
 					{profileMap}
 					{loginPubkey}
@@ -248,6 +246,7 @@
 					{mutedChannelIds}
 					{mutedWords}
 					{mutedHashTags}
+					{followingPubkeys}
 					{eventsTimeline}
 					{eventsReaction}
 					{eventsEmojiSet}

@@ -142,7 +142,6 @@
 										{loginPubkey}
 										currentPubkey={loginPubkey}
 										{profileMap}
-										profileEventMap={new Map<string, NostrEvent>()}
 										channelMap={new Map<string, ChannelContent>()}
 										eventsTimeline={[]}
 										eventsReaction={[]}

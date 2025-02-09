@@ -20,7 +20,6 @@
 		getEventsFirst,
 		getEventsReaction,
 		getEventsTimelineTop,
-		getProfileEventMap,
 		getProfileName,
 		muteChannel,
 		muteHashTag,
@@ -117,7 +116,6 @@
 				: getEventsByKinds(kindSet)
 			: getEventsChannel()
 	);
-	const profileEventMap: Map<string, NostrEvent> = $derived(getProfileEventMap());
 	const channelBookmarkMap: Map<string, string[]> = $derived(getChannelBookmarkMap());
 	const followingChannelIds: string[] = $derived(channelBookmarkMap.get(loginPubkey ?? '') ?? []);
 	const channelIds: string[] = $derived(
@@ -434,7 +432,6 @@
 							{loginPubkey}
 							{currentPubkey}
 							{profileMap}
-							{profileEventMap}
 							{channelMap}
 							{eventsTimeline}
 							{eventsReaction}
@@ -926,6 +923,7 @@
 							{mutedChannelIds}
 							{mutedWords}
 							{mutedHashTags}
+							{followingPubkeys}
 							{eventsTimeline}
 							{eventsReaction}
 							{eventsEmojiSet}

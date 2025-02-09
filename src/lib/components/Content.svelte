@@ -16,6 +16,7 @@
 		mutedChannelIds = [],
 		mutedWords = [],
 		mutedHashTags = [],
+		followingPubkeys = [],
 		eventsTimeline = [],
 		eventsReaction = [],
 		eventsEmojiSet = [],
@@ -37,6 +38,7 @@
 		mutedChannelIds?: string[];
 		mutedWords?: string[];
 		mutedHashTags?: string[];
+		followingPubkeys?: string[];
 		eventsTimeline?: NostrEvent[];
 		eventsReaction?: NostrEvent[];
 		eventsEmojiSet?: NostrEvent[];
@@ -179,6 +181,7 @@
 					{mutedChannelIds}
 					{mutedWords}
 					{mutedHashTags}
+					{followingPubkeys}
 					{eventsTimeline}
 					{eventsReaction}
 					{eventsEmojiSet}
@@ -209,6 +212,7 @@
 					{mutedChannelIds}
 					{mutedWords}
 					{mutedHashTags}
+					{followingPubkeys}
 					{eventsTimeline}
 					{eventsReaction}
 					{eventsEmojiSet}
@@ -238,6 +242,7 @@
 					{mutedChannelIds}
 					{mutedWords}
 					{mutedHashTags}
+					{followingPubkeys}
 					{eventsTimeline}
 					{eventsReaction}
 					{eventsEmojiSet}

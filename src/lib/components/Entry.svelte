@@ -19,6 +19,7 @@
 		sendRepost,
 		unbookmarkEmojiSets
 	} from '$lib/resource.svelte';
+	import Profile from '$lib/components/Profile.svelte';
 	import Reaction from '$lib/components/Reaction.svelte';
 	import AddStar from '$lib/components/AddStar.svelte';
 	import ChannelMeta from '$lib/components/ChannelMeta.svelte';
@@ -39,6 +40,7 @@
 		mutedChannelIds,
 		mutedWords,
 		mutedHashTags,
+		followingPubkeys,
 		eventsTimeline,
 		eventsReaction,
 		eventsEmojiSet,
@@ -58,6 +60,7 @@
 		mutedChannelIds: string[];
 		mutedWords: string[];
 		mutedHashTags: string[];
+		followingPubkeys: string[];
 		eventsTimeline: NostrEvent[];
 		eventsReaction: NostrEvent[];
 		eventsEmojiSet: NostrEvent[];
@@ -371,6 +374,8 @@
 										</button>
 									</span>
 								{/if}
+							{:else if event.kind === 0}
+								User Metadata
 							{:else if event.kind === 1}
 								<a href="/{nip19.npubEncode(event.pubkey)}">id:{prof?.name ?? 'none'}</a>
 							{:else if [6, 16].includes(event.kind)}
@@ -462,6 +467,7 @@
 												{mutedChannelIds}
 												{mutedWords}
 												{mutedHashTags}
+												{followingPubkeys}
 												{eventsTimeline}
 												{eventsReaction}
 												{eventsEmojiSet}
@@ -482,6 +488,21 @@
 									{:else if repostedEventId !== undefined}
 										{`nostr:${nip19.neventEncode({ id: repostedEventId })}`}
 									{/if}
+								{:else if event.kind === 0}
+									<Profile
+										{loginPubkey}
+										currentPubkey={event.pubkey}
+										{profileMap}
+										{channelMap}
+										{eventsTimeline}
+										{eventsReaction}
+										{eventsEmojiSet}
+										{mutedPubkeys}
+										{mutedChannelIds}
+										{mutedWords}
+										{mutedHashTags}
+										{followingPubkeys}
+									/>
 								{:else if event.kind === 7}
 									{@const reactedEventId = event.tags
 										.findLast((tag) => tag.length >= 2 && tag[0] === 'e')
@@ -497,6 +518,7 @@
 											{mutedChannelIds}
 											{mutedWords}
 											{mutedHashTags}
+											{followingPubkeys}
 											{eventsTimeline}
 											{eventsReaction}
 											{eventsEmojiSet}
@@ -536,6 +558,7 @@
 											{mutedPubkeys}
 											{mutedChannelIds}
 											{mutedWords}
+											{followingPubkeys}
 											{eventsTimeline}
 											{eventsReaction}
 											{eventsEmojiSet}
@@ -575,6 +598,7 @@
 												{mutedChannelIds}
 												{mutedWords}
 												{mutedHashTags}
+												{followingPubkeys}
 												{eventsTimeline}
 												{eventsReaction}
 												{eventsEmojiSet}
@@ -686,6 +710,7 @@
 											{mutedPubkeys}
 											{mutedChannelIds}
 											{mutedWords}
+											{followingPubkeys}
 											{eventsTimeline}
 											{eventsReaction}
 											{eventsEmojiSet}
@@ -1057,6 +1082,7 @@
 									{mutedChannelIds}
 									{mutedWords}
 									{mutedHashTags}
+									{followingPubkeys}
 									{eventsTimeline}
 									{eventsReaction}
 									{eventsEmojiSet}

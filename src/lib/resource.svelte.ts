@@ -1010,11 +1010,15 @@ const _subTimeline = eventStore
 	.stream([
 		{
 			kinds: [
-				0, 1, 6, 7, 16, 20, 40, 41, 42, 1111, 9734, 9735, 10000, 10005, 10030, 30030, 30023, 31990
+				0, 1, 6, 7, 16, 17, 20, 40, 41, 42, 1111, 9734, 9735, 10000, 10005, 10030, 30030, 30023,
+				31990
 			]
 		}
 	])
 	.subscribe(async (event) => {
+		if (![0, 9735].includes(event.kind) && !profileMap.has(event.pubkey)) {
+			rxReqB0.emit({ kinds: [0], authors: [event.pubkey], until: unixNow() });
+		}
 		switch (event.kind) {
 			case 0: {
 				const ids = getIdsForFilter([event]).ids.filter((id) => !eventStore.hasEvent(id));
@@ -1035,9 +1039,6 @@ const _subTimeline = eventStore
 				) {
 					break;
 				}
-				if (!profileMap.has(event.pubkey)) {
-					rxReqB0.emit({ kinds: [0], authors: [event.pubkey], until: unixNow() });
-				}
 				const id = event.tags.findLast((tag) => tag.length >= 2 && tag[0] === 'e')?.at(1);
 				if (id !== undefined && !eventStore.hasEvent(id)) {
 					getEventsByIdWithRelayHint(event, 'e');
@@ -1046,9 +1047,6 @@ const _subTimeline = eventStore
 				break;
 			}
 			case 7: {
-				if (!profileMap.has(event.pubkey)) {
-					rxReqB0.emit({ kinds: [0], authors: [event.pubkey], until: unixNow() });
-				}
 				const id = event.tags.findLast((tag) => tag.length >= 2 && tag[0] === 'e')?.at(1);
 				if (id !== undefined && !eventStore.hasEvent(id)) {
 					rxReqBId.emit({ ids: [id], until: unixNow() });
@@ -1075,16 +1073,7 @@ const _subTimeline = eventStore
 				}
 				break;
 			}
-			case 20: {
-				if (!profileMap.has(event.pubkey)) {
-					rxReqB0.emit({ kinds: [0], authors: [event.pubkey], until: unixNow() });
-				}
-				break;
-			}
 			case 40: {
-				if (!profileMap.has(event.pubkey)) {
-					rxReqB0.emit({ kinds: [0], authors: [event.pubkey], until: unixNow() });
-				}
 				rxReqB41.emit({ kinds: [41], '#e': [event.id], until: unixNow() });
 				break;
 			}
@@ -1098,9 +1087,6 @@ const _subTimeline = eventStore
 			case 1:
 			case 42:
 			case 1111: {
-				if (!profileMap.has(event.pubkey)) {
-					rxReqB0.emit({ kinds: [0], authors: [event.pubkey], until: unixNow() });
-				}
 				//多数のリアクションが付くと重くなる
 				rxReqB7.emit({ kinds: [7], '#e': [event.id], limit: 10, until: unixNow() });
 				const getIdOfMarkerd = (marker: string): string | undefined => {
@@ -1193,9 +1179,6 @@ const _subTimeline = eventStore
 				break;
 			}
 			case 9734: {
-				if (!profileMap.has(event.pubkey)) {
-					rxReqB0.emit({ kinds: [0], authors: [event.pubkey], until: unixNow() });
-				}
 				if (
 					loginPubkey !== undefined &&
 					event.tags.some((tag) => tag.length >= 2 && tag[0] === 'p' && tag[1] === loginPubkey)
@@ -1258,9 +1241,6 @@ const _subTimeline = eventStore
 				break;
 			}
 			case 10030: {
-				if (!profileMap.has(event.pubkey)) {
-					rxReqB0.emit({ kinds: [0], authors: [event.pubkey], until: unixNow() });
-				}
 				const atags = event.tags
 					.filter((tag) => tag.length >= 2 && tag[0] === 'a')
 					.map((tag) => tag[1]);
@@ -1314,9 +1294,6 @@ const _subTimeline = eventStore
 			case 30023:
 			case 30030:
 			case 31990: {
-				if (!profileMap.has(event.pubkey)) {
-					rxReqB0.emit({ kinds: [0], authors: [event.pubkey], until: unixNow() });
-				}
 				const ap: nip19.AddressPointer = {
 					identifier: event.tags.find((tag) => tag.length >= 2 && tag[0] === 'd')?.at(1) ?? '',
 					pubkey: event.pubkey,

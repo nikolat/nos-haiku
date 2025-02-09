@@ -395,7 +395,7 @@
 										<a href="/keyword/{nip19.neventEncode({ id: channelIdReposted })}">unknown</a>
 									{/if}
 								{/if}
-							{:else if event.kind === 7}
+							{:else if [7, 17].includes(event.kind)}
 								Reaction <Reaction reactionEvent={event} profile={undefined} isAuthor={false} />
 							{:else if event.kind === 20}
 								Picture
@@ -531,6 +531,15 @@
 										/>
 									{:else if reactedEventId !== undefined}
 										{`nostr:${nip19.neventEncode({ id: reactedEventId })}`}
+									{/if}
+								{:else if event.kind === 17}
+									{@const r = event.tags
+										.find((tag) => tag.length >= 2 && tag[0] === 'r' && URL.canParse(tag[1]))
+										?.at(1)}
+									{#if r === undefined}
+										<p class="warning-message">url not found</p>
+									{:else}
+										<Content content={r} tags={[]} />
 									{/if}
 								{:else if event.kind === 20}
 									{@const title = event.tags

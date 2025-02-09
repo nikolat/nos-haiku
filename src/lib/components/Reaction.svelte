@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { defaultReactionToShow, getRoboHashURL } from '$lib/config';
-	import { isCustomEmoji } from '$lib/utils';
+	import { isCustomEmoji, isValidEmoji } from '$lib/utils';
 	import { sendDeletion } from '$lib/resource.svelte';
 	import type { NostrEvent } from 'nostr-tools/pure';
 	import * as nip19 from 'nostr-tools/nip19';
@@ -27,7 +27,9 @@
 	data-created-at={reactionEvent.created_at}
 >
 	<span class="reactionstar-content">
-		{#if isCustomEmoji(reactionEvent)}
+		{#if !isValidEmoji(reactionEvent)}
+			<span class="warning-message">(invalid emoji)</span>
+		{:else if isCustomEmoji(reactionEvent)}
 			<img
 				src={reactionEvent.tags.find((tag) => tag[0] === 'emoji')?.at(2)}
 				alt={reactionEvent.content}
@@ -125,5 +127,9 @@
 		width: 16px;
 		height: 16px;
 		border-radius: 10%;
+	}
+	.warning-message {
+		text-decoration-line: underline;
+		text-decoration-color: red;
 	}
 </style>

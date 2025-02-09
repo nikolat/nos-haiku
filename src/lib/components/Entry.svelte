@@ -2,6 +2,7 @@
 	import { getClientURL, getRoboHashURL } from '$lib/config';
 	import {
 		getAbsoluteTime,
+		getEvent9734,
 		getRelativeTime,
 		zap,
 		type ChannelContent,
@@ -403,6 +404,10 @@
 								Channel
 							{:else if event.kind === 1111}
 								Comment
+							{:else if event.kind === 9734}
+								Zap Request
+							{:else if event.kind === 9735}
+								Zap
 							{:else if event.kind === 10030}
 								User emoji list
 							{:else if event.kind === 30023}
@@ -585,6 +590,32 @@
 										<ChannelMeta {channel} />
 									{:else}
 										unknown channel
+									{/if}
+								{:else if event.kind === 9735}
+									<Content content={event.content} tags={event.tags} />
+									{@const event9734 = getEvent9734(event)}
+									{#if event9734 !== null}
+										<Entry
+											event={event9734}
+											{channelMap}
+											{profileMap}
+											{loginPubkey}
+											{mutedPubkeys}
+											{mutedChannelIds}
+											{mutedWords}
+											{mutedHashTags}
+											{followingPubkeys}
+											{eventsTimeline}
+											{eventsReaction}
+											{eventsEmojiSet}
+											{uploaderSelected}
+											{channelToPost}
+											{currentChannelId}
+											{isEnabledRelativeTime}
+											{nowRealtime}
+											level={level + 1}
+											isNested={true}
+										/>
 									{/if}
 								{:else if event.kind === 10030}
 									{@const aStrs = event.tags

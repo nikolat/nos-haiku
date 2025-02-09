@@ -1,4 +1,4 @@
-import { verifyEvent, type NostrEvent } from 'nostr-tools/pure';
+import { verifyEvent, type NostrEvent, type VerifiedEvent } from 'nostr-tools/pure';
 import type { RelayRecord } from 'nostr-tools/relay';
 import { normalizeURL } from 'nostr-tools/utils';
 import * as nip19 from 'nostr-tools/nip19';
@@ -92,11 +92,33 @@ const getSats = (event9734: NostrEvent): number | null => {
 	return zapAmount;
 };
 
-export const getEvent9734 = async (
+export const getEvent9734 = (event: NostrEvent): VerifiedEvent | null => {
+	if (event.kind !== 9735) {
+		return null;
+	}
+	const description = event.tags.find((tag) => tag.length >= 2 && tag[0] === 'description')?.at(1);
+	if (description === undefined) {
+		return null;
+	}
+	//kind9734の検証
+	let event9734: NostrEvent;
+	try {
+		event9734 = JSON.parse(description);
+	} catch (error) {
+		console.warn(error);
+		return null;
+	}
+	if (!verifyEvent(event9734)) {
+		return null;
+	}
+	return event9734;
+};
+
+export const getEvent9734WithVerification = async (
 	event: NostrEvent,
 	profile: ProfileContentEvent
-): Promise<NostrEvent | null> => {
-	if (event.kind !== 9735 || profile.event.pubkey === undefined) {
+): Promise<VerifiedEvent | null> => {
+	if (event.kind !== 9735) {
 		return null;
 	}
 	const description = event.tags.find((tag) => tag.length >= 2 && tag[0] === 'description')?.at(1);

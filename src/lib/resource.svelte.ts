@@ -17,7 +17,12 @@ import {
 import { verifier } from 'rx-nostr-crypto';
 import { EventStore } from 'applesauce-core';
 import { unixNow, getProfileContent, type ProfileContent } from 'applesauce-core/helpers';
-import { sortEvents, type EventTemplate, type NostrEvent } from 'nostr-tools/pure';
+import {
+	sortEvents,
+	type EventTemplate,
+	type NostrEvent,
+	type VerifiedEvent
+} from 'nostr-tools/pure';
 import { isParameterizedReplaceableKind, isReplaceableKind } from 'nostr-tools/kinds';
 import { normalizeURL } from 'nostr-tools/utils';
 import type { Filter } from 'nostr-tools/filter';
@@ -597,6 +602,11 @@ const nextOnSubscribeEventStore = (event: NostrEvent | null, kindToDelete?: numb
 			);
 			break;
 		}
+		case 9734:
+		case 9735: {
+			//eventsAllの更新だけが目的
+			break;
+		}
 		case 10000: {
 			if (loginPubkey !== undefined) {
 				eventMuteList = eventStore.getReplaceable(10000, loginPubkey);
@@ -737,8 +747,8 @@ eventStore
 	.stream([
 		{
 			kinds: [
-				0, 1, 3, 5, 6, 7, 16, 40, 41, 42, 1111, 9734, 10000, 10002, 10005, 10030, 30002, 30023,
-				30030, 30078
+				0, 1, 3, 5, 6, 7, 16, 40, 41, 42, 1111, 9734, 9735, 10000, 10002, 10005, 10030, 30002,
+				30023, 30030, 30078
 			]
 		}
 	])
@@ -1191,14 +1201,7 @@ const _subTimeline = eventStore
 				break;
 			}
 			case 9735: {
-				if (loginPubkey === undefined) {
-					break;
-				}
-				const prof = profileMap.get(loginPubkey);
-				if (prof === undefined) {
-					break;
-				}
-				const event9734: NostrEvent | null = await getEvent9734(event, prof);
+				const event9734: VerifiedEvent | null = getEvent9734(event);
 				if (event9734 !== null) {
 					eventStore.add(event9734);
 					console.info('kind', event9734.kind);

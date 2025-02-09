@@ -7,7 +7,13 @@
 		zapNpub,
 		zapRelays
 	} from '$lib/config';
-	import { zap, type ChannelContent, type ProfileContentEvent, type UrlParams } from '$lib/utils';
+	import {
+		getEvent9734,
+		zap,
+		type ChannelContent,
+		type ProfileContentEvent,
+		type UrlParams
+	} from '$lib/utils';
 	import {
 		bookmarkChannel,
 		followUser,
@@ -176,7 +182,11 @@
 	const timelineAll: NostrEvent[] = $derived.by(() => {
 		let tl: NostrEvent[];
 		if (isAntenna) {
-			tl = eventsTimeline.filter((ev) => followingPubkeys.includes(ev.pubkey));
+			tl = eventsTimeline.filter((ev) =>
+				ev.kind === 9735
+					? followingPubkeys.includes(getEvent9734(ev)?.pubkey ?? '')
+					: followingPubkeys.includes(ev.pubkey)
+			);
 		} else if (currentNoteId !== undefined) {
 			const entry = getEventById(currentNoteId);
 			tl = entry !== undefined ? [entry] : [];

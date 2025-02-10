@@ -4,6 +4,7 @@
 		getAbsoluteTime,
 		getEvent9734,
 		getRelativeTime,
+		getRelaysToUseFromKind10002Event,
 		splitNip51ListPublic,
 		zap,
 		type ChannelContent,
@@ -25,6 +26,7 @@
 	import Reaction from '$lib/components/kinds/Reaction.svelte';
 	import ChannelMeta from '$lib/components/kinds/ChannelMeta.svelte';
 	import MuteList from '$lib/components/kinds/MuteList.svelte';
+	import RelayList from '$lib/components/kinds/RelayList.svelte';
 	import AddStar from '$lib/components/AddStar.svelte';
 	import Content from '$lib/components/Content.svelte';
 	import Entry from '$lib/components/Entry.svelte';
@@ -413,6 +415,8 @@
 								Zap
 							{:else if event.kind === 10000}
 								Mute list
+							{:else if event.kind === 10002}
+								Relay list
 							{:else if event.kind === 10030}
 								User emoji list
 							{:else if event.kind === 30023}
@@ -686,6 +690,8 @@
 										mutedHashTags={tPub}
 										isAuthor={false}
 									/>
+								{:else if event.kind === 10002}
+									<RelayList relaysToUse={getRelaysToUseFromKind10002Event(event)} />
 								{:else if event.kind === 10030}
 									{@const aStrs = event.tags
 										.filter((tag) => tag.length >= 2 && tag[0] === 'a')

@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { getRoboHashURL, uploaderURLs, urlToLinkProfileEditor } from '$lib/config';
+	import { uploaderURLs, urlToLinkProfileEditor } from '$lib/config';
 	import type { ChannelContent, ProfileContentEvent } from '$lib/utils';
 	import {
 		clearCache,
@@ -16,13 +16,11 @@
 	} from '$lib/resource.svelte';
 	import Profile from '$lib/components/kinds/Profile.svelte';
 	import MuteList from '$lib/components/kinds/MuteList.svelte';
+	import RelayList from '$lib/components/kinds/RelayList.svelte';
 	import Header from '$lib/components/Header.svelte';
 	import { goto } from '$app/navigation';
-	import { browser } from '$app/environment';
 	import type { NostrEvent } from 'nostr-tools/pure';
 	import type { RelayRecord } from 'nostr-tools/relay';
-	import * as nip11 from 'nostr-tools/nip11';
-	import * as nip19 from 'nostr-tools/nip19';
 	import { _ } from 'svelte-i18n';
 
 	let {
@@ -275,53 +273,7 @@
 									{/if}
 									<option value="default">Default</option>
 								</select>
-								<table>
-									<tbody>
-										<tr>
-											<th></th>
-											<th>relay</th>
-											<th>r</th>
-											<th>w</th>
-										</tr>
-										{#each Object.entries(relaysToUse) as relay (relay[0])}
-											<tr>
-												<td>
-													{#if browser}
-														{#await nip11.fetchRelayInformation(relay[0]) then r}
-															{#if URL.canParse(r.icon ?? '')}
-																<img src={r.icon} alt={r.name} />
-															{:else if r.pubkey !== undefined}
-																<img
-																	src={getRoboHashURL(nip19.npubEncode(r.pubkey))}
-																	alt={r.name}
-																/>
-															{/if}
-														{:catch error}
-															{console.warn(error.message)}
-														{/await}
-													{/if}
-												</td>
-												<td>{relay[0]}</td>
-												<td
-													><input
-														type="checkbox"
-														checked={relay[1].read}
-														name="read"
-														disabled
-													/></td
-												>
-												<td
-													><input
-														type="checkbox"
-														checked={relay[1].write}
-														name="write"
-														disabled
-													/></td
-												>
-											</tr>
-										{/each}
-									</tbody>
-								</table>
+								<RelayList {relaysToUse} showIcon={true} />
 							</div>
 						</div>
 						<div class="Settings__section">
@@ -397,25 +349,5 @@
 	.Control input:disabled,
 	.Control input:disabled + span {
 		cursor: not-allowed;
-	}
-	.Control table {
-		table-layout: auto;
-		width: auto;
-	}
-	.Control table th {
-		text-align: center;
-		padding: 1px 1em;
-		background-color: var(--background-secondary);
-	}
-	.Control table td {
-		white-space: pre-wrap;
-		padding: 1px 1em;
-	}
-	.Control table tr:nth-child(odd) td {
-		background-color: var(--background-secondary);
-	}
-	.Control table td img {
-		width: 16px;
-		height: 16px;
 	}
 </style>

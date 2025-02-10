@@ -342,6 +342,19 @@ export const getIdsForFilter = (
 	return { ids: Array.from(ids), aps: aps };
 };
 
+export const getRelaysToUseFromKind10002Event = (event?: NostrEvent): RelayRecord => {
+	const newRelays: RelayRecord = {};
+	for (const tag of event?.tags.filter(
+		(tag) => tag.length >= 2 && tag[0] === 'r' && URL.canParse(tag[1])
+	) ?? []) {
+		newRelays[normalizeURL(tag[1])] = {
+			read: tag.length === 2 || tag[2] === 'read',
+			write: tag.length === 2 || tag[2] === 'write'
+		};
+	}
+	return newRelays;
+};
+
 export const getRelaysToUseByRelaysSelected = (
 	relaysSelected: string,
 	eventRelayList?: NostrEvent,
@@ -349,15 +362,7 @@ export const getRelaysToUseByRelaysSelected = (
 ): Promise<RelayRecord> => {
 	switch (relaysSelected.startsWith('30002:') ? 'kind30002' : relaysSelected) {
 		case 'kind10002': {
-			const newRelays: RelayRecord = {};
-			for (const tag of eventRelayList?.tags.filter(
-				(tag) => tag.length >= 2 && tag[0] === 'r' && URL.canParse(tag[1])
-			) ?? []) {
-				newRelays[normalizeURL(tag[1])] = {
-					read: tag.length === 2 || tag[2] === 'read',
-					write: tag.length === 2 || tag[2] === 'write'
-				};
-			}
+			const newRelays: RelayRecord = getRelaysToUseFromKind10002Event(eventRelayList);
 			return Promise.resolve(newRelays);
 		}
 		case 'kind30002': {

@@ -1193,6 +1193,10 @@ const _subTimeline = eventStore
 				if (id !== undefined && !eventStore.hasEvent(id)) {
 					rxReqBId.emit({ ids: [id], until: unixNow() });
 				}
+				const p = event.tags.findLast((tag) => tag.length >= 2 && tag[0] === 'p')?.at(1);
+				if (p !== undefined && !profileMap.has(p)) {
+					rxReqB0.emit({ kinds: [0], authors: [p], until: unixNow() });
+				}
 				break;
 			}
 			case 9735: {

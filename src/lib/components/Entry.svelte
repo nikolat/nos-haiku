@@ -598,12 +598,36 @@
 										unknown channel
 									{/if}
 								{:else if event.kind === 9734}
-									{@const eventId = event.tags
+									{@const pubkeyZapped = event.tags
+										.find((tag) => tag.length >= 2 && tag[0] === 'p')
+										?.at(1)}
+									{#if pubkeyZapped !== undefined}
+										{@const profZapped = profileMap.get(pubkeyZapped)}
+										<div class="Entry__parentmarker">
+											<a href="/{nip19.npubEncode(pubkeyZapped)}">
+												<i class="fa-fw fas fa-arrow-alt-from-right"></i>
+												<span class="Mention">
+													<img
+														src={profZapped?.picture ??
+															getRoboHashURL(nip19.npubEncode(pubkeyZapped))}
+														alt={getProfileName(profZapped)}
+														class="Avatar Avatar--sm"
+													/>
+													<Content
+														content={getProfileName(profZapped)}
+														tags={profZapped?.event.tags ?? []}
+														isAbout={true}
+													/>
+												</span>
+											</a>
+										</div>
+									{/if}
+									<Content content={event.content} tags={event.tags} />
+									{@const eventIdZapped = event.tags
 										.find((tag) => tag.length >= 2 && tag[0] === 'e')
 										?.at(1)}
-									{@const eventZapped = getEventById(eventId ?? '')}
+									{@const eventZapped = getEventById(eventIdZapped ?? '')}
 									{#if eventZapped !== undefined}
-										<Content content={event.content} tags={event.tags} />
 										<Entry
 											event={eventZapped}
 											{channelMap}
@@ -650,6 +674,8 @@
 											level={level + 1}
 											isNested={true}
 										/>
+									{:else}
+										invalid kind:9735 event
 									{/if}
 								{:else if event.kind === 10030}
 									{@const aStrs = event.tags

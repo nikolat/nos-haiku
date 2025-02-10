@@ -136,7 +136,9 @@
 					.filter(
 						(id) =>
 							!mutedChannelIds.includes(id) &&
-							!mutedWords.some((w) => (channelMap.get(id)?.name.toLowerCase() ?? '').includes(w)) &&
+							!mutedWords.some((w) =>
+								(channelMap.get(id)?.name?.toLowerCase() ?? '').includes(w)
+							) &&
 							!mutedHashTags.some((t) => (channelMap.get(id)?.categories ?? []).includes(t))
 					)
 			)
@@ -256,7 +258,7 @@
 						ev.content.toLowerCase().includes(word) ||
 						(ev.kind === 42 &&
 							rootIds.some((rootId) =>
-								(channelMap.get(rootId)?.name.toLowerCase() ?? '').includes(word)
+								(channelMap.get(rootId)?.name?.toLowerCase() ?? '').includes(word)
 							))
 				) &&
 				!mutedHashTags.some(
@@ -566,7 +568,7 @@
 							{/if}
 						{:else if currentChannelId !== undefined}
 							{@const channel = channelMap.get(currentChannelId)}
-							{#if channel !== undefined}
+							{#if channel?.name !== undefined}
 								<h1 class="Feed__title"><i class="fa-fw fas fa-tags"></i> {channel.name}</h1>
 								<h3 class="Feed__subtitle">
 									{$_('Page.main.feed-subtitle-entry').replace('{idView}', channel.name)}
@@ -753,7 +755,7 @@
 														title={$_('Page.main.edit-it').replace('{idEdit}', channel.name)}
 														onclick={() => {
 															isEnabledToEditChannel = true;
-															editChannelName = channel.name;
+															editChannelName = channel.name ?? '';
 															editChannelAbout = channel.about ?? '';
 															editChannelPicture = channel.picture ?? '';
 															editChannelTags = channel.categories;

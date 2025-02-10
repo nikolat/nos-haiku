@@ -1007,10 +1007,7 @@ const getEventsQuoted = (event: NostrEvent) => {
 const _subTimeline = eventStore
 	.stream([
 		{
-			kinds: [
-				0, 1, 6, 7, 16, 17, 20, 40, 41, 42, 1111, 9734, 9735, 10000, 10005, 10030, 30030, 30023,
-				31990
-			]
+			since: 0
 		}
 	])
 	.subscribe(async (event) => {
@@ -1196,7 +1193,7 @@ const _subTimeline = eventStore
 				break;
 			}
 			case 10000: {
-				if (loginPubkey !== undefined) {
+				if (loginPubkey !== undefined && event.pubkey === loginPubkey) {
 					const { pPub, ePub, wPub, tPub, pSec, eSec, wSec, tSec } = await splitNip51List(
 						event,
 						loginPubkey
@@ -1207,12 +1204,12 @@ const _subTimeline = eventStore
 					mutedHashTags = Array.from(
 						new Set<string>([...tPub, ...tSec].map((t) => t.toLowerCase()))
 					);
-				}
-				if (mutedPubkeys.length > 0) {
-					rxReqB0.emit({ kinds: [0], authors: mutedPubkeys, until: unixNow() });
-				}
-				if (mutedChannelIds.length > 0) {
-					rxReqB40.emit({ kinds: [40], ids: mutedChannelIds, until: unixNow() });
+					if (mutedPubkeys.length > 0) {
+						rxReqB0.emit({ kinds: [0], authors: mutedPubkeys, until: unixNow() });
+					}
+					if (mutedChannelIds.length > 0) {
+						rxReqB40.emit({ kinds: [40], ids: mutedChannelIds, until: unixNow() });
+					}
 				}
 				break;
 			}

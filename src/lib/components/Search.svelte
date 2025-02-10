@@ -30,7 +30,7 @@
 	const channelMapSearched: Map<string, ChannelContent> = $derived.by(() => {
 		const channelMapSearched = new Map<string, ChannelContent>();
 		for (const [k, v] of channelMap) {
-			if (v.name.toLowerCase().includes(query.toLowerCase())) {
+			if (v.name?.toLowerCase().includes(query.toLowerCase())) {
 				channelMapSearched.set(k, v);
 			}
 		}

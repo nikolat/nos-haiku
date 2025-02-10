@@ -123,7 +123,7 @@
 	let reasonContentWarning: string = $state('');
 	let contentToSend: string = $state('');
 	$effect(() => {
-		if (channelToPost !== undefined) {
+		if (channelToPost?.name !== undefined) {
 			channelNameToCreate = channelToPost.name;
 		} else {
 			channelNameToCreate = '';

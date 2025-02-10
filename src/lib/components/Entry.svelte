@@ -405,7 +405,13 @@
 							{:else if event.kind === 1111}
 								Comment
 							{:else if event.kind === 9734}
-								Zap Request
+								{@const sats =
+									parseInt(
+										event.tags
+											.find((tag) => tag.length >= 2 && tag[0] === 'amount' && /^\d+$/.test(tag[1]))
+											?.at(1) ?? '-1'
+									) / 1000}
+								Zap Request {#if sats > 0}{`⚡${sats}`}{/if}
 							{:else if event.kind === 9735}
 								Zap
 							{:else if event.kind === 10030}
@@ -591,8 +597,36 @@
 									{:else}
 										unknown channel
 									{/if}
+								{:else if event.kind === 9734}
+									{@const eventId = event.tags
+										.find((tag) => tag.length >= 2 && tag[0] === 'e')
+										?.at(1)}
+									{@const eventZapped = getEventById(eventId ?? '')}
+									{#if eventZapped !== undefined}
+										<Content content={event.content} tags={event.tags} />
+										<Entry
+											event={eventZapped}
+											{channelMap}
+											{profileMap}
+											{loginPubkey}
+											{mutedPubkeys}
+											{mutedChannelIds}
+											{mutedWords}
+											{mutedHashTags}
+											{followingPubkeys}
+											{eventsTimeline}
+											{eventsReaction}
+											{eventsEmojiSet}
+											{uploaderSelected}
+											{channelToPost}
+											{currentChannelId}
+											{isEnabledRelativeTime}
+											{nowRealtime}
+											level={level + 1}
+											isNested={true}
+										/>
+									{/if}
 								{:else if event.kind === 9735}
-									<Content content={event.content} tags={event.tags} />
 									{@const event9734 = getEvent9734(event)}
 									{#if event9734 !== null}
 										<Entry

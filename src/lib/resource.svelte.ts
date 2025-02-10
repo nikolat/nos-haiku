@@ -1026,7 +1026,7 @@ const _subTimeline = eventStore
 		}
 	])
 	.subscribe(async (event) => {
-		if (![0, 9735].includes(event.kind) && !profileMap.has(event.pubkey)) {
+		if (![0].includes(event.kind) && !profileMap.has(event.pubkey)) {
 			rxReqB0.emit({ kinds: [0], authors: [event.pubkey], until: unixNow() });
 		}
 		switch (event.kind) {
@@ -1189,14 +1189,9 @@ const _subTimeline = eventStore
 				break;
 			}
 			case 9734: {
-				if (
-					loginPubkey !== undefined &&
-					event.tags.some((tag) => tag.length >= 2 && tag[0] === 'p' && tag[1] === loginPubkey)
-				) {
-					const id = event.tags.findLast((tag) => tag.length >= 2 && tag[0] === 'e')?.at(1);
-					if (id !== undefined && !eventStore.hasEvent(id)) {
-						rxReqBId.emit({ ids: [id], until: unixNow() });
-					}
+				const id = event.tags.findLast((tag) => tag.length >= 2 && tag[0] === 'e')?.at(1);
+				if (id !== undefined && !eventStore.hasEvent(id)) {
+					rxReqBId.emit({ ids: [id], until: unixNow() });
 				}
 				break;
 			}
@@ -1469,8 +1464,15 @@ export const getEventsFirst = (
 		filters.push({ kinds, search: query, limit: 10 });
 	} else if (isAntenna) {
 		if (pubkeysFollowing.length > 0) {
-			const kinds: number[] = kindSet.size === 0 ? [1, 6, 16, 42, 1111] : Array.from(kindSet);
-			filters.push({ kinds, authors: pubkeysFollowing });
+			if (kindSet.has(9735)) {
+				filters.push({ kinds: [9735], '#P': pubkeysFollowing });
+			}
+			const kinds: number[] = (
+				kindSet.size === 0 ? [1, 6, 16, 42, 1111] : Array.from(kindSet)
+			).filter((k) => k !== 9735);
+			if (kinds.length > 0) {
+				filters.push({ kinds, authors: pubkeysFollowing });
+			}
 			//ブックマークしているチャンネルの投稿も取得したいが、limitで混ぜるのは難しいので考え中
 		}
 	} else if (isTopPage) {

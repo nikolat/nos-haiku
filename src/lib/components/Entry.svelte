@@ -50,8 +50,7 @@
 		currentChannelId,
 		isEnabledRelativeTime,
 		nowRealtime,
-		level,
-		isNested = false
+		level
 	}: {
 		event: NostrEvent;
 		channelMap: Map<string, ChannelContent>;
@@ -71,7 +70,6 @@
 		isEnabledRelativeTime: boolean;
 		nowRealtime: number;
 		level: number;
-		isNested?: boolean;
 	} = $props();
 
 	const getRootId = (event: NostrEvent | undefined): string | undefined => {
@@ -190,9 +188,6 @@
 	);
 	const classNames: string[] = $derived.by(() => {
 		const classNames: string[] = ['Entry'];
-		if (isNested) {
-			classNames.push('Nested');
-		}
 		if (level > 0) {
 			classNames.push('Quote');
 		}
@@ -647,7 +642,6 @@
 											{isEnabledRelativeTime}
 											{nowRealtime}
 											level={level + 1}
-											isNested={true}
 										/>
 									{/if}
 								{:else if event.kind === 9735}
@@ -672,7 +666,6 @@
 											{isEnabledRelativeTime}
 											{nowRealtime}
 											level={level + 1}
-											isNested={true}
 										/>
 									{:else}
 										invalid kind:9735 event
@@ -708,7 +701,6 @@
 												{isEnabledRelativeTime}
 												{nowRealtime}
 												level={level + 1}
-												isNested={true}
 											/>
 										{/if}
 									{/each}
@@ -1192,7 +1184,6 @@
 									{isEnabledRelativeTime}
 									{nowRealtime}
 									level={level + 1}
-									isNested={true}
 								/>
 							{/each}
 						{/if}

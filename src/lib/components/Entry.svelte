@@ -12,6 +12,7 @@
 	} from '$lib/utils';
 	import {
 		bookmarkEmojiSets,
+		getChannelBookmarkMap,
 		getEventByAddressPointer,
 		getEventById,
 		getEventsReplying,
@@ -27,6 +28,7 @@
 	import ChannelMeta from '$lib/components/kinds/ChannelMeta.svelte';
 	import MuteList from '$lib/components/kinds/MuteList.svelte';
 	import RelayList from '$lib/components/kinds/RelayList.svelte';
+	import ChannelList from '$lib/components/kinds/ChannelList.svelte';
 	import AddStar from '$lib/components/AddStar.svelte';
 	import Content from '$lib/components/Content.svelte';
 	import Entry from '$lib/components/Entry.svelte';
@@ -417,6 +419,8 @@
 								Mute list
 							{:else if event.kind === 10002}
 								Relay list
+							{:else if event.kind === 10005}
+								Public chats list
 							{:else if event.kind === 10030}
 								User emoji list
 							{:else if event.kind === 30023}
@@ -692,6 +696,17 @@
 									/>
 								{:else if event.kind === 10002}
 									<RelayList relaysToUse={getRelaysToUseFromKind10002Event(event)} />
+								{:else if event.kind === 10005}
+									{@const channelBookmarkMap = getChannelBookmarkMap()}
+									{@const channelBookmarkIds = channelBookmarkMap.get(event.pubkey)}
+									{#if channelBookmarkIds !== undefined}
+										<ChannelList
+											channelIds={channelBookmarkIds}
+											{loginPubkey}
+											{channelMap}
+											bind:channelToPost
+										/>
+									{/if}
 								{:else if event.kind === 10030}
 									{@const aStrs = event.tags
 										.filter((tag) => tag.length >= 2 && tag[0] === 'a')

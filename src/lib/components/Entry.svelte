@@ -121,14 +121,15 @@
 		mutedWords.some((word) => event.content.toLowerCase().includes(word))
 	);
 	const isMutedHashTag: boolean = $derived(
-		mutedHashTags.some(
-			(t) =>
-				event.tags
-					.filter((tag) => tag.length >= 2 && tag[0] === 't')
-					.map((tag) => tag[1].toLowerCase())
-					.includes(t) ||
-				(channel !== undefined && channel.categories.includes(t))
-		)
+		event.kind !== 10000 &&
+			mutedHashTags.some(
+				(t) =>
+					event.tags
+						.filter((tag) => tag.length >= 2 && tag[0] === 't')
+						.map((tag) => tag[1].toLowerCase())
+						.includes(t) ||
+					(channel !== undefined && channel.categories.includes(t))
+			)
 	);
 	const getUrlViaProxy = (
 		event: NostrEvent,

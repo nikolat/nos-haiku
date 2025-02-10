@@ -264,11 +264,12 @@
 				) &&
 				!mutedHashTags.some(
 					(t) =>
-						ev.tags
-							.filter((tag) => tag.length >= 2 && tag[0] === 't')
-							.map((tag) => tag.at(1)?.toLowerCase())
-							.filter((s) => s !== undefined)
-							.includes(t) ||
+						([1, 42].includes(ev.kind) &&
+							ev.tags
+								.filter((tag) => tag.length >= 2 && tag[0] === 't')
+								.map((tag) => tag.at(1)?.toLowerCase())
+								.filter((s) => s !== undefined)
+								.includes(t)) ||
 						(ev.kind === 42 &&
 							rootIds.some((rootId) => (channelMap.get(rootId)?.categories ?? []).includes(t)))
 				)

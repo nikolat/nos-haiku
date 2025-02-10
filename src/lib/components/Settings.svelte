@@ -12,13 +12,10 @@
 		setLang,
 		setRelaysSelected,
 		setRelaysToUseSelected,
-		setUploaderSelected,
-		unmuteChannel,
-		unmuteHashTag,
-		unmuteUser,
-		unmuteWord
+		setUploaderSelected
 	} from '$lib/resource.svelte';
 	import Profile from '$lib/components/kinds/Profile.svelte';
+	import MuteList from '$lib/components/kinds/MuteList.svelte';
 	import Header from '$lib/components/Header.svelte';
 	import { goto } from '$app/navigation';
 	import { browser } from '$app/environment';
@@ -70,10 +67,6 @@
 
 	const relaysToUse: RelayRecord = $derived(getRelaysToUse());
 	const relaySets: NostrEvent[] = $derived(getRelaySets());
-
-	const mutedChannels: ChannelContent[] = $derived(
-		mutedChannelIds.map((id) => channelMap.get(id)).filter((cc) => cc !== undefined)
-	);
 </script>
 
 <Header
@@ -360,165 +353,16 @@
 						</div>
 					</div>
 					<div class="Settings__body">
-						<div class="Settings__section">
-							<div class="Label">
-								<i class="fa-fw fas fa-user-minus"></i>
-								<span>{$_('Settings.safety.muted-users')}</span>
-								<p class="Tip">{$_('Settings.safety.muted-users-tips')}</p>
-							</div>
-							<div class="Control">
-								<div class="BlockList">
-									<div class="BlockList__container">
-										<ul>
-											{#each mutedPubkeys as pubkey (pubkey)}
-												{@const prof = profileMap.get(pubkey)}
-												<li style="">
-													<div>
-														<a href="/{nip19.npubEncode(pubkey)}"
-															><img
-																alt=""
-																src={profileMap.get(pubkey)?.picture ??
-																	getRoboHashURL(nip19.npubEncode(pubkey))}
-															/></a
-														>
-													</div>
-													<div>
-														<p>{prof?.display_name ?? ''} (id:{prof?.name ?? ''})</p>
-													</div>
-													<div>
-														<button
-															class="Button Button--warn"
-															aria-label={$_('Settings.safety.unmute')}
-															onclick={() => {
-																if (loginPubkey !== undefined) {
-																	unmuteUser(pubkey, loginPubkey);
-																}
-															}}><i class="fa-fw fas fa-trash-alt"></i></button
-														>
-													</div>
-												</li>
-											{:else}
-												<li>{$_('Settings.safety.nothing-muted')}</li>
-											{/each}
-										</ul>
-									</div>
-								</div>
-							</div>
-						</div>
-						<div class="Settings__section">
-							<div class="Label">
-								<i class="fa-fw fas fa-tags"></i>
-								<span>{$_('Settings.safety.muted-keywords')}</span>
-								<p class="Tip">{$_('Settings.safety.muted-keywords-tips')}</p>
-							</div>
-							<div class="Control">
-								<div class="BlockList">
-									<div class="BlockList__container">
-										<ul>
-											{#each mutedChannels as channel (channel.id)}
-												<li>
-													<div>
-														<a href="/keyword/{nip19.neventEncode({ id: channel.id })}">
-															<img
-																alt=""
-																src={URL.canParse(channel.picture ?? '')
-																	? channel.picture
-																	: getRoboHashURL(nip19.neventEncode({ id: channel.id }))}
-															/>
-														</a>
-													</div>
-													<div>
-														<p>{channel.name}</p>
-													</div>
-													<div>
-														<button
-															class="Button Button--warn"
-															aria-label={$_('Settings.safety.unmute')}
-															onclick={() => {
-																if (loginPubkey !== undefined) {
-																	unmuteChannel(channel.id, loginPubkey);
-																}
-															}}><i class="fa-fw fas fa-trash-alt"></i></button
-														>
-													</div>
-												</li>
-											{:else}
-												<li>{$_('Settings.safety.nothing-muted')}</li>
-											{/each}
-										</ul>
-									</div>
-								</div>
-							</div>
-						</div>
-						{#if mutedWords.length > 0}
-							<div class="Settings__section">
-								<div class="Label">
-									<i class="fa-fw fas fa-tags"></i> <span>{$_('Settings.safety.muted-words')}</span>
-									<p class="Tip">{$_('Settings.safety.muted-words-tips')}</p>
-								</div>
-								<div class="Control">
-									<div class="BlockList">
-										<div class="BlockList__container">
-											<ul>
-												{#each mutedWords as word (word)}
-													<li>
-														<div>
-															<p>{word}</p>
-														</div>
-														<div>
-															<button
-																class="Button Button--warn"
-																aria-label={$_('Settings.safety.unmute')}
-																onclick={() => {
-																	if (loginPubkey !== undefined) {
-																		unmuteWord(word, loginPubkey);
-																	}
-																}}><i class="fa-fw fas fa-trash-alt"></i></button
-															>
-														</div>
-													</li>
-												{/each}
-											</ul>
-										</div>
-									</div>
-								</div>
-							</div>
-						{/if}
-						{#if mutedHashTags.length > 0}
-							<div class="Settings__section">
-								<div class="Label">
-									<i class="fa-fw fas fa-tags"></i>
-									<span>{$_('Settings.safety.muted-hashtags')}</span>
-									<p class="Tip">{$_('Settings.safety.muted-hashtags-tips')}</p>
-								</div>
-								<div class="Control">
-									<div class="BlockList">
-										<div class="BlockList__container">
-											<ul>
-												{#each mutedHashTags as hashTag (hashTag)}
-													<li>
-														<div>
-															<p>#{hashTag}</p>
-														</div>
-														<div>
-															<button
-																class="Button Button--warn"
-																aria-label={$_('Settings.safety.unmute')}
-																onclick={() => {
-																	if (loginPubkey !== undefined) {
-																		unmuteHashTag(hashTag, loginPubkey);
-																	}
-																}}><i class="fa-fw fas fa-trash-alt"></i></button
-															>
-														</div>
-													</li>
-												{/each}
-											</ul>
-										</div>
-									</div>
-								</div>
-							</div>
-						{/if}
+						<MuteList
+							{loginPubkey}
+							{profileMap}
+							{channelMap}
+							{mutedPubkeys}
+							{mutedChannelIds}
+							{mutedWords}
+							{mutedHashTags}
+							isAuthor={true}
+						/>
 					</div>
 				</div>
 				<div data-settings-group="logout" class="Card Settings">

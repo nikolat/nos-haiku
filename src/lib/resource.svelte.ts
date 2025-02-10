@@ -49,6 +49,7 @@ import {
 	getRelaysToUseByRelaysSelected,
 	isValidEmoji,
 	splitNip51List,
+	splitNip51ListPublic,
 	urlLinkString,
 	type ChannelContent,
 	type ProfileContentEvent,
@@ -1209,6 +1210,14 @@ const _subTimeline = eventStore
 					}
 					if (mutedChannelIds.length > 0) {
 						rxReqB40.emit({ kinds: [40], ids: mutedChannelIds, until: unixNow() });
+					}
+				} else {
+					const { pPub, ePub } = splitNip51ListPublic(event);
+					if (pPub.length > 0) {
+						rxReqB0.emit({ kinds: [0], authors: pPub, until: unixNow() });
+					}
+					if (ePub.length > 0) {
+						rxReqB40.emit({ kinds: [40], ids: ePub, until: unixNow() });
 					}
 				}
 				break;

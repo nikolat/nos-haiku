@@ -132,19 +132,19 @@
 			"select-relay-set": "Select relay set",
 			"uploader": "Uploader",
 			"select-uploader": "Select uploader"
-		},
-		"safety": {
-			"unmute": "Unmute",
-			"nothing-muted": "There's nothing here.",
-			"muted-users": "Muted users",
-			"muted-users-tips": "Muted users are excluded from the timeline. However, they can be viewed by opening the user's page directly.",
-			"muted-keywords": "Muted keywords",
-			"muted-keywords-tips": "Muted keywords are excluded from the timeline. However, they can be viewed by opening the keyword's page directly.",
-			"muted-words": "Muted words",
-			"muted-words-tips": "Posts, keywords, and reactions containing muted words will be excluded from the timeline.",
-			"muted-hashtags": "Muted hashtags",
-			"muted-hashtags-tips": "Posts and keywords specified in the category containing muted hashtags will be excluded from the timeline."
 		}
+	},
+	"MuteList": {
+		"unmute": "Unmute",
+		"nothing-muted": "There's nothing here.",
+		"muted-users": "Muted users",
+		"muted-users-tips": "Muted users are excluded from the timeline. However, they can be viewed by opening the user's page directly.",
+		"muted-keywords": "Muted keywords",
+		"muted-keywords-tips": "Muted keywords are excluded from the timeline. However, they can be viewed by opening the keyword's page directly.",
+		"muted-words": "Muted words",
+		"muted-words-tips": "Posts, keywords, and reactions containing muted words will be excluded from the timeline.",
+		"muted-hashtags": "Muted hashtags",
+		"muted-hashtags-tips": "Posts and keywords specified in the category containing muted hashtags will be excluded from the timeline."
 	},
 	"utils": {
 		"now": "now",

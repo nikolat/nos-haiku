@@ -4,6 +4,7 @@
 		getAbsoluteTime,
 		getEvent9734,
 		getRelativeTime,
+		splitNip51ListPublic,
 		zap,
 		type ChannelContent,
 		type ProfileContentEvent
@@ -23,6 +24,7 @@
 	import Profile from '$lib/components/kinds/Profile.svelte';
 	import Reaction from '$lib/components/kinds/Reaction.svelte';
 	import ChannelMeta from '$lib/components/kinds/ChannelMeta.svelte';
+	import MuteList from '$lib/components/kinds/MuteList.svelte';
 	import AddStar from '$lib/components/AddStar.svelte';
 	import Content from '$lib/components/Content.svelte';
 	import Entry from '$lib/components/Entry.svelte';
@@ -409,6 +411,8 @@
 								Zap Request {#if sats > 0}{`⚡${sats}`}{/if}
 							{:else if event.kind === 9735}
 								Zap
+							{:else if event.kind === 10000}
+								Mute list
 							{:else if event.kind === 10030}
 								User emoji list
 							{:else if event.kind === 30023}
@@ -670,6 +674,18 @@
 									{:else}
 										invalid kind:9735 event
 									{/if}
+								{:else if event.kind === 10000}
+									{@const { pPub, ePub, wPub, tPub } = splitNip51ListPublic(event)}
+									<MuteList
+										{loginPubkey}
+										{profileMap}
+										{channelMap}
+										mutedPubkeys={pPub}
+										mutedChannelIds={ePub}
+										mutedWords={wPub}
+										mutedHashTags={tPub}
+										isAuthor={false}
+									/>
 								{:else if event.kind === 10030}
 									{@const aStrs = event.tags
 										.filter((tag) => tag.length >= 2 && tag[0] === 'a')

@@ -169,6 +169,28 @@ export const getEvent9734WithVerification = async (
 	return event9734;
 };
 
+export const splitNip51ListPublic = (
+	event: NostrEvent
+): {
+	pPub: string[];
+	ePub: string[];
+	wPub: string[];
+	tPub: string[];
+	tagList: string[][];
+} => {
+	const getList = (tags: string[][], tagName: string): string[] =>
+		Array.from(
+			new Set<string>(
+				tags.filter((tag) => tag.length >= 2 && tag[0] === tagName).map((tag) => tag[1])
+			)
+		);
+	const [pPub, ePub, wPub, tPub] = ['p', 'e', 'word', 't'].map((tagName: string) =>
+		getList(event.tags, tagName)
+	);
+	const tagList: string[][] = event.tags;
+	return { pPub, ePub, wPub, tPub, tagList };
+};
+
 export const splitNip51List = async (
 	event: NostrEvent,
 	loginPubkey: string
@@ -185,7 +207,11 @@ export const splitNip51List = async (
 	contentList: string[][];
 }> => {
 	const getList = (tags: string[][], tagName: string): string[] =>
-		tags.filter((tag) => tag.length >= 2 && tag[0] === tagName).map((tag) => tag[1]);
+		Array.from(
+			new Set<string>(
+				tags.filter((tag) => tag.length >= 2 && tag[0] === tagName).map((tag) => tag[1])
+			)
+		);
 	const [pPub, ePub, wPub, tPub] = ['p', 'e', 'word', 't'].map((tagName: string) =>
 		getList(event.tags, tagName)
 	);

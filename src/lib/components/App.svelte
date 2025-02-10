@@ -67,7 +67,8 @@
 
 	let urlSearchParams: URLSearchParams = $state(page.url.searchParams);
 	let isLoading: boolean = $state(false);
-	let idTimeout: number;
+	let idTimeoutLoading: number;
+	let idTimeoutFirstFetch: number;
 	let nowRealtime: number = $state(1000 * unixNow());
 	let intervalID: number;
 	const getEventsFirstWithLoading = () => {
@@ -84,24 +85,21 @@
 	onMount(async () => {
 		locale.set(lang ?? initialLocale);
 		document.addEventListener('nlAuth', (e) => {
-			clearTimeout(idTimeout);
+			clearTimeout(idTimeoutLoading);
+			clearTimeout(idTimeoutFirstFetch);
 			const ce: CustomEvent = e as CustomEvent;
-			if (ce.detail.type === 'login' || ce.detail.type === 'signup') {
-				//公開鍵ログイン時に何故か2回呼ばれる
-				if (loginPubkey !== undefined) {
-					return;
+			//公開鍵ログイン時に何故か2回呼ばれる
+			idTimeoutFirstFetch = setTimeout(() => {
+				if (ce.detail.type === 'login' || ce.detail.type === 'signup') {
+					setLoginPubkey(ce.detail.pubkey);
+					getEventsFirstWithLoading();
+				} else {
+					setLoginPubkey(undefined);
+					clearCache([{ since: 0 }]);
+					resetRelaysDefault();
+					getEventsFirstWithLoading();
 				}
-				setLoginPubkey(ce.detail.pubkey);
-				getEventsFirstWithLoading();
-			} else {
-				if (loginPubkey === undefined) {
-					return;
-				}
-				setLoginPubkey(undefined);
-				clearCache([{ since: 0 }]);
-				resetRelaysDefault();
-				getEventsFirstWithLoading();
-			}
+			}, 100);
 		});
 		const { init } = await import('nostr-login');
 		init({
@@ -116,7 +114,7 @@
 		clearInterval(intervalID);
 	});
 	afterNavigate(() => {
-		idTimeout = setTimeout(getEventsFirstWithLoading, loginPubkey === undefined ? 1000 : 10);
+		idTimeoutLoading = setTimeout(getEventsFirstWithLoading, loginPubkey === undefined ? 1000 : 10);
 		intervalID = setInterval(() => {
 			nowRealtime = 1000 * unixNow();
 		}, 5000);

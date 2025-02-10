@@ -8,7 +8,7 @@
 		getReadTimeOfNotification,
 		sendReadTime
 	} from '$lib/resource.svelte';
-	import Reaction from '$lib/components/Reaction.svelte';
+	import Reaction from '$lib/components/kinds/Reaction.svelte';
 	import Content from '$lib/components/Content.svelte';
 	import { afterNavigate, beforeNavigate, goto } from '$app/navigation';
 	import { page } from '$app/state';

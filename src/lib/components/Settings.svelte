@@ -18,8 +18,8 @@
 		unmuteUser,
 		unmuteWord
 	} from '$lib/resource.svelte';
+	import Profile from '$lib/components/kinds/Profile.svelte';
 	import Header from '$lib/components/Header.svelte';
-	import Profile from '$lib/components/Profile.svelte';
 	import { goto } from '$app/navigation';
 	import { browser } from '$app/environment';
 	import type { NostrEvent } from 'nostr-tools/pure';

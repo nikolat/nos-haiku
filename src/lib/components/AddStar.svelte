@@ -2,7 +2,7 @@
 	import { expansionThreshold } from '$lib/config';
 	import { getEmoji, isValidEmoji } from '$lib/utils';
 	import { getEventsEmojiSet, sendReaction } from '$lib/resource.svelte';
-	import Reaction from '$lib/components/Reaction.svelte';
+	import Reaction from '$lib/components/kinds/Reaction.svelte';
 	import type { NostrEvent } from 'nostr-tools/pure';
 	import type { ProfileContent } from 'applesauce-core/helpers';
 

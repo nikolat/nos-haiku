@@ -20,10 +20,10 @@
 		sendRepost,
 		unbookmarkEmojiSets
 	} from '$lib/resource.svelte';
-	import Profile from '$lib/components/Profile.svelte';
-	import Reaction from '$lib/components/Reaction.svelte';
+	import Profile from '$lib/components/kinds/Profile.svelte';
+	import Reaction from '$lib/components/kinds/Reaction.svelte';
+	import ChannelMeta from '$lib/components/kinds/ChannelMeta.svelte';
 	import AddStar from '$lib/components/AddStar.svelte';
-	import ChannelMeta from '$lib/components/ChannelMeta.svelte';
 	import Content from '$lib/components/Content.svelte';
 	import Entry from '$lib/components/Entry.svelte';
 	import CreateEntry from '$lib/components/CreateEntry.svelte';

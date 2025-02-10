@@ -38,12 +38,12 @@
 		unmuteHashTag,
 		unmuteUser
 	} from '$lib/resource.svelte';
+	import Profile from '$lib/components/kinds/Profile.svelte';
+	import ChannelMeta from '$lib/components/kinds/ChannelMeta.svelte';
 	import Header from '$lib/components/Header.svelte';
-	import Profile from '$lib/components/Profile.svelte';
 	import Content from '$lib/components/Content.svelte';
 	import CreateEntry from '$lib/components/CreateEntry.svelte';
 	import Entry from '$lib/components/Entry.svelte';
-	import ChannelMeta from '$lib/components/ChannelMeta.svelte';
 	import { afterNavigate, beforeNavigate } from '$app/navigation';
 	import type { NostrEvent } from 'nostr-tools/pure';
 	import * as nip19 from 'nostr-tools/nip19';

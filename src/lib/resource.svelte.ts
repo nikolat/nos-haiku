@@ -1394,6 +1394,7 @@ export const getEventsFirst = (
 		isAntenna,
 		isSettings
 	} = urlParams;
+	subF?.unsubscribe();
 	rxNostr.setDefaultRelays(relaysToUse);
 	const filters: LazyFilter[] = [];
 	let options: Partial<RxNostrUseOptions> | undefined;
@@ -1495,6 +1496,9 @@ export const getEventsFirst = (
 	for (const f of filters) {
 		f.until = until;
 		f.limit = 10;
+	}
+	if (filters.length === 0) {
+		return;
 	}
 	const rxReqBFirst = createRxBackwardReq();
 	rxNostr
@@ -1602,7 +1606,6 @@ export const getEventsFirst = (
 			authors: [loginPubkey]
 		});
 	}
-	subF?.unsubscribe();
 	subF = rxNostr.use(rxReqF, { on: options }).pipe(tie).subscribe({
 		next,
 		complete

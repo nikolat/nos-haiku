@@ -74,6 +74,8 @@
 		"mute-suf": " をミュートする",
 		"view-custom-emoji-pre": " ",
 		"view-custom-emoji-suf": " の使用カスタム絵文字を見る",
+		"login-as-the-user-pre": " ",
+		"login-as-the-user-suf": " でログイン",
 		"remove-from-favorites": "お気に入りから削除",
 		"add-to-favorites": "お気に入りに追加"
 	},

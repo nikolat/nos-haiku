@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { getRoboHashURL, serviceIconImageUri, getUrlToLinkProfile } from '$lib/config';
-	import type { ChannelContent, ProfileContentEvent } from '$lib/utils';
+	import { loginWithNpub, type ChannelContent, type ProfileContentEvent } from '$lib/utils';
 	import {
 		followUser,
 		getProfileName,
@@ -88,45 +88,45 @@
 					</a>
 				</div>
 			</div>
-			{#if loginPubkey !== undefined}
-				{#if loginPubkey === currentPubkey}
-					<div class="Actions">
-						<!-- svelte-ignore a11y_click_events_have_key_events -->
-						<!-- svelte-ignore a11y_no_static_element_interactions -->
-						<div
-							title={$_('Profile.settings')}
-							class={showSetting ? 'SettingButton SettingButton--active' : 'SettingButton'}
-							onclick={() => {
-								showSetting = !showSetting;
-							}}
-						>
-							<div class="SettingButton__Button">
-								<span class="fa-fw fas fa-cog"></span>
-							</div>
-							<div class="SettingButton__Dropdown Dropdown--right">
-								<a href="/settings">
-									<i class="fa-fw fas fa-cog"></i>
-									{$_('Profile.settings')}
-								</a>
-							</div>
+			{#if loginPubkey === currentPubkey}
+				<div class="Actions">
+					<!-- svelte-ignore a11y_click_events_have_key_events -->
+					<!-- svelte-ignore a11y_no_static_element_interactions -->
+					<div
+						title={$_('Profile.settings')}
+						class={showSetting ? 'SettingButton SettingButton--active' : 'SettingButton'}
+						onclick={() => {
+							showSetting = !showSetting;
+						}}
+					>
+						<div class="SettingButton__Button">
+							<span class="fa-fw fas fa-cog"></span>
+						</div>
+						<div class="SettingButton__Dropdown Dropdown--right">
+							<a href="/settings">
+								<i class="fa-fw fas fa-cog"></i>
+								{$_('Profile.settings')}
+							</a>
 						</div>
 					</div>
-				{:else}
-					<div class="Actions">
-						<!-- svelte-ignore a11y_click_events_have_key_events -->
-						<!-- svelte-ignore a11y_no_static_element_interactions -->
-						<div
-							title={$_('Profile.settings')}
-							class={showSetting ? 'SettingButton SettingButton--active' : 'SettingButton'}
-							onclick={() => {
-								showSetting = !showSetting;
-							}}
-						>
-							<div class="SettingButton__Button">
-								<span class="fa-fw fas fa-ellipsis-h"></span>
-							</div>
-							<div class="SettingButton__Dropdown Dropdown--right">
-								<!-- svelte-ignore a11y_missing_attribute -->
+				</div>
+			{:else}
+				<div class="Actions">
+					<!-- svelte-ignore a11y_click_events_have_key_events -->
+					<!-- svelte-ignore a11y_no_static_element_interactions -->
+					<div
+						title={$_('Profile.settings')}
+						class={showSetting ? 'SettingButton SettingButton--active' : 'SettingButton'}
+						onclick={() => {
+							showSetting = !showSetting;
+						}}
+					>
+						<div class="SettingButton__Button">
+							<span class="fa-fw fas fa-ellipsis-h"></span>
+						</div>
+						<div class="SettingButton__Dropdown Dropdown--right">
+							<!-- svelte-ignore a11y_missing_attribute -->
+							{#if loginPubkey !== undefined}
 								{#if mutedPubkeys.includes(currentPubkey)}
 									<a
 										onclick={() => {
@@ -158,21 +158,39 @@
 										{$_('Profile.mute-suf')}
 									</a>
 								{/if}
+							{:else}
 								<a
-									title={`${$_('Profile.view-custom-emoji-pre')}${getProfileName(prof)}${$_('Profile.view-custom-emoji-suf')}`}
-									href={`/entry/${nip19.naddrEncode({ identifier: '', pubkey: currentPubkey, kind: 10030 })}`}
+									title={`${$_('Profile.login-as-the-user-pre')}${getProfileName(prof)}${$_('Profile.login-as-the-user-suf')}`}
+									onclick={() => {
+										loginWithNpub(nip19.npubEncode(currentPubkey));
+									}}
 								>
-									<i class="fa-fw fas fa-smile"></i>
-									{$_('Profile.view-custom-emoji-pre')}
+									<i class="fa-fw fas fa-eye"></i>
+									{$_('Profile.login-as-the-user-pre')}
 									<Content
 										content={getProfileName(prof)}
 										tags={prof?.event.tags ?? []}
 										isAbout={true}
 									/>
-									{$_('Profile.view-custom-emoji-suf')}
+									{$_('Profile.login-as-the-user-suf')}
 								</a>
-							</div>
+							{/if}
+							<a
+								title={`${$_('Profile.view-custom-emoji-pre')}${getProfileName(prof)}${$_('Profile.view-custom-emoji-suf')}`}
+								href={`/entry/${nip19.naddrEncode({ identifier: '', pubkey: currentPubkey, kind: 10030 })}`}
+							>
+								<i class="fa-fw fas fa-smile"></i>
+								{$_('Profile.view-custom-emoji-pre')}
+								<Content
+									content={getProfileName(prof)}
+									tags={prof?.event.tags ?? []}
+									isAbout={true}
+								/>
+								{$_('Profile.view-custom-emoji-suf')}
+							</a>
 						</div>
+					</div>
+					{#if loginPubkey !== undefined}
 						{#if followingPubkeys.includes(currentPubkey)}
 							<div
 								title={$_('Profile.remove-from-favorites')}
@@ -199,8 +217,8 @@
 								></span>
 							</div>
 						{/if}
-					</div>
-				{/if}
+					{/if}
+				</div>
 			{/if}
 		</div>
 		<div class="ProfileBox__content">

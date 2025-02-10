@@ -87,11 +87,18 @@
 			clearTimeout(idTimeout);
 			const ce: CustomEvent = e as CustomEvent;
 			if (ce.detail.type === 'login' || ce.detail.type === 'signup') {
+				//公開鍵ログイン時に何故か2回呼ばれる
+				if (loginPubkey !== undefined) {
+					return;
+				}
 				setLoginPubkey(ce.detail.pubkey);
 				getEventsFirstWithLoading();
 			} else {
+				if (loginPubkey === undefined) {
+					return;
+				}
 				setLoginPubkey(undefined);
-				clearCache([{ until: unixNow() }]);
+				clearCache([{ since: 0 }]);
 				resetRelaysDefault();
 				getEventsFirstWithLoading();
 			}

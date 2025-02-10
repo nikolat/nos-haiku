@@ -520,3 +520,31 @@ export const urlLinkString = (url: string): [string, string] => {
 	const rest = splitIdx === -1 ? '' : url.substring(splitIdx);
 	return [finalUrl, rest];
 };
+
+export const loginWithNpub = (npub: string) => {
+	document.dispatchEvent(new CustomEvent('nlLaunch', { detail: 'login-read-only' }));
+	const intervalIDLaunch = setInterval(() => {
+		const nlauth = document.querySelector('nl-auth');
+		if (nlauth === null || nlauth.shadowRoot === null) {
+			return;
+		}
+		const nlinput: HTMLInputElement | null = nlauth.shadowRoot.querySelector('.nl-input');
+		if (nlinput === null) {
+			return;
+		}
+		clearInterval(intervalIDLaunch);
+		nlinput.value = npub;
+		nlinput.dispatchEvent(new Event('input'));
+		const intervalIDLogin = setInterval(() => {
+			if (nlauth === null || nlauth.shadowRoot === null) {
+				return;
+			}
+			const nlbutton: HTMLButtonElement | null = nlauth.shadowRoot.querySelector('.nl-button');
+			if (nlbutton === null) {
+				return;
+			}
+			clearInterval(intervalIDLogin);
+			nlbutton.click();
+		}, 100);
+	}, 100);
+};

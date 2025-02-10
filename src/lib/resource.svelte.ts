@@ -602,11 +602,6 @@ const nextOnSubscribeEventStore = (event: NostrEvent | null, kindToDelete?: numb
 			);
 			break;
 		}
-		case 9734:
-		case 9735: {
-			//eventsAllの更新だけが目的
-			break;
-		}
 		case 10000: {
 			if (loginPubkey !== undefined) {
 				eventMuteList = eventStore.getReplaceable(10000, loginPubkey);
@@ -657,10 +652,6 @@ const nextOnSubscribeEventStore = (event: NostrEvent | null, kindToDelete?: numb
 				}
 				eventsRelaySets = sortEvents(events);
 			}
-			break;
-		}
-		case 30023: {
-			//eventsAllの更新だけが目的
 			break;
 		}
 		case 30030: {
@@ -746,10 +737,7 @@ const nextOnSubscribeEventStore = (event: NostrEvent | null, kindToDelete?: numb
 eventStore
 	.stream([
 		{
-			kinds: [
-				0, 1, 3, 5, 6, 7, 16, 40, 41, 42, 1111, 9734, 9735, 10000, 10002, 10005, 10030, 30002,
-				30023, 30030, 30078
-			]
+			since: 0
 		}
 	])
 	.subscribe({

@@ -86,8 +86,15 @@
 	});
 
 	let queryInput: string = $state('');
+	let inputSearch: HTMLInputElement | undefined = $state();
 	let searchType: string = $state('channel');
 	const goSearchUrl = () => {
+		if (inputSearch === undefined) {
+			return;
+		}
+		if (inputSearch.validity.patternMismatch) {
+			return;
+		}
 		let path: string;
 		let kinds: number[];
 		if (searchType === 'note') {
@@ -262,9 +269,11 @@
 			>
 				<input
 					type="search"
-					placeholder={$_('Header.search')}
+					placeholder={searchType === 'kind' ? '1,7,42,9735,...' : $_('Header.search')}
+					pattern={searchType === 'kind' ? '[,\\d]+' : '.+'}
 					class="Input"
 					bind:value={queryInput}
+					bind:this={inputSearch}
 					onclick={(event) => {
 						event.stopPropagation();
 					}}
@@ -512,5 +521,8 @@
 	}
 	.search-type {
 		margin-right: auto;
+	}
+	input:invalid {
+		border: red solid 1px;
 	}
 </style>

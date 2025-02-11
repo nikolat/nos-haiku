@@ -13,6 +13,7 @@
 	import { getToken } from 'nostr-tools/nip98';
 	import type { ProfileContent } from 'applesauce-core/helpers';
 	import { _ } from 'svelte-i18n';
+	import { browser } from '$app/environment';
 
 	let {
 		loginPubkey,
@@ -160,17 +161,19 @@
 </script>
 
 <div class="CreateEntry">
-	<a
-		href="/{loginPubkey === undefined ? '' : nip19.npubEncode(loginPubkey)}"
-		class="CreateEntry__profile"
-		><img
-			src={loginPubkey === undefined
-				? defaultAccountUri
-				: (profileMap.get(loginPubkey)?.picture ?? getRoboHashURL(nip19.npubEncode(loginPubkey)))}
-			class="Avatar"
-			alt=""
-		/></a
-	>
+	{#if browser}
+		<a
+			href="/{loginPubkey === undefined ? '' : nip19.npubEncode(loginPubkey)}"
+			class="CreateEntry__profile"
+			><img
+				src={loginPubkey === undefined
+					? defaultAccountUri
+					: (profileMap.get(loginPubkey)?.picture ?? getRoboHashURL(nip19.npubEncode(loginPubkey)))}
+				class="Avatar"
+				alt=""
+			/></a
+		>
+	{/if}
 	<div class="CreateEntry__main">
 		<div class="InputGroup">
 			{#if currentChannelId === undefined && eventToReply === undefined}

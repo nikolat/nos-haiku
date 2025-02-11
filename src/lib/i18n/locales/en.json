@@ -56,7 +56,7 @@
 		"nothing-found-for": "Nothing found for '{query}'"
 	},
 	"Header": {
-		"search": "Search",
+		"search": "hello",
 		"keyword": "Keyword",
 		"post": "Post",
 		"my-page": "My Page",

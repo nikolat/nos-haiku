@@ -68,7 +68,6 @@
 	let urlSearchParams: URLSearchParams = $state(page.url.searchParams);
 	let isLoading: boolean = $state(false);
 	let idTimeoutLoading: number;
-	let idTimeoutFirstFetch: number;
 	let nowRealtime: number = $state(1000 * unixNow());
 	let intervalID: number;
 	const getEventsFirstWithLoading = () => {
@@ -86,20 +85,20 @@
 		locale.set(lang ?? initialLocale);
 		document.addEventListener('nlAuth', (e) => {
 			clearTimeout(idTimeoutLoading);
-			clearTimeout(idTimeoutFirstFetch);
 			const ce: CustomEvent = e as CustomEvent;
-			//公開鍵ログイン時に何故か2回呼ばれる
-			idTimeoutFirstFetch = setTimeout(() => {
-				if (ce.detail.type === 'login' || ce.detail.type === 'signup') {
-					setLoginPubkey(ce.detail.pubkey);
-					getEventsFirstWithLoading();
-				} else {
-					setLoginPubkey(undefined);
-					clearCache([{ since: 0 }]);
-					resetRelaysDefault();
-					getEventsFirstWithLoading();
-				}
-			}, 100);
+			//何故か2回呼ばれる
+			if (isLoading) {
+				return;
+			}
+			if (ce.detail.type === 'login' || ce.detail.type === 'signup') {
+				setLoginPubkey(ce.detail.pubkey);
+				getEventsFirstWithLoading();
+			} else {
+				setLoginPubkey(undefined);
+				clearCache([{ since: 0 }]);
+				resetRelaysDefault();
+				getEventsFirstWithLoading();
+			}
 		});
 		const { init } = await import('nostr-login');
 		init({

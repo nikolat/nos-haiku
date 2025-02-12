@@ -258,6 +258,21 @@
 		const ap: nip19.AddressPointer = { identifier: sp[2], pubkey: sp[1], kind: parseInt(sp[0]) };
 		return ap;
 	});
+	const textAndUrlReplyTo: [string, string] | undefined = $derived.by(() => {
+		if (event.kind !== 1111) {
+			return undefined;
+		}
+		const i = event.tags.find((tag) => tag.length >= 2 && tag[0] === 'i')?.at(1);
+		const k = event.tags.find((tag) => tag.length >= 2 && tag[0] === 'k')?.at(1);
+		const iAlt = event.tags.find((tag) => tag.length >= 3 && tag[0] === 'i')?.at(2);
+		if (i !== undefined && k !== undefined && URL.canParse(i) && URL.canParse(k)) {
+			return [i, i];
+		} else if (i !== undefined && iAlt !== undefined && URL.canParse(iAlt)) {
+			return [i, iAlt];
+		} else {
+			return undefined;
+		}
+	});
 	const pubkeyReplyTo: string | undefined = $derived(
 		getEventById(idReplyTo ?? '')?.pubkey ?? addressReplyTo?.pubkey
 	);
@@ -605,6 +620,37 @@
 									{:else}
 										unknown channel
 									{/if}
+								{:else if event.kind === 1111}
+									{#if textAndUrlReplyTo !== undefined}
+										<i class="fa-fw fas fa-arrow-alt-from-right"></i>
+										<span class="Mention">
+											<a href={textAndUrlReplyTo[1]} target="_blank" rel="noopener noreferrer"
+												>{textAndUrlReplyTo[0]}</a
+											>
+										</span>
+									{/if}
+									<p>
+										<Content
+											content={event.content}
+											tags={event.tags}
+											{channelMap}
+											{profileMap}
+											{loginPubkey}
+											{mutedPubkeys}
+											{mutedChannelIds}
+											{mutedWords}
+											{followingPubkeys}
+											{eventsTimeline}
+											{eventsReaction}
+											{eventsEmojiSet}
+											{uploaderSelected}
+											bind:channelToPost
+											{currentChannelId}
+											{isEnabledRelativeTime}
+											{nowRealtime}
+											{level}
+										/>
+									</p>
 								{:else if event.kind === 9734}
 									{@const pubkeyZapped = event.tags
 										.find((tag) => tag.length >= 2 && tag[0] === 'p')

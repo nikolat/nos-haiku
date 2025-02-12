@@ -1423,7 +1423,7 @@ export const getEventsFirst = (
 		[];
 	const kindSet: Set<number> = new Set<number>();
 	for (const [k, v] of urlSearchParams ?? []) {
-		if (k === 'kind' && /^\d+$/.test(v)) {
+		if (['kind', 'k'].includes(k) && /^\d+$/.test(v)) {
 			const kind = parseInt(v);
 			if (0 <= kind && kind <= 65535) {
 				kindSet.add(kind);

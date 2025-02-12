@@ -81,25 +81,25 @@
 			true
 		);
 	};
+	const nlAuth = (e: Event) => {
+		clearTimeout(idTimeoutLoading);
+		const ce: CustomEvent = e as CustomEvent;
+		//何故か2回呼ばれる
+		if (isLoading) {
+			return;
+		}
+		if (ce.detail.type === 'login' || ce.detail.type === 'signup') {
+			setLoginPubkey(ce.detail.pubkey);
+			getEventsFirstWithLoading();
+		} else {
+			setLoginPubkey(undefined);
+			clearCache([{ since: 0 }]);
+			resetRelaysDefault();
+			getEventsFirstWithLoading();
+		}
+	};
 	onMount(async () => {
 		locale.set(lang ?? initialLocale);
-		document.addEventListener('nlAuth', (e) => {
-			clearTimeout(idTimeoutLoading);
-			const ce: CustomEvent = e as CustomEvent;
-			//何故か2回呼ばれる
-			if (isLoading) {
-				return;
-			}
-			if (ce.detail.type === 'login' || ce.detail.type === 'signup') {
-				setLoginPubkey(ce.detail.pubkey);
-				getEventsFirstWithLoading();
-			} else {
-				setLoginPubkey(undefined);
-				clearCache([{ since: 0 }]);
-				resetRelaysDefault();
-				getEventsFirstWithLoading();
-			}
-		});
 		const { init } = await import('nostr-login');
 		init({
 			title: $_('App.nostr-login.title'),
@@ -111,9 +111,11 @@
 	});
 	beforeNavigate(() => {
 		clearInterval(intervalID);
+		document.removeEventListener('nlAuth', nlAuth);
 	});
 	afterNavigate(() => {
-		idTimeoutLoading = setTimeout(getEventsFirstWithLoading, loginPubkey === undefined ? 1000 : 10);
+		document.addEventListener('nlAuth', nlAuth);
+		idTimeoutLoading = setTimeout(getEventsFirstWithLoading, 100);
 		intervalID = setInterval(() => {
 			nowRealtime = 1000 * unixNow();
 		}, 5000);

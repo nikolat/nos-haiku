@@ -180,7 +180,7 @@
 	const eventsReaction: NostrEvent[] = $derived(getEventsReaction());
 	const eventsEmojiSet: NostrEvent[] = $derived(getEventsEmojiSet());
 	const pinnedNotesEvent: NostrEvent | undefined = $derived(
-		currentPubkey === undefined || currentNoteId !== undefined
+		currentPubkey === undefined || currentNoteId !== undefined || kindSet.size > 0
 			? undefined
 			: getEventByAddressPointer({ identifier: '', pubkey: currentPubkey, kind: 10001 })
 	);

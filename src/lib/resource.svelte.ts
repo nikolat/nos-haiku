@@ -1433,7 +1433,7 @@ export const getEventsFirst = (
 	const pSet: Set<string> = new Set<string>();
 	const relaySet: Set<string> = new Set<string>();
 	for (const [k, v] of urlSearchParams ?? []) {
-		if (['kind', 'k'].includes(k) && /^\d+$/.test(v)) {
+		if (k === 'kind' && /^\d+$/.test(v)) {
 			const kind = parseInt(v);
 			if (0 <= kind && kind <= 65535) {
 				kindSet.add(kind);

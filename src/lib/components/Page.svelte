@@ -110,7 +110,7 @@
 	const kindSet: Set<number> = $derived.by(() => {
 		const kindSet: Set<number> = new Set<number>();
 		for (const [k, v] of urlSearchParams) {
-			if (['kind', 'k'].includes(k) && /^\d+$/.test(v)) {
+			if (k === 'kind' && /^\d+$/.test(v)) {
 				kindSet.add(parseInt(v));
 			}
 		}

@@ -113,7 +113,7 @@
 			path = `/search/${encodeURI(queryInput)}`;
 			kinds = [40, 41];
 		}
-		const qp = kinds.map((k) => `k=${k}`).join('&');
+		const qp = kinds.map((k) => `kind=${k}`).join('&');
 		goto(`${path}?${qp}`);
 	};
 
@@ -198,14 +198,14 @@
 			if (!page.url.pathname.includes('/search/')) {
 				//iPhone の Safari では URLSearchParamsIterator に every() は生えていないため for で回すしかない
 				for (const [k, v] of urlSearchParams.entries()) {
-					if (['kind', 'k'].includes(k) && /^\d+$/.test(v)) {
+					if (k === 'kind' && /^\d+$/.test(v)) {
 						type = 'kind';
 						break;
 					}
 				}
 			} else {
 				for (const [k, v] of urlSearchParams.entries()) {
-					if (!(['kind', 'k'].includes(k) && /^\d+$/.test(v) && [40, 41].includes(parseInt(v)))) {
+					if (!(k === 'kind' && /^\d+$/.test(v) && [40, 41].includes(parseInt(v)))) {
 						type = 'note';
 						break;
 					}

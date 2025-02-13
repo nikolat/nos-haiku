@@ -850,7 +850,7 @@ const mergeFilterId: MergeFilter = (a: LazyFilter[], b: LazyFilter[]) => {
 
 const rxReqF = createRxForwardReq();
 const rxReqB0 = createRxBackwardReq();
-const rxReqB1_42 = createRxBackwardReq();
+const rxReqB1_42_1111 = createRxBackwardReq();
 const rxReqB7 = createRxBackwardReq();
 const rxReqB40 = createRxBackwardReq();
 const rxReqB41 = createRxBackwardReq();
@@ -867,7 +867,7 @@ rxNostr
 		next,
 		complete
 	});
-rxNostr.use(rxReqB1_42).pipe(tie).subscribe({
+rxNostr.use(rxReqB1_42_1111).pipe(tie).subscribe({
 	next,
 	complete
 });
@@ -1158,18 +1158,26 @@ const _subTimeline = eventStore
 				//	(countThread.get(rootId) ?? 0) < countThreadLimit
 				//) {
 				//	countThread.set(rootId, countThreadLimit); //この取得は一度だけでよい
-				//	rxReqB1_42.emit({ kinds: [event.kind], '#e': [rootId], limit: 10, until: unixNow() });
+				//	rxReqB1_42_1111.emit({ kinds: [event.kind], '#e': [rootId], limit: 10, until: unixNow() });
 				//} else if (
 				//	((event.kind === 1 && rootId === undefined) || event.kind === 42) &&
 				//	(countThread.get(event.id) ?? 0) < countThreadLimit
 				//) {
 				//	countThread.set(event.id, countThreadLimit); //この取得は一度だけでよい
-				//	rxReqB1_42.emit({ kinds: [event.kind], '#e': [event.id], limit: 10, until: unixNow() });
+				//	rxReqB1_42_1111.emit({ kinds: [event.kind], '#e': [event.id], limit: 10, until: unixNow() });
 				//}
-				//↑海外リレーはスレッド文化過ぎて取得が終わらないので kind:42のみとする
-				if (event.kind === 42 && (countThread.get(event.id) ?? 0) < countThreadLimit) {
+				//↑海外リレーはスレッド文化過ぎて取得が終わらないので kind:1以外とする
+				if (
+					[42, 1111].includes(event.kind) &&
+					(countThread.get(event.id) ?? 0) < countThreadLimit
+				) {
 					countThread.set(event.id, countThreadLimit); //この取得は一度だけでよい
-					rxReqB1_42.emit({ kinds: [event.kind], '#e': [event.id], limit: 10, until: unixNow() });
+					rxReqB1_42_1111.emit({
+						kinds: [event.kind],
+						'#e': [event.id],
+						limit: 10,
+						until: unixNow()
+					});
 				}
 				getEventsQuoted(event);
 				break;

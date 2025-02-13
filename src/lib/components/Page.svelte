@@ -934,7 +934,7 @@
 					/>
 				</div>
 				<div class="FeedList">
-					{#if pinnedNotesEvent !== undefined}
+					{#if pinnedNotesEvent !== undefined && pinnedNotesEvent.tags.filter((tag) => tag.length >= 2 && tag[0] === 'e').length > 0}
 						<Entry
 							event={pinnedNotesEvent}
 							{channelMap}

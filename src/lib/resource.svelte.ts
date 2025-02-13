@@ -1439,8 +1439,14 @@ export const getEventsFirst = (
 		}
 	}
 	if (currentNoteId === undefined && currentPubkey !== undefined) {
-		const kinds: number[] = kindSet.size === 0 ? [1, 6, 16, 42, 1111] : Array.from(kindSet);
-		filters.push({ kinds, authors: [currentPubkey] });
+		if (kindSet.has(9735)) {
+			filters.push({ kinds: [9735], '#P': [currentPubkey] });
+		}
+		const kinds: number[] =
+			kindSet.size === 0 ? [1, 6, 16, 42, 1111] : Array.from(kindSet).filter((k) => k !== 9735);
+		if (kinds.length > 0) {
+			filters.push({ kinds, authors: [currentPubkey] });
+		}
 	} else if (currentChannelId !== undefined) {
 		filters.push({ kinds: [42], '#e': [currentChannelId] });
 		filters.push({ kinds: [16], '#k': ['42'] });

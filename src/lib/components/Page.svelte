@@ -197,7 +197,9 @@
 			const entry = getEventByAddressPointer(currentAddressPointer);
 			tl = entry !== undefined ? [entry] : [];
 		} else if (currentPubkey !== undefined) {
-			tl = eventsTimeline.filter((ev) => ev.pubkey === currentPubkey);
+			tl = eventsTimeline.filter((ev) =>
+				ev.kind === 9735 ? getEvent9734(ev)?.pubkey === currentPubkey : ev.pubkey === currentPubkey
+			);
 		} else if (currentChannelId !== undefined) {
 			tl = eventsTimeline.filter(
 				(ev) =>

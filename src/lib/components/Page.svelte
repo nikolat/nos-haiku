@@ -179,6 +179,11 @@
 	);
 	const eventsReaction: NostrEvent[] = $derived(getEventsReaction());
 	const eventsEmojiSet: NostrEvent[] = $derived(getEventsEmojiSet());
+	const pinnedNotesEvent: NostrEvent | undefined = $derived(
+		currentPubkey === undefined || currentNoteId !== undefined
+			? undefined
+			: getEventByAddressPointer({ identifier: '', pubkey: currentPubkey, kind: 10001 })
+	);
 
 	let countToShow: number = $state(10);
 
@@ -929,6 +934,28 @@
 					/>
 				</div>
 				<div class="FeedList">
+					{#if pinnedNotesEvent !== undefined}
+						<Entry
+							event={pinnedNotesEvent}
+							{channelMap}
+							{profileMap}
+							{loginPubkey}
+							{mutedPubkeys}
+							{mutedChannelIds}
+							{mutedWords}
+							{mutedHashTags}
+							{followingPubkeys}
+							{eventsTimeline}
+							{eventsReaction}
+							{eventsEmojiSet}
+							{uploaderSelected}
+							bind:channelToPost
+							{currentChannelId}
+							{isEnabledRelativeTime}
+							{nowRealtime}
+							level={0}
+						/>
+					{/if}
 					{#each timelineToShow as event (event.id)}
 						<Entry
 							{event}

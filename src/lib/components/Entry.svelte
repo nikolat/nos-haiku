@@ -433,6 +433,8 @@
 								Zap
 							{:else if event.kind === 10000}
 								Mute list
+							{:else if event.kind === 10001}
+								Pinned notes
 							{:else if event.kind === 10002}
 								Relay list
 							{:else if event.kind === 10005}
@@ -741,6 +743,35 @@
 										mutedHashTags={tPub}
 										isAuthor={false}
 									/>
+								{:else if event.kind === 10001}
+									{@const es = event.tags
+										.filter((tag) => tag.length >= 2 && tag[0] === 'e')
+										.map((tag) => tag[1])}
+									{@const content = es
+										.map((e) => `nostr:${nip19.neventEncode({ id: e })}`)
+										.join('\n')}
+									<p>
+										<Content
+											{content}
+											tags={event.tags}
+											{channelMap}
+											{profileMap}
+											{loginPubkey}
+											{mutedPubkeys}
+											{mutedChannelIds}
+											{mutedWords}
+											{followingPubkeys}
+											{eventsTimeline}
+											{eventsReaction}
+											{eventsEmojiSet}
+											{uploaderSelected}
+											bind:channelToPost
+											{currentChannelId}
+											{isEnabledRelativeTime}
+											{nowRealtime}
+											{level}
+										/>
+									</p>
 								{:else if event.kind === 10002}
 									<RelayList relaysToUse={getRelaysToUseFromKind10002Event(event)} />
 								{:else if event.kind === 10005}

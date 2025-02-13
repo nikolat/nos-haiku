@@ -392,7 +392,7 @@ export const setRelaysToUseSelected = async (relaysSelected: string): Promise<vo
 };
 
 export const clearCache = (
-	filters: Filter[] = [{ kinds: [1, 3, 6, 7, 16, 42, 10000, 10030, 30002, 30078] }]
+	filters: Filter[] = [{ kinds: [1, 3, 6, 7, 16, 42, 10000, 10001, 10030, 30002, 30078] }]
 ) => {
 	for (const ev of eventStore.getAll(filters)) {
 		eventStore.database.deleteEvent(ev);
@@ -503,9 +503,9 @@ export const getEventsReplying = (event: NostrEvent): NostrEvent[] => {
 export const getEventByAddressPointer = (data: nip19.AddressPointer): NostrEvent | undefined => {
 	return eventsAll.find(
 		(ev) =>
-			(ev.tags.find((tag) => tag.length >= 2 && tag[0] === 'd')?.at(1) ?? '') === data.identifier &&
 			ev.pubkey === data.pubkey &&
-			ev.kind === data.kind
+			ev.kind === data.kind &&
+			(ev.tags.find((tag) => tag.length >= 2 && tag[0] === 'd')?.at(1) ?? '') === data.identifier
 	);
 };
 
@@ -1230,6 +1230,16 @@ const _subTimeline = eventStore
 				}
 				break;
 			}
+			case 10001: {
+				const ids = event.tags
+					.filter((tag) => tag.length >= 2 && tag[0] === 'e')
+					.map((tag) => tag[1])
+					.filter((id) => !eventStore.hasEvent(id));
+				if (ids.length > 0) {
+					rxReqBId.emit({ ids, until: unixNow() });
+				}
+				break;
+			}
 			case 10005: {
 				if (loginPubkey !== undefined && event.pubkey === loginPubkey) {
 					const { ePub, eSec } = await splitNip51List(event, loginPubkey);
@@ -1360,7 +1370,7 @@ const prepareFirstEvents = (completeOnNextFetch: () => void = complete) => {
 	}
 	rxNostr.setDefaultRelays(relaysToUse);
 	const rxReqB = createRxBackwardReq();
-	const filterKinds = [3, 10000, 10002, 10005, 10030];
+	const filterKinds = [3, 10000, 10001, 10002, 10005, 10030];
 	if (!profileMap.has(loginPubkey)) {
 		filterKinds.push(0);
 	}
@@ -1557,20 +1567,23 @@ export const getEventsFirst = (
 	rxReqBFirst.emit(filters);
 	rxReqBFirst.over();
 	if (currentPubkey !== undefined && isFirstFetch) {
+		const kinds = [10001, 10005];
 		const rxReqBBookmark = createRxBackwardReq();
 		rxNostr
 			.use(rxReqBBookmark)
 			.pipe(
 				tie,
-				latestEach(({ event }) => event.pubkey)
+				latestEach(({ event }) => event.kind)
 			)
 			.subscribe({
 				next,
 				complete
 			});
-		rxReqBBookmark.emit({ kinds: [10005], authors: [currentPubkey], until });
+		rxReqBBookmark.emit({ kinds, authors: [currentPubkey], until });
 		rxReqBBookmark.over();
-		filters.find((f) => f.authors?.join(':') === currentPubkey)?.kinds?.push(10005);
+		for (const kind of kinds) {
+			filters.find((f) => f.authors?.join(':') === currentPubkey)?.kinds?.push(kind);
+		}
 	}
 	//無限スクロール用Reqはここまでで終了
 	if (!isFirstFetch) {
@@ -1578,7 +1591,9 @@ export const getEventsFirst = (
 	}
 	//ここから先はForwardReq用追加分(受信しっぱなし)
 	if (loginPubkey !== undefined) {
-		let kinds = [0, 1, 3, 5, 6, 7, 40, 41, 42, 1111, 9735, 10000, 10002, 10005, 10030, 30002];
+		let kinds = [
+			0, 1, 3, 5, 6, 7, 40, 41, 42, 1111, 9735, 10000, 10001, 10002, 10005, 10030, 30002
+		];
 		if (!pubkeysFollowing.includes(loginPubkey)) {
 			kinds = kinds.concat(16).toSorted((a, b) => a - b);
 		}

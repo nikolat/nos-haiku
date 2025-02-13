@@ -1430,12 +1430,15 @@ export const getEventsFirst = (
 		eventFollowList?.tags.filter((tag) => tag.length >= 2 && tag[0] === 'p').map((tag) => tag[1]) ??
 		[];
 	const kindSet: Set<number> = new Set<number>();
+	const relaySet: Set<string> = new Set<string>();
 	for (const [k, v] of urlSearchParams ?? []) {
 		if (['kind', 'k'].includes(k) && /^\d+$/.test(v)) {
 			const kind = parseInt(v);
 			if (0 <= kind && kind <= 65535) {
 				kindSet.add(kind);
 			}
+		} else if (k === 'relay' && URL.canParse(v)) {
+			relaySet.add(normalizeURL(v));
 		}
 	}
 	if (currentNoteId === undefined && currentPubkey !== undefined) {
@@ -1513,6 +1516,9 @@ export const getEventsFirst = (
 	if (filters.length === 0) {
 		subF?.unsubscribe();
 		return;
+	}
+	if (relaySet.size > 0) {
+		options = { relays: Array.from(relaySet) };
 	}
 	const rxReqBFirst = createRxBackwardReq();
 	rxNostr

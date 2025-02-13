@@ -415,6 +415,8 @@
 								{/if}
 							{:else if [7, 17].includes(event.kind)}
 								Reaction <Reaction reactionEvent={event} profile={undefined} isAuthor={false} />
+							{:else if event.kind === 8}
+								Badge Award
 							{:else if event.kind === 20}
 								Picture
 							{:else if event.kind === 40}
@@ -441,6 +443,8 @@
 								Public chats list
 							{:else if event.kind === 10030}
 								User emoji list
+							{:else if event.kind === 30009}
+								Badge Definition
 							{:else if event.kind === 30023}
 								Long-form Content
 							{:else if event.kind === 30030}
@@ -568,6 +572,62 @@
 									{:else if reactedEventId !== undefined}
 										{`nostr:${nip19.neventEncode({ id: reactedEventId })}`}
 									{/if}
+								{:else if event.kind === 8}
+									{@const ps = new Set<string>(
+										event.tags
+											.filter((tag) => tag.length >= 2 && tag[0] === 'p')
+											.map((tag) => tag[1])
+									)}
+									{@const asp = event.tags
+										.find((tag) => tag.length >= 2 && tag[0] === 'a')
+										?.at(1)
+										?.split(':')}
+									{@const content =
+										asp === undefined
+											? ''
+											: `nostr:${nip19.naddrEncode({ identifier: asp[2], pubkey: asp[1], kind: parseInt(asp[0]) })}`}
+									{#each ps as p}
+										{@const profAwarded = profileMap.get(p)}
+										<div class="Entry__parentmarker">
+											<a href="/{nip19.npubEncode(p)}">
+												<i class="fa-fw fas fa-arrow-alt-from-right"></i>
+												<span class="Mention">
+													<img
+														src={profAwarded?.picture ?? getRoboHashURL(nip19.npubEncode(p))}
+														alt={getProfileName(profAwarded)}
+														class="Avatar Avatar--sm"
+													/>
+													<Content
+														content={getProfileName(profAwarded)}
+														tags={profAwarded?.event.tags ?? []}
+														isAbout={true}
+													/>
+												</span>
+											</a>
+										</div>
+									{/each}
+									<p>
+										<Content
+											{content}
+											tags={event.tags}
+											{channelMap}
+											{profileMap}
+											{loginPubkey}
+											{mutedPubkeys}
+											{mutedChannelIds}
+											{mutedWords}
+											{followingPubkeys}
+											{eventsTimeline}
+											{eventsReaction}
+											{eventsEmojiSet}
+											{uploaderSelected}
+											bind:channelToPost
+											{currentChannelId}
+											{isEnabledRelativeTime}
+											{nowRealtime}
+											{level}
+										/>
+									</p>
 								{:else if event.kind === 17}
 									{@const r = event.tags
 										.find((tag) => tag.length >= 2 && tag[0] === 'r' && URL.canParse(tag[1]))
@@ -819,6 +879,19 @@
 											/>
 										{/if}
 									{/each}
+								{:else if event.kind === 30009}
+									{@const tagMap = new Map<string, string>(
+										event.tags.map((tag) => [tag[0], tag[1]])
+									)}
+									{#if tagMap.get('name') !== undefined}<p class="name">
+											{tagMap.get('name')}
+										</p>{/if}
+									{#if tagMap.get('description') !== undefined}<p class="description">
+											{tagMap.get('description')}
+										</p>{/if}
+									{#if URL.canParse(tagMap.get('image') ?? '')}<p class="image">
+											<img alt={tagMap.get('name') ?? ''} src={tagMap.get('image')} />
+										</p>{/if}
 								{:else if event.kind === 30030}
 									{@const dTagName =
 										event.tags.find((tag) => tag.length >= 2 && tag[0] === 'd')?.at(1) ?? ''}

@@ -36,6 +36,7 @@
 	import type { NostrEvent } from 'nostr-tools/pure';
 	import * as nip19 from 'nostr-tools/nip19';
 	import { isParameterizedReplaceableKind, isReplaceableKind } from 'nostr-tools/kinds';
+	import { decode } from 'light-bolt11-decoder';
 	import { _ } from 'svelte-i18n';
 
 	let {
@@ -432,7 +433,14 @@
 									) / 1000}
 								Zap Request {#if sats > 0}{`⚡${sats}`}{/if}
 							{:else if event.kind === 9735}
-								Zap
+								{@const invoice = decode(
+									event.tags.find((tag) => tag.length >= 2 && tag[0] === 'bolt11')?.at(1) ?? ''
+								)}
+								{@const sats =
+									parseInt(
+										invoice.sections.find((section) => section.name === 'amount')?.value ?? '-1'
+									) / 1000}
+								Zap {#if sats > 0}{`⚡${sats}`}{/if}
 							{:else if event.kind === 10000}
 								Mute list
 							{:else if event.kind === 10001}

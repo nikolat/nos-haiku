@@ -588,6 +588,7 @@ const nextOnSubscribeEventStore = (event: NostrEvent | null, kindToDelete?: numb
 		case 8:
 		case 16:
 		case 42:
+		case 1068:
 		case 1111:
 		case 9735: {
 			if (
@@ -610,11 +611,11 @@ const nextOnSubscribeEventStore = (event: NostrEvent | null, kindToDelete?: numb
 					eventStore.getAll(
 						loginPubkey === undefined
 							? [
-									{ kinds: isEnabledSkipKind1 ? [42, 1111] : [1, 6, 42, 1111] },
+									{ kinds: isEnabledSkipKind1 ? [42, 1111] : [1, 6, 42, 1068, 1111] },
 									{ kinds: [16], '#k': ['42'] }
 								]
 							: [
-									{ kinds: isEnabledSkipKind1 ? [42, 1111] : [1, 6, 42, 1111] },
+									{ kinds: isEnabledSkipKind1 ? [42, 1111] : [1, 6, 42, 1068, 1111] },
 									{ kinds: [16], '#k': ['42'] },
 									{ kinds: [8], '#p': [loginPubkey] },
 									{ kinds: [9735], '#P': [loginPubkey] }
@@ -1262,6 +1263,31 @@ const _subTimeline = eventStore
 				getEventsQuoted(event);
 				break;
 			}
+			case 1068: {
+				const pollExpiration: number = parseInt(
+					event.tags
+						.find((tag) => tag.length >= 2 && tag[0] === 'endsAt' && /^\d+$/.test(tag[1]))
+						?.at(1) ?? '0'
+				);
+				rxReqB1_42_1111.emit({
+					kinds: [1018],
+					'#e': [event.id],
+					until: pollExpiration
+				});
+				rxReqB7.emit({
+					kinds: [7],
+					'#e': [event.id],
+					limit: 10,
+					until: unixNow()
+				});
+				rxReqB1_42_1111.emit({
+					kinds: [1111],
+					'#E': [event.id],
+					limit: 10,
+					until: unixNow()
+				});
+				break;
+			}
 			case 9734: {
 				fetchEventsByETags(event);
 				fetchEventsByATags(event);
@@ -1550,7 +1576,7 @@ export const getEventsFirst = (
 				fs.push({ kinds: [9735], '#P': pubkeysFollowing });
 			}
 			const kinds: number[] = (
-				kindSet.size === 0 ? [1, 6, 16, 42, 1111] : Array.from(kindSet)
+				kindSet.size === 0 ? [1, 6, 16, 42, 1018, 1068, 1111] : Array.from(kindSet)
 			).filter((k) => k !== 9735);
 			if (kinds.length > 0) {
 				fs.push({ kinds, authors: pubkeysFollowing });
@@ -1633,7 +1659,8 @@ export const getEventsFirst = (
 	//ここから先はForwardReq用追加分(受信しっぱなし)
 	if (loginPubkey !== undefined) {
 		let kinds = [
-			0, 1, 3, 5, 6, 7, 40, 41, 42, 1111, 9735, 10000, 10001, 10002, 10005, 10030, 30002, 30008
+			0, 1, 3, 5, 6, 7, 40, 41, 42, 1018, 1068, 1111, 9735, 10000, 10001, 10002, 10005, 10030,
+			30002, 30008
 		];
 		if (!pubkeysFollowing.includes(loginPubkey)) {
 			kinds = kinds.concat(16).toSorted((a, b) => a - b);

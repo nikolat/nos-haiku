@@ -1253,6 +1253,7 @@ const _subTimeline = eventStore
 			}
 			case 9734: {
 				fetchEventsByETags(event);
+				fetchEventsByATags(event);
 				const p = event.tags.findLast((tag) => tag.length >= 2 && tag[0] === 'p')?.at(1);
 				if (p !== undefined && !profileMap.has(p)) {
 					rxReqB0.emit({ kinds: [0], authors: [p], until: unixNow() });

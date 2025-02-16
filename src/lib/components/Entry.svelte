@@ -750,10 +750,15 @@
 										</div>
 									{/if}
 									<Content content={event.content} tags={event.tags} />
-									{@const eventIdZapped = event.tags
-										.find((tag) => tag.length >= 2 && tag[0] === 'e')
-										?.at(1)}
-									{@const eventZapped = getEventById(eventIdZapped ?? '')}
+									{@const eventIdZapped =
+										event.tags.find((tag) => tag.length >= 2 && tag[0] === 'e')?.at(1) ?? ''}
+									{@const aIdZapped =
+										event.tags.find((tag) => tag.length >= 2 && tag[0] === 'a')?.at(1) ?? ''}
+									{@const ary = aIdZapped.split(':')}
+									{@const data = { identifier: ary[2], pubkey: ary[1], kind: parseInt(ary[0]) }}
+									{@const eventZappedByETag = getEventById(eventIdZapped)}
+									{@const eventZappedByATag = getEventByAddressPointer(data)}
+									{@const eventZapped = eventZappedByETag ?? eventZappedByATag}
 									{#if eventZapped !== undefined}
 										<Entry
 											event={eventZapped}

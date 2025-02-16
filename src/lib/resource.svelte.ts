@@ -1263,6 +1263,10 @@ const _subTimeline = eventStore
 				getEventsQuoted(event);
 				break;
 			}
+			case 1018: {
+				fetchEventsByETags(event);
+				break;
+			}
 			case 1068: {
 				const pollExpiration: number = parseInt(
 					event.tags

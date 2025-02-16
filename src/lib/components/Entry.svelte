@@ -347,20 +347,20 @@
 		}
 		return Array.from(eventMap.values());
 	};
-	const getPollResult = (event: NostrEvent): [string, number][] => {
+	const getPollResult = (event: NostrEvent): Map<string, [string, number]> => {
 		const events1018 = oneVotePerPubkey(event);
 		const rMap = new Map<string, number>();
 		for (const ev of events1018) {
-			const response = ev.tags
-				.find((tag) => tag.length >= 2 && ['response', 'option'].includes(tag[0]))
-				?.at(1);
+			const response = ev.tags.find((tag) => tag.length >= 2 && tag[0] === 'response')?.at(1);
 			if (response !== undefined) {
 				rMap.set(response, (rMap.get(response) ?? 0) + 1);
 			}
 		}
-		const nameMap: [string, number][] = event.tags
-			.filter((tag) => tag.length >= 3 && tag[0] === 'option')
-			.map((tag) => [tag[2], rMap.get(tag[1]) ?? 0]);
+		const nameMap: Map<string, [string, number]> = new Map<string, [string, number]>(
+			event.tags
+				.filter((tag) => tag.length >= 3 && tag[0] === 'option')
+				.map((tag) => [tag[1], [tag[2], rMap.get(tag[1]) ?? 0]])
+		);
 		return nameMap;
 	};
 
@@ -466,6 +466,8 @@
 								Picture
 							{:else if event.kind === 40}
 								Channel
+							{:else if event.kind === 1018}
+								Poll Response
 							{:else if event.kind === 1068}
 								Poll
 							{:else if event.kind === 1111}
@@ -790,6 +792,35 @@
 									{:else}
 										unknown channel
 									{/if}
+								{:else if event.kind === 1018}
+									{@const response = event.tags
+										.find((tag) => tag.length >= 2 && tag[0] === 'response')
+										?.at(1)}
+									{@const eId = event.tags.find((tag) => tag.length >= 2 && tag[0] === 'e')?.at(1)}
+									{@const event1068 = getEventById(eId ?? '')}
+									<p>response: {response}</p>
+									{#if event1068 !== undefined}
+										<Entry
+											event={event1068}
+											{channelMap}
+											{profileMap}
+											{loginPubkey}
+											{mutedPubkeys}
+											{mutedChannelIds}
+											{mutedWords}
+											{mutedHashTags}
+											{followingPubkeys}
+											{eventsTimeline}
+											{eventsReaction}
+											{eventsEmojiSet}
+											{uploaderSelected}
+											{channelToPost}
+											{currentChannelId}
+											{isEnabledRelativeTime}
+											{nowRealtime}
+											level={level + 1}
+										/>
+									{/if}
 								{:else if event.kind === 1068}
 									{@const pollResultMap = getPollResult(event)}
 									<p>
@@ -815,8 +846,8 @@
 										/>
 									</p>
 									<ol>
-										{#each pollResultMap as [k, v]}
-											<li>{k}: {v}</li>
+										{#each pollResultMap as [k, [v, n]] (k)}
+											<li>{`(${k})${v}`}: {n}</li>
 										{/each}
 									</ol>
 								{:else if event.kind === 1111}

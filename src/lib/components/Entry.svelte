@@ -29,6 +29,7 @@
 	import MuteList from '$lib/components/kinds/MuteList.svelte';
 	import RelayList from '$lib/components/kinds/RelayList.svelte';
 	import ChannelList from '$lib/components/kinds/ChannelList.svelte';
+	import Badges from '$lib/components/kinds/Badges.svelte';
 	import AddStar from '$lib/components/AddStar.svelte';
 	import Content from '$lib/components/Content.svelte';
 	import Entry from '$lib/components/Entry.svelte';
@@ -451,6 +452,8 @@
 								Public chats list
 							{:else if event.kind === 10030}
 								User emoji list
+							{:else if event.kind === 30008}
+								Profile Badges
 							{:else if event.kind === 30009}
 								Badge Definition
 							{:else if event.kind === 30023}
@@ -887,6 +890,13 @@
 											/>
 										{/if}
 									{/each}
+								{:else if event.kind === 30008}
+									{@const badgeEvent = getEventByAddressPointer({
+										identifier: 'profile_badges',
+										pubkey: event.pubkey,
+										kind: event.kind
+									})}
+									<Badges currentPubkey={event.pubkey} {badgeEvent} />
 								{:else if event.kind === 30009}
 									{@const tagMap = new Map<string, string>(
 										event.tags.map((tag) => [tag[0], tag[1]])

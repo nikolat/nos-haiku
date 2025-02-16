@@ -3,12 +3,14 @@
 	import { loginWithNpub, type ChannelContent, type ProfileContentEvent } from '$lib/utils';
 	import {
 		followUser,
+		getEventByAddressPointer,
 		getProfileName,
 		muteUser,
 		unfollowUser,
 		unmuteUser
 	} from '$lib/resource.svelte';
 	import Content from '$lib/components/Content.svelte';
+	import Badges from '$lib/components/kinds/Badges.svelte';
 	import { onMount } from 'svelte';
 	import { afterNavigate, beforeNavigate } from '$app/navigation';
 	import type { NostrEvent } from 'nostr-tools/pure';
@@ -46,6 +48,9 @@
 
 	const prof = $derived(profileMap.get(currentPubkey));
 	const nip05string: string | undefined = $derived(prof?.nip05);
+	const badgeEvent: NostrEvent | undefined = $derived(
+		getEventByAddressPointer({ identifier: 'profile_badges', pubkey: currentPubkey, kind: 30008 })
+	);
 
 	let showSetting: boolean = $state(false);
 	const handlerSetting = (ev: MouseEvent): void => {
@@ -222,6 +227,7 @@
 			{/if}
 		</div>
 		<div class="ProfileBox__content">
+			<Badges {currentPubkey} {badgeEvent} />
 			<h3 class="router-link-exact-active router-link-active">
 				<a href={`/${nip19.npubEncode(currentPubkey)}`}>
 					<Content content={getProfileName(prof)} tags={prof?.event.tags ?? []} isAbout={true} />

@@ -392,7 +392,7 @@ export const setRelaysToUseSelected = async (relaysSelected: string): Promise<vo
 };
 
 export const clearCache = (
-	filters: Filter[] = [{ kinds: [1, 3, 6, 7, 16, 42, 10000, 10001, 10030, 30002, 30078] }]
+	filters: Filter[] = [{ kinds: [1, 3, 6, 7, 16, 42, 10000, 10001, 10030, 30002, 30008, 30078] }]
 ) => {
 	for (const ev of eventStore.getAll(filters)) {
 		eventStore.database.deleteEvent(ev);
@@ -819,7 +819,11 @@ const mergeFilter41: MergeFilter = (a: LazyFilter[], b: LazyFilter[]) => {
 	return [{ kinds: [41], '#e': etags, limit: f?.limit, until: f?.until, since: f?.since }];
 };
 
-const mergeFilter30030: MergeFilter = (a: LazyFilter[], b: LazyFilter[]) => {
+const mergeFilterForAddressableEvents = (
+	a: LazyFilter[],
+	b: LazyFilter[],
+	kind: number
+): LazyFilter[] => {
 	const margedFilters = [...a, ...b];
 	const newFilters: LazyFilter[] = [];
 	const filterMap: Map<string, Set<string>> = new Map<string, Set<string>>();
@@ -835,7 +839,7 @@ const mergeFilter30030: MergeFilter = (a: LazyFilter[], b: LazyFilter[]) => {
 		}
 	}
 	for (const [author, dTagSet] of filterMap) {
-		const filter = { kinds: [30030], authors: [author], '#d': Array.from(dTagSet) };
+		const filter = { kinds: [kind], authors: [author], '#d': Array.from(dTagSet) };
 		newFilters.push(filter);
 	}
 	return newFilters;
@@ -905,9 +909,16 @@ rxNostr.use(rxReqBRp).pipe(tie).subscribe({
 	complete
 });
 
-const getEventsByIdWithRelayHint = (event: NostrEvent, tagNameToGet: string) => {
+const getEventsByIdWithRelayHint = (
+	event: NostrEvent,
+	tagNameToGet: string,
+	onlyLastOne: boolean = false
+) => {
 	if (['e', 'q'].includes(tagNameToGet)) {
-		const eTags = event.tags.filter((tag) => tag.length >= 3 && tag[0] === tagNameToGet);
+		let eTags = event.tags.filter((tag) => tag.length >= 3 && tag[0] === tagNameToGet);
+		if (onlyLastOne) {
+			eTags = [eTags.at(-1) ?? []];
+		}
 		for (const eTag of eTags) {
 			const id = eTag[1];
 			const relayHint = eTag[2];
@@ -934,7 +945,10 @@ const getEventsByIdWithRelayHint = (event: NostrEvent, tagNameToGet: string) => 
 			rxReqBIdCustom.over();
 		}
 	} else if (tagNameToGet === 'a') {
-		const aTags = event.tags.filter((tag) => tag.length >= 3 && tag[0] === tagNameToGet);
+		let aTags = event.tags.filter((tag) => tag.length >= 3 && tag[0] === tagNameToGet);
+		if (onlyLastOne) {
+			aTags = [aTags.at(-1) ?? []];
+		}
 		for (const aTag of aTags) {
 			const sp = aTag[1].split(':');
 			const ap: nip19.AddressPointer = { identifier: sp[2], pubkey: sp[1], kind: parseInt(sp[0]) };
@@ -1005,26 +1019,69 @@ const getEventsQuoted = (event: NostrEvent) => {
 	getEventsByIdWithRelayHint(event, 'a');
 };
 
-const fetchEventByATag = (a: string | undefined): void => {
-	if (a === undefined) {
-		return;
-	}
-	const ary = a.split(':');
-	const ap: nip19.AddressPointer = {
-		identifier: ary[2],
-		pubkey: ary[1],
-		kind: parseInt(ary[0])
-	};
-	if (!eventStore.hasReplaceable(ap.kind, ap.pubkey, ap.identifier)) {
-		const filter: LazyFilter = {
-			kinds: [ap.kind],
-			authors: [ap.pubkey],
-			until: unixNow()
-		};
-		if (ap.identifier.length > 0) {
-			filter['#d'] = [ap.identifier];
+const fetchEventsByETags = (event: NostrEvent, onlyLastOne: boolean = false) => {
+	let ids = event.tags
+		.filter((tag) => tag.length >= 2 && tag[0] === 'e')
+		.map((tag) => tag[1])
+		.filter((id) => !eventStore.hasEvent(id));
+	if (ids.length > 0) {
+		getEventsByIdWithRelayHint(event, 'e', onlyLastOne);
+		const lastOne: string | undefined = ids.at(-1);
+		if (onlyLastOne && lastOne !== undefined) {
+			ids = [lastOne];
 		}
-		rxReqBRp.emit(filter);
+		rxReqBId.emit({ ids, until: unixNow() });
+	}
+};
+
+const fetchEventsByATags = (event: NostrEvent) => {
+	const atags = event.tags.filter((tag) => tag.length >= 2 && tag[0] === 'a').map((tag) => tag[1]);
+	const filters = [];
+	if (atags.length > 0) {
+		for (const atag of atags) {
+			const ary = atag.split(':');
+			const ap: nip19.AddressPointer = {
+				identifier: ary[2],
+				pubkey: ary[1],
+				kind: parseInt(ary[0])
+			};
+			if (!eventStore.hasReplaceable(ap.kind, ap.pubkey, ap.identifier)) {
+				const filter: LazyFilter = {
+					kinds: [ap.kind],
+					authors: [ap.pubkey],
+					until: unixNow()
+				};
+				if (ap.identifier.length > 0) {
+					filter['#d'] = [ap.identifier];
+				}
+				filters.push(filter);
+			}
+		}
+		let margedFilters: LazyFilter[] = [];
+		for (const filter of filters) {
+			margedFilters = mergeFilterForAddressableEvents(
+				margedFilters,
+				[filter],
+				filter.kinds?.at(0) ?? -1
+			);
+		}
+		const sliceByNumber = (array: LazyFilter[], number: number) => {
+			const length = Math.ceil(array.length / number);
+			return new Array(length)
+				.fill(undefined)
+				.map((_, i) => array.slice(i * number, (i + 1) * number));
+		};
+		const relayHints: string[] = Array.from(
+			new Set<string>(
+				event.tags
+					.filter((tag) => tag.length >= 3 && tag[0] === 'a' && URL.canParse(tag[2]))
+					.map((tag) => normalizeURL(tag[2]))
+			)
+		);
+		const relays: string[] = Array.from(new Set<string>([...relaysToRead, ...relayHints]));
+		for (const filters of sliceByNumber(margedFilters, 10)) {
+			rxReqBRp.emit(filters, { relays });
+		}
 	}
 };
 
@@ -1058,20 +1115,12 @@ const _subTimeline = eventStore
 				) {
 					break;
 				}
-				const id = event.tags.findLast((tag) => tag.length >= 2 && tag[0] === 'e')?.at(1);
-				if (id !== undefined && !eventStore.hasEvent(id)) {
-					getEventsByIdWithRelayHint(event, 'e');
-					rxReqBId.emit({ ids: [id], until: unixNow() });
-				}
+				fetchEventsByETags(event);
 				break;
 			}
 			case 7: {
-				const id = event.tags.findLast((tag) => tag.length >= 2 && tag[0] === 'e')?.at(1);
-				if (id !== undefined && !eventStore.hasEvent(id)) {
-					rxReqBId.emit({ ids: [id], until: unixNow() });
-				}
-				const a = event.tags.findLast((tag) => tag.length >= 2 && tag[0] === 'a')?.at(1);
-				fetchEventByATag(a);
+				fetchEventsByETags(event, true);
+				fetchEventsByATags(event);
 				break;
 			}
 			case 8: {
@@ -1086,8 +1135,7 @@ const _subTimeline = eventStore
 				if (pubkeys.length > 0) {
 					rxReqB0.emit({ kinds: [0], authors: pubkeys, until: unixNow() });
 				}
-				const a = event.tags.findLast((tag) => tag.length >= 2 && tag[0] === 'a')?.at(1);
-				fetchEventByATag(a);
+				fetchEventsByATags(event);
 				break;
 			}
 			case 40: {
@@ -1204,10 +1252,7 @@ const _subTimeline = eventStore
 				break;
 			}
 			case 9734: {
-				const id = event.tags.findLast((tag) => tag.length >= 2 && tag[0] === 'e')?.at(1);
-				if (id !== undefined && !eventStore.hasEvent(id)) {
-					rxReqBId.emit({ ids: [id], until: unixNow() });
-				}
+				fetchEventsByETags(event);
 				const p = event.tags.findLast((tag) => tag.length >= 2 && tag[0] === 'p')?.at(1);
 				if (p !== undefined && !profileMap.has(p)) {
 					rxReqB0.emit({ kinds: [0], authors: [p], until: unixNow() });
@@ -1252,13 +1297,7 @@ const _subTimeline = eventStore
 				break;
 			}
 			case 10001: {
-				const ids = event.tags
-					.filter((tag) => tag.length >= 2 && tag[0] === 'e')
-					.map((tag) => tag[1])
-					.filter((id) => !eventStore.hasEvent(id));
-				if (ids.length > 0) {
-					rxReqBId.emit({ ids, until: unixNow() });
-				}
+				fetchEventsByETags(event);
 				break;
 			}
 			case 10005: {
@@ -1276,43 +1315,7 @@ const _subTimeline = eventStore
 				break;
 			}
 			case 10030: {
-				const atags = event.tags
-					.filter((tag) => tag.length >= 2 && tag[0] === 'a')
-					.map((tag) => tag[1]);
-				const filterForGetEmoji = [];
-				if (atags.length > 0) {
-					for (const atag of atags) {
-						const ary = atag.split(':');
-						const filter: LazyFilter = {
-							kinds: [parseInt(ary[0])],
-							authors: [ary[1]],
-							'#d': [ary[2]],
-							until: unixNow()
-						};
-						filterForGetEmoji.push(filter);
-					}
-					let margedFilters: LazyFilter[] = [];
-					for (const filter of filterForGetEmoji) {
-						margedFilters = mergeFilter30030(margedFilters, [filter]);
-					}
-					const sliceByNumber = (array: LazyFilter[], number: number) => {
-						const length = Math.ceil(array.length / number);
-						return new Array(length)
-							.fill(undefined)
-							.map((_, i) => array.slice(i * number, (i + 1) * number));
-					};
-					const relayHints: string[] = Array.from(
-						new Set<string>(
-							event.tags
-								.filter((tag) => tag.length >= 3 && tag[0] === 'a' && URL.canParse(tag[2]))
-								.map((tag) => normalizeURL(tag[2]))
-						)
-					);
-					const relays: string[] = Array.from(new Set<string>([...relaysToRead, ...relayHints]));
-					for (const filters of sliceByNumber(margedFilters, 10)) {
-						rxReqBRp.emit(filters, { relays });
-					}
-				}
+				fetchEventsByATags(event);
 				const ap: nip19.AddressPointer = {
 					identifier: '',
 					pubkey: event.pubkey,
@@ -1326,6 +1329,7 @@ const _subTimeline = eventStore
 				});
 				break;
 			}
+			case 30008:
 			case 30023:
 			case 30030:
 			case 31990: {
@@ -1351,6 +1355,10 @@ const _subTimeline = eventStore
 				rxReqBRp.emit(filters);
 				if (event.kind === 30023) {
 					getEventsQuoted(event);
+				}
+				if (event.kind === 30008 && ap.identifier === 'profile_badges') {
+					fetchEventsByETags(event);
+					fetchEventsByATags(event);
 				}
 				break;
 			}
@@ -1412,7 +1420,7 @@ const prepareFirstEvents = (completeOnNextFetch: () => void = complete) => {
 		});
 	rxReqB.emit(lFilter);
 	rxReqB.over();
-	rxReqBRp.emit({ kinds: [30002], authors: [loginPubkey], until: unixNow() });
+	rxReqBRp.emit({ kinds: [30002, 30008], authors: [loginPubkey], until: unixNow() });
 };
 
 export const getEventsFirst = (
@@ -1588,7 +1596,7 @@ export const getEventsFirst = (
 	rxReqBFirst.emit(filters);
 	rxReqBFirst.over();
 	if (currentPubkey !== undefined && isFirstFetch) {
-		const kinds = [10001, 10005];
+		const kinds = [10001, 10005, 30008];
 		const rxReqBBookmark = createRxBackwardReq();
 		rxNostr
 			.use(rxReqBBookmark)
@@ -1613,7 +1621,7 @@ export const getEventsFirst = (
 	//ここから先はForwardReq用追加分(受信しっぱなし)
 	if (loginPubkey !== undefined) {
 		let kinds = [
-			0, 1, 3, 5, 6, 7, 40, 41, 42, 1111, 9735, 10000, 10001, 10002, 10005, 10030, 30002
+			0, 1, 3, 5, 6, 7, 40, 41, 42, 1111, 9735, 10000, 10001, 10002, 10005, 10030, 30002, 30008
 		];
 		if (!pubkeysFollowing.includes(loginPubkey)) {
 			kinds = kinds.concat(16).toSorted((a, b) => a - b);

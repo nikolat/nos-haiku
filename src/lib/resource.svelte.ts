@@ -2637,6 +2637,6 @@ export const sendNote = async (
 	sendEvent(eventToSend, options);
 };
 
-const sendEvent = (eventToSend: NostrEvent, options?: Partial<RxNostrSendOptions>): void => {
+export const sendEvent = (eventToSend: NostrEvent, options?: Partial<RxNostrSendOptions>): void => {
 	rxNostr.send(eventToSend, options);
 };

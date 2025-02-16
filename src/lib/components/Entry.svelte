@@ -2,6 +2,7 @@
 	import { getClientURL, getRoboHashURL } from '$lib/config';
 	import {
 		getAbsoluteTime,
+		getAddressPointerFromAId,
 		getEvent9734,
 		getRelativeTime,
 		getRelaysToUseFromKind10002Event,
@@ -167,14 +168,14 @@
 	});
 	const clientInfo: { name: string; url: string } | undefined = $derived.by(() => {
 		const tag = event.tags.find((tag) => tag.length >= 3 && tag[0] === 'client');
-		if (tag === undefined || tag[2] === undefined) {
+		const aId = tag?.at(2);
+		if (tag === undefined || aId === undefined) {
 			return undefined;
 		}
-		const sp = tag[2].split(':');
-		if (sp.length < 3 || !/^\d+$/.test(sp[0])) {
+		const ap: nip19.AddressPointer | null = getAddressPointerFromAId(aId);
+		if (ap === null) {
 			return undefined;
 		}
-		const ap: nip19.AddressPointer = { identifier: sp[2], pubkey: sp[1], kind: parseInt(sp[0]) };
 		const relayHint = URL.canParse(tag.at(3) ?? '') ? tag[3] : null;
 		if (relayHint !== null) {
 			ap.relays = [relayHint];
@@ -254,12 +255,14 @@
 		if (event.kind !== 1111) {
 			return undefined;
 		}
-		const a = event.tags.find((tag) => tag.length >= 2 && tag[0] === 'a')?.at(1);
-		if (a === undefined) {
+		const aId = event.tags.find((tag) => tag.length >= 2 && tag[0] === 'a')?.at(1);
+		if (aId === undefined) {
 			return undefined;
 		}
-		const sp = a.split(':');
-		const ap: nip19.AddressPointer = { identifier: sp[2], pubkey: sp[1], kind: parseInt(sp[0]) };
+		const ap: nip19.AddressPointer | null = getAddressPointerFromAId(aId);
+		if (ap === null) {
+			return undefined;
+		}
 		return ap;
 	});
 	const textAndUrlReplyTo: [string, string] | undefined = $derived.by(() => {
@@ -591,17 +594,13 @@
 											.filter((tag) => tag.length >= 2 && tag[0] === 'p')
 											.map((tag) => tag[1])
 									)}
-									{@const asp = event.tags
-										.find((tag) => tag.length >= 2 && tag[0] === 'a')
-										?.at(1)
-										?.split(':')}
-									{@const aTagStr = event.tags
-										.find((tag) => tag.length >= 2 && tag[0] === 'a')
-										?.at(1)}
-									{@const isValidAward = event.pubkey === asp?.at(1) && aTagStr !== undefined}
+									{@const aId = event.tags.find((tag) => tag.length >= 2 && tag[0] === 'a')?.at(1)}
+									{@const asp = aId?.split(':')}
+									{@const ap = aId === undefined ? null : getAddressPointerFromAId(aId)}
+									{@const isValidAward =
+										event.pubkey === asp?.at(1) && aId !== undefined && ap !== null}
 									{#if isValidAward}
-										{@const ap = { identifier: asp[2], pubkey: asp[1], kind: parseInt(asp[0]) }}
-										{@const content = asp === undefined ? '' : `nostr:${nip19.naddrEncode(ap)}`}
+										{@const content = ap === null ? '' : `nostr:${nip19.naddrEncode(ap)}`}
 										{#each ps as p}
 											{@const profAwarded = profileMap.get(p)}
 											<div class="Entry__parentmarker">
@@ -629,12 +628,12 @@
 												kind: 30008
 											})}
 											{@const badgeDefinitionEvent = getEventByAddressPointer(ap)}
-											{@const aTagStrs =
+											{@const aIds =
 												profileBadgesEvent?.tags
 													.filter((tag) => tag.length >= 2 && tag[0] === 'a')
 													.map((tag) => tag[1]) ?? []}
 											<div>
-												{#if aTagStrs.includes(aTagStr)}
+												{#if aIds.includes(aId)}
 													<div
 														title={$_('Entry.remove-from-favorites')}
 														class="FavoriteButton FavoriteButton--active"
@@ -644,7 +643,7 @@
 														<span
 															class="fa-fw fas fa-heart"
 															onclick={() => {
-																unbookmarkBadge(profileBadgesEvent, aTagStr, event.id);
+																unbookmarkBadge(profileBadgesEvent, aId, event.id);
 															}}
 														></span>
 													</div>
@@ -661,7 +660,7 @@
 																).at(0);
 																bookmarkBadge(
 																	profileBadgesEvent,
-																	aTagStr,
+																	aId,
 																	recommendedRelayATag,
 																	event.id,
 																	recommendedRelayETag
@@ -812,10 +811,10 @@
 										event.tags.find((tag) => tag.length >= 2 && tag[0] === 'e')?.at(1) ?? ''}
 									{@const aIdZapped =
 										event.tags.find((tag) => tag.length >= 2 && tag[0] === 'a')?.at(1) ?? ''}
-									{@const ary = aIdZapped.split(':')}
-									{@const data = { identifier: ary[2], pubkey: ary[1], kind: parseInt(ary[0]) }}
+									{@const ap = getAddressPointerFromAId(aIdZapped)}
 									{@const eventZappedByETag = getEventById(eventIdZapped)}
-									{@const eventZappedByATag = getEventByAddressPointer(data)}
+									{@const eventZappedByATag =
+										ap === null ? undefined : getEventByAddressPointer(ap)}
 									{@const eventZapped = eventZappedByETag ?? eventZappedByATag}
 									{#if eventZapped !== undefined}
 										<Entry
@@ -920,16 +919,17 @@
 										/>
 									{/if}
 								{:else if event.kind === 10030}
-									{@const aStrs = event.tags
+									{@const aIds = event.tags
 										.filter((tag) => tag.length >= 2 && tag[0] === 'a')
 										.map((tag) => tag[1])}
-									{#each new Set<string>(aStrs) as aStr, i (aStr)}
+									{#each new Set<string>(aIds) as aId, i (aId)}
 										{#if i > 0}{'\n'}{/if}
-										{@const ary = aStr.split(':')}
-										{@const data = { identifier: ary[2], pubkey: ary[1], kind: parseInt(ary[0]) }}
-										{@const ev = getEventByAddressPointer(data)}
+										{@const ap = getAddressPointerFromAId(aId)}
+										{@const ev = ap === null ? undefined : getEventByAddressPointer(ap)}
 										{#if ev === undefined}
-											{`nostr:${nip19.naddrEncode(data)}`}
+											{#if ap !== null}
+												{`nostr:${nip19.naddrEncode(ap)}`}
+											{/if}
 										{:else}
 											<Entry
 												event={ev}

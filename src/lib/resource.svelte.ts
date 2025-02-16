@@ -43,6 +43,7 @@ import {
 } from '$lib/config';
 import { preferences } from '$lib/store';
 import {
+	getAddressPointerFromAId,
 	getEvent9734,
 	getIdsForFilter,
 	getPubkeysForFilter,
@@ -722,7 +723,7 @@ const nextOnSubscribeEventStore = (event: NostrEvent | null, kindToDelete?: numb
 		);
 		eventsMention = eventsMentionKey.map(
 			(ev: NostrEvent): { baseEvent: NostrEvent; targetEvent: NostrEvent | undefined } => {
-				const id = (
+				const eId = (
 					ev.tags.find(
 						(tag) =>
 							tag.length >= 4 && tag[0] === 'e' && tag[3] === 'reply' && [1, 42].includes(ev.kind)
@@ -735,18 +736,14 @@ const nextOnSubscribeEventStore = (event: NostrEvent | null, kindToDelete?: numb
 					) ??
 					ev.tags.findLast((tag) => tag.length >= 2 && tag[0] === 'e' && ev.kind === 7)
 				)?.at(1);
-				const a = ev.tags.findLast((tag) => tag.length >= 2 && tag[0] === 'a')?.at(1);
+				const aId = ev.tags.findLast((tag) => tag.length >= 2 && tag[0] === 'a')?.at(1);
 				let targetEvent: NostrEvent | undefined;
-				if (id !== undefined) {
-					targetEvent = eventStore.getEvent(id ?? '');
-				} else if (a !== undefined && [7, 8, 16, 1111].includes(ev.kind)) {
-					const ary = a.split(':');
-					const ap: nip19.AddressPointer = {
-						identifier: ary[2],
-						pubkey: ary[1],
-						kind: parseInt(ary[0])
-					};
-					targetEvent = eventStore.getReplaceable(ap.kind, ap.pubkey, ap.identifier);
+				if (eId !== undefined) {
+					targetEvent = eventStore.getEvent(eId);
+				} else if (aId !== undefined && [7, 8, 16, 1111].includes(ev.kind)) {
+					const ap: nip19.AddressPointer | null = getAddressPointerFromAId(aId);
+					targetEvent =
+						ap === null ? undefined : eventStore.getReplaceable(ap.kind, ap.pubkey, ap.identifier);
 				}
 				return { baseEvent: ev, targetEvent };
 			}
@@ -970,10 +967,10 @@ const getEventsByIdWithRelayHint = (
 			aTags = [aTags.at(-1) ?? []];
 		}
 		for (const aTag of aTags) {
-			const sp = aTag[1].split(':');
-			const ap: nip19.AddressPointer = { identifier: sp[2], pubkey: sp[1], kind: parseInt(sp[0]) };
+			const ap: nip19.AddressPointer | null = getAddressPointerFromAId(aTag[1]);
 			const relayHint = aTag[2];
 			if (
+				ap === null ||
 				eventStore.hasReplaceable(ap.kind, ap.pubkey, ap.identifier) ||
 				relayHint === undefined ||
 				!URL.canParse(relayHint)
@@ -1055,17 +1052,12 @@ const fetchEventsByETags = (event: NostrEvent, onlyLastOne: boolean = false) => 
 };
 
 const fetchEventsByATags = (event: NostrEvent) => {
-	const atags = event.tags.filter((tag) => tag.length >= 2 && tag[0] === 'a').map((tag) => tag[1]);
+	const aIds = event.tags.filter((tag) => tag.length >= 2 && tag[0] === 'a').map((tag) => tag[1]);
 	const filters = [];
-	if (atags.length > 0) {
-		for (const atag of atags) {
-			const ary = atag.split(':');
-			const ap: nip19.AddressPointer = {
-				identifier: ary[2],
-				pubkey: ary[1],
-				kind: parseInt(ary[0])
-			};
-			if (!eventStore.hasReplaceable(ap.kind, ap.pubkey, ap.identifier)) {
+	if (aIds.length > 0) {
+		for (const aId of aIds) {
+			const ap: nip19.AddressPointer | null = getAddressPointerFromAId(aId);
+			if (ap !== null && !eventStore.hasReplaceable(ap.kind, ap.pubkey, ap.identifier)) {
 				const filter: LazyFilter = {
 					kinds: [ap.kind],
 					authors: [ap.pubkey],
@@ -1207,20 +1199,19 @@ const _subTimeline = eventStore
 					const idRoot: string | undefined = event.tags
 						.find((tag) => tag.length >= 2 && tag[0] === 'E')
 						?.at(1);
-					let ap: nip19.AddressPointer | undefined;
-					const a = event.tags.find((tag) => tag.length >= 2 && tag[0] === 'a')?.at(1);
-					const A = event.tags.find((tag) => tag.length >= 2 && tag[0] === 'A')?.at(1);
-					if (a !== undefined) {
-						const sp = a.split(':');
-						ap = { identifier: sp[2], pubkey: sp[1], kind: parseInt(sp[0]) };
+					let ap: nip19.AddressPointer | null = null;
+					const aId = event.tags.find((tag) => tag.length >= 2 && tag[0] === 'a')?.at(1);
+					const AId = event.tags.find((tag) => tag.length >= 2 && tag[0] === 'A')?.at(1);
+					if (aId !== undefined) {
+						ap = getAddressPointerFromAId(aId);
 					}
 					if (
-						ap !== undefined &&
+						ap !== null &&
 						!eventStore.hasReplaceable(ap.kind, ap.pubkey, ap.identifier) &&
-						A !== undefined &&
-						(countThread.get(A) ?? 0) < countThreadLimit
+						AId !== undefined &&
+						(countThread.get(AId) ?? 0) < countThreadLimit
 					) {
-						countThread.set(A, (countThread.get(A) ?? 0) + 1);
+						countThread.set(AId, (countThread.get(AId) ?? 0) + 1);
 						const filter: LazyFilter = {
 							kinds: [ap.kind],
 							authors: [ap.pubkey],

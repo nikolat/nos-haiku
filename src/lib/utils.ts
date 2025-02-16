@@ -169,6 +169,20 @@ export const getEvent9734WithVerification = async (
 	return event9734;
 };
 
+export const getAddressPointerFromAId = (aId: string): nip19.AddressPointer | null => {
+	const sp = aId.split(':');
+	if (sp.length < 3) {
+		return null;
+	}
+	try {
+		const ap: nip19.AddressPointer = { identifier: sp[2], pubkey: sp[1], kind: parseInt(sp[0]) };
+		return ap;
+	} catch (error) {
+		console.warn(error);
+		return null;
+	}
+};
+
 export const splitNip51ListPublic = (
 	event: NostrEvent
 ): {

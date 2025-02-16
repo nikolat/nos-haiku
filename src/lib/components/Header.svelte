@@ -13,6 +13,7 @@
 	import { afterNavigate, beforeNavigate, goto } from '$app/navigation';
 	import { page } from '$app/state';
 	import type { NostrEvent } from 'nostr-tools/pure';
+	import { isParameterizedReplaceableKind, isReplaceableKind } from 'nostr-tools/kinds';
 	import * as nip19 from 'nostr-tools/nip19';
 	import { unixNow } from 'applesauce-core/helpers';
 	import { _ } from 'svelte-i18n';
@@ -435,30 +436,51 @@
 										added a <a href="/entry/{nip19.neventEncode({ ...ev, author: ev.pubkey })}"
 											><Reaction reactionEvent={ev} profile={undefined} isAuthor={false} /></a
 										>
+									{:else if ev.kind === 8}
+										<a href="/entry/{nip19.neventEncode({ ...ev, author: ev.pubkey })}">📛awarded</a
+										>
 									{:else if [1, 42, 1111].includes(ev.kind)}
-										<a href="/entry/{nip19.neventEncode({ ...ev, author: ev.pubkey })}">mentioned</a
+										<a href="/entry/{nip19.neventEncode({ ...ev, author: ev.pubkey })}"
+											>💬mentioned</a
 										>
 									{:else if [6, 16].includes(ev.kind)}
-										<a href="/entry/{nip19.neventEncode({ ...ev, author: ev.pubkey })}">reposted</a>
+										<a href="/entry/{nip19.neventEncode({ ...ev, author: ev.pubkey })}"
+											>🔁reposted</a
+										>
 									{:else if ev.kind === 9734}
-										Zapped
+										⚡zapped
 									{/if}
-									to
+									{#if ev.kind !== 8}
+										to
+									{/if}
 									<br />
 									{#if evTo !== undefined}
-										{@const d = evTo.tags.find((tag) => tag.length >= 2 && tag[0] === 'd')?.at(1)}
+										{@const d =
+											evTo.tags.find((tag) => tag.length >= 2 && tag[0] === 'd')?.at(1) ?? ''}
 										{@const link =
-											d !== undefined
+											isReplaceableKind(evTo.kind) || isParameterizedReplaceableKind(evTo.kind)
 												? `/entry/${nip19.naddrEncode({ identifier: d, pubkey: evTo.pubkey, kind: evTo.kind })}`
 												: `/entry/${nip19.neventEncode({ ...evTo, author: evTo.pubkey })}`}
 										<a href={link}>
-											<Content
-												content={evTo.content.length > 20
-													? `${evTo.content.slice(0, 20)}...`
-													: evTo.content}
-												tags={evTo.tags}
-												enableAutoLink={false}
-											/>
+											{#if ev.kind === 8 && evTo.kind === 30009}
+												{@const image =
+													evTo.tags.find((tag) => tag.length >= 2 && tag[0] === 'image')?.at(1) ??
+													''}
+												{@const title =
+													evTo.tags.find((tag) => tag.length >= 2 && tag[0] === 'name')?.at(1) ??
+													''}
+												{#if URL.canParse(image)}
+													<img alt={title} {title} class="badge" src={image} />
+												{/if}
+											{:else}
+												<Content
+													content={evTo.content.length > 20
+														? `${evTo.content.slice(0, 20)}...`
+														: evTo.content}
+													tags={evTo.tags}
+													enableAutoLink={false}
+												/>
+											{/if}
 										</a>
 									{/if}
 								</p>
@@ -518,6 +540,10 @@
 	}
 	.GlobalHeader__body span.scroll > button:active > svg {
 		fill: yellow;
+	}
+	.badge {
+		width: 32px;
+		height: 32px;
 	}
 	.search-type {
 		margin-right: auto;

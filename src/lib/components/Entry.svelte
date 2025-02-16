@@ -11,6 +11,7 @@
 		type ProfileContentEvent
 	} from '$lib/utils';
 	import {
+		bookmarkBadge,
 		bookmarkEmojiSets,
 		getChannelBookmarkMap,
 		getEventByAddressPointer,
@@ -21,6 +22,7 @@
 		getSeenOn,
 		sendDeletion,
 		sendRepost,
+		unbookmarkBadge,
 		unbookmarkEmojiSets
 	} from '$lib/resource.svelte';
 	import Profile from '$lib/components/kinds/Profile.svelte';
@@ -35,8 +37,8 @@
 	import Entry from '$lib/components/Entry.svelte';
 	import CreateEntry from '$lib/components/CreateEntry.svelte';
 	import type { NostrEvent } from 'nostr-tools/pure';
-	import * as nip19 from 'nostr-tools/nip19';
 	import { isParameterizedReplaceableKind, isReplaceableKind } from 'nostr-tools/kinds';
+	import * as nip19 from 'nostr-tools/nip19';
 	import { decode } from 'light-bolt11-decoder';
 	import { _ } from 'svelte-i18n';
 
@@ -593,52 +595,108 @@
 										.find((tag) => tag.length >= 2 && tag[0] === 'a')
 										?.at(1)
 										?.split(':')}
-									{@const content =
-										asp === undefined
-											? ''
-											: `nostr:${nip19.naddrEncode({ identifier: asp[2], pubkey: asp[1], kind: parseInt(asp[0]) })}`}
-									{#each ps as p}
-										{@const profAwarded = profileMap.get(p)}
-										<div class="Entry__parentmarker">
-											<a href="/{nip19.npubEncode(p)}">
-												<i class="fa-fw fas fa-arrow-alt-from-right"></i>
-												<span class="Mention">
-													<img
-														src={profAwarded?.picture ?? getRoboHashURL(nip19.npubEncode(p))}
-														alt={getProfileName(profAwarded)}
-														class="Avatar Avatar--sm"
-													/>
-													<Content
-														content={getProfileName(profAwarded)}
-														tags={profAwarded?.event.tags ?? []}
-														isAbout={true}
-													/>
-												</span>
-											</a>
-										</div>
-									{/each}
-									<p>
-										<Content
-											{content}
-											tags={event.tags}
-											{channelMap}
-											{profileMap}
-											{loginPubkey}
-											{mutedPubkeys}
-											{mutedChannelIds}
-											{mutedWords}
-											{followingPubkeys}
-											{eventsTimeline}
-											{eventsReaction}
-											{eventsEmojiSet}
-											{uploaderSelected}
-											bind:channelToPost
-											{currentChannelId}
-											{isEnabledRelativeTime}
-											{nowRealtime}
-											{level}
-										/>
-									</p>
+									{@const aTagStr = event.tags
+										.find((tag) => tag.length >= 2 && tag[0] === 'a')
+										?.at(1)}
+									{@const isValidAward = event.pubkey === asp?.at(1) && aTagStr !== undefined}
+									{#if isValidAward}
+										{@const ap = { identifier: asp[2], pubkey: asp[1], kind: parseInt(asp[0]) }}
+										{@const content = asp === undefined ? '' : `nostr:${nip19.naddrEncode(ap)}`}
+										{#each ps as p}
+											{@const profAwarded = profileMap.get(p)}
+											<div class="Entry__parentmarker">
+												<a href="/{nip19.npubEncode(p)}">
+													<i class="fa-fw fas fa-arrow-alt-from-right"></i>
+													<span class="Mention">
+														<img
+															src={profAwarded?.picture ?? getRoboHashURL(nip19.npubEncode(p))}
+															alt={getProfileName(profAwarded)}
+															class="Avatar Avatar--sm"
+														/>
+														<Content
+															content={getProfileName(profAwarded)}
+															tags={profAwarded?.event.tags ?? []}
+															isAbout={true}
+														/>
+													</span>
+												</a>
+											</div>
+										{/each}
+										{#if loginPubkey !== undefined && ps.has(loginPubkey)}
+											{@const profileBadgesEvent = getEventByAddressPointer({
+												identifier: 'profile_badges',
+												pubkey: loginPubkey,
+												kind: 30008
+											})}
+											{@const badgeDefinitionEvent = getEventByAddressPointer(ap)}
+											{@const aTagStrs =
+												profileBadgesEvent?.tags
+													.filter((tag) => tag.length >= 2 && tag[0] === 'a')
+													.map((tag) => tag[1]) ?? []}
+											<div>
+												{#if aTagStrs.includes(aTagStr)}
+													<div
+														title={$_('Entry.remove-from-favorites')}
+														class="FavoriteButton FavoriteButton--active"
+													>
+														<!-- svelte-ignore a11y_click_events_have_key_events -->
+														<!-- svelte-ignore a11y_no_static_element_interactions -->
+														<span
+															class="fa-fw fas fa-heart"
+															onclick={() => {
+																unbookmarkBadge(profileBadgesEvent, aTagStr, event.id);
+															}}
+														></span>
+													</div>
+												{:else}
+													<div title={$_('Entry.add-to-favorites')} class="FavoriteButton">
+														<!-- svelte-ignore a11y_click_events_have_key_events -->
+														<!-- svelte-ignore a11y_no_static_element_interactions -->
+														<span
+															class="fa-fw fas fa-heart"
+															onclick={() => {
+																const recommendedRelayETag = getSeenOn(event.id).at(0);
+																const recommendedRelayATag = getSeenOn(
+																	badgeDefinitionEvent?.id ?? ''
+																).at(0);
+																bookmarkBadge(
+																	profileBadgesEvent,
+																	aTagStr,
+																	recommendedRelayATag,
+																	event.id,
+																	recommendedRelayETag
+																);
+															}}
+														></span>
+													</div>
+												{/if}
+											</div>
+										{/if}
+										<p>
+											<Content
+												{content}
+												tags={event.tags}
+												{channelMap}
+												{profileMap}
+												{loginPubkey}
+												{mutedPubkeys}
+												{mutedChannelIds}
+												{mutedWords}
+												{followingPubkeys}
+												{eventsTimeline}
+												{eventsReaction}
+												{eventsEmojiSet}
+												{uploaderSelected}
+												bind:channelToPost
+												{currentChannelId}
+												{isEnabledRelativeTime}
+												{nowRealtime}
+												{level}
+											/>
+										</p>
+									{:else}
+										invalid award
+									{/if}
 								{:else if event.kind === 17}
 									{@const r = event.tags
 										.find((tag) => tag.length >= 2 && tag[0] === 'r' && URL.canParse(tag[1]))
@@ -913,7 +971,12 @@
 											{tagMap.get('description')}
 										</p>{/if}
 									{#if URL.canParse(tagMap.get('image') ?? '')}<p class="image">
-											<img alt={tagMap.get('name') ?? ''} src={tagMap.get('image')} />
+											<img
+												alt={tagMap.get('name') ?? ''}
+												title={tagMap.get('name') ?? ''}
+												src={tagMap.get('image')}
+												class="badge"
+											/>
 										</p>{/if}
 								{:else if event.kind === 30030}
 									{@const dTagName =
@@ -1544,6 +1607,10 @@
 	.emoji {
 		height: 32px;
 		vertical-align: top;
+	}
+	.badge {
+		width: 200px;
+		height: 200px;
 	}
 	.handler-information img.banner {
 		max-height: 100px;

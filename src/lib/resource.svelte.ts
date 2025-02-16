@@ -584,21 +584,41 @@ const nextOnSubscribeEventStore = (event: NostrEvent | null, kindToDelete?: numb
 		}
 		case 1:
 		case 6:
+		case 8:
 		case 16:
 		case 42:
-		case 1111: {
+		case 1111:
+		case 9735: {
 			if (
-				kind === 16 &&
-				event?.tags.find((tag) => tag.length >= 2 && tag[0] === 'k')?.at(1) !== '42'
+				(kind === 8 &&
+					(loginPubkey === undefined ||
+						(loginPubkey !== undefined &&
+							event?.tags.find((tag) => tag.length >= 2 && tag[0] === 'p')?.at(1) !==
+								loginPubkey))) ||
+				(kind === 16 &&
+					event?.tags.find((tag) => tag.length >= 2 && tag[0] === 'k')?.at(1) !== '42') ||
+				(kind === 9735 &&
+					(loginPubkey === undefined ||
+						(loginPubkey !== undefined &&
+							event?.tags.find((tag) => tag.length >= 2 && tag[0] === 'P')?.at(1) !== loginPubkey)))
 			) {
 				break;
 			}
 			eventsTimeline = sortEvents(
 				Array.from(
-					eventStore.getAll([
-						{ kinds: isEnabledSkipKind1 ? [42, 1111] : [1, 6, 42, 1111] },
-						{ kinds: [16], '#k': ['42'] }
-					])
+					eventStore.getAll(
+						loginPubkey === undefined
+							? [
+									{ kinds: isEnabledSkipKind1 ? [42, 1111] : [1, 6, 42, 1111] },
+									{ kinds: [16], '#k': ['42'] }
+								]
+							: [
+									{ kinds: isEnabledSkipKind1 ? [42, 1111] : [1, 6, 42, 1111] },
+									{ kinds: [16], '#k': ['42'] },
+									{ kinds: [8], '#p': [loginPubkey] },
+									{ kinds: [9735], '#P': [loginPubkey] }
+								]
+					)
 				)
 			);
 			break;
@@ -684,11 +704,11 @@ const nextOnSubscribeEventStore = (event: NostrEvent | null, kindToDelete?: numb
 				eventStore.getAll(
 					isEnabledSkipKind1
 						? [
-								{ '#p': [loginPubkey], kinds: [42, 1111, 9734] },
+								{ '#p': [loginPubkey], kinds: [8, 42, 1111, 9734] },
 								{ '#p': [loginPubkey], kinds: [7, 16], '#k': ['42'] }
 							]
 						: [
-								{ '#p': [loginPubkey], kinds: [1, 6, 7, 42, 1111, 9734] },
+								{ '#p': [loginPubkey], kinds: [1, 6, 7, 8, 42, 1111, 9734] },
 								{ '#p': [loginPubkey], kinds: [16], '#k': ['42'] }
 							]
 				)
@@ -719,7 +739,7 @@ const nextOnSubscribeEventStore = (event: NostrEvent | null, kindToDelete?: numb
 				let targetEvent: NostrEvent | undefined;
 				if (id !== undefined) {
 					targetEvent = eventStore.getEvent(id ?? '');
-				} else if (a !== undefined && [7, 16, 1111].includes(ev.kind)) {
+				} else if (a !== undefined && [7, 8, 16, 1111].includes(ev.kind)) {
 					const ary = a.split(':');
 					const ap: nip19.AddressPointer = {
 						identifier: ary[2],
@@ -1562,10 +1582,10 @@ export const getEventsFirst = (
 	}
 	if (isFirstFetch && loginPubkey !== undefined) {
 		if (isEnabledSkipKind1) {
-			filters.push({ kinds: [42, 1111, 9735], '#p': [loginPubkey] });
+			filters.push({ kinds: [8, 42, 1111, 9735], '#p': [loginPubkey] });
 			filters.push({ kinds: [7, 16], '#p': [loginPubkey], '#k': ['42'] });
 		} else {
-			filters.push({ kinds: [1, 6, 7, 16, 42, 1111, 9735], '#p': [loginPubkey] });
+			filters.push({ kinds: [1, 6, 7, 8, 16, 42, 1111, 9735], '#p': [loginPubkey] });
 		}
 	}
 	if (isEnabledSkipKind1) {
@@ -1681,7 +1701,7 @@ export const getEventsFirst = (
 		//削除反映漏れに備えて kind:5 は少し前から取得する
 		filters.push({
 			kinds: [5],
-			'#k': (isEnabledSkipKind1 ? [7, 16, 40, 41, 42] : [1, 6, 7, 16, 40, 41, 42]).map((n) =>
+			'#k': (isEnabledSkipKind1 ? [7, 8, 16, 40, 41, 42] : [1, 6, 7, 8, 16, 40, 41, 42]).map((n) =>
 				String(n)
 			),
 			authors: pubkeysFollowing,
@@ -2142,6 +2162,89 @@ export const unbookmarkEmojiSets = async (aTagStr: string): Promise<void> => {
 	const content: string = eventEmojiSetList.content;
 	const eventTemplate: EventTemplate = $state.snapshot({
 		kind: eventEmojiSetList.kind,
+		tags,
+		content,
+		created_at: unixNow()
+	});
+	const eventToSend = await window.nostr.signEvent(eventTemplate);
+	const options: Partial<RxNostrSendOptions> = { on: { relays: relaysToWrite } };
+	sendEvent(eventToSend, options);
+};
+
+export const bookmarkBadge = async (
+	profileBadgesEvent: NostrEvent | undefined,
+	aTagStr: string,
+	recommendedRelayATag: string | undefined,
+	eTagStr: string,
+	recommendedRelayETag: string | undefined
+): Promise<void> => {
+	if (window.nostr === undefined) {
+		return;
+	}
+	const kind = 30008;
+	let tags: string[][];
+	let content: string;
+	const aTagStrs = profileBadgesEvent?.tags
+		.filter((tag) => tag.length >= 2 && tag[0] === 'a')
+		.map((tag) => tag[1]);
+	const aTag = ['a', aTagStr];
+	if (recommendedRelayATag !== undefined) {
+		aTag.push(recommendedRelayATag);
+	}
+	const eTag = ['e', eTagStr];
+	if (recommendedRelayETag !== undefined) {
+		eTag.push(recommendedRelayETag);
+	}
+	if (profileBadgesEvent === undefined || aTagStrs === undefined) {
+		const dTag = ['d', 'profile_badges'];
+		tags = [dTag, aTag, eTag];
+		content = '';
+	} else if (aTagStrs.includes(aTagStr)) {
+		console.warn('already bookmarked');
+		return;
+	} else {
+		tags = [...profileBadgesEvent.tags, aTag, eTag];
+		content = profileBadgesEvent.content;
+	}
+	const eventTemplate: EventTemplate = $state.snapshot({
+		kind,
+		tags,
+		content,
+		created_at: unixNow()
+	});
+	const eventToSend = await window.nostr.signEvent(eventTemplate);
+	const options: Partial<RxNostrSendOptions> = { on: { relays: relaysToWrite } };
+	sendEvent(eventToSend, options);
+};
+
+export const unbookmarkBadge = async (
+	profileBadgesEvent: NostrEvent | undefined,
+	aTagStr: string,
+	eTagStr: string
+): Promise<void> => {
+	if (window.nostr === undefined) {
+		return;
+	}
+	const aTags = profileBadgesEvent?.tags
+		.filter((tag) => tag.length >= 2 && tag[0] === 'a')
+		.map((tag) => tag[1]);
+	if (profileBadgesEvent === undefined || aTags === undefined) {
+		console.warn('kind:30008 profile_badges event does not exist');
+		return;
+	} else if (!aTags.includes(aTagStr)) {
+		console.warn('not bookmarked yet');
+		return;
+	}
+	const tags: string[][] = profileBadgesEvent.tags.filter(
+		(tag) =>
+			!(
+				(tag.length >= 2 && tag[0] === 'a' && tag[1] === aTagStr) ||
+				(tag.length >= 2 && tag[0] === 'e' && tag[1] === eTagStr)
+			)
+	);
+	const content: string = profileBadgesEvent.content;
+	const eventTemplate: EventTemplate = $state.snapshot({
+		kind: profileBadgesEvent.kind,
 		tags,
 		content,
 		created_at: unixNow()

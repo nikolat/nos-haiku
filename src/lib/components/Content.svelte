@@ -114,7 +114,7 @@
 			{:else}
 				<a href={url} target="_blank" rel="noopener noreferrer">{url}</a>
 			{/if}
-		{:else if /^https?:\/\/\S+\.(jpe?g|png|gif|webp)/i.test(url)}
+		{:else if /^https?:\/\/\S+\.(jpe?g|png|gif|webp|svg)/i.test(url)}
 			<!-- svelte-ignore a11y_click_events_have_key_events -->
 			<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
 			<img

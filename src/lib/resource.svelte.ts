@@ -2418,15 +2418,19 @@ export const sendNote = async (
 	targetEventToReply?: NostrEvent,
 	emojiMap?: Map<string, string>,
 	imetaMap?: Map<string, FileUploadResponse>,
-	contentWarningReason?: string | null | undefined
+	contentWarningReason?: string | null | undefined,
+	pollItems?: string[],
+	pollEndsAt?: number
 ) => {
 	if (window.nostr === undefined) {
 		return;
 	}
 	const relaysToAdd: Set<string> = new Set<string>();
-	//チャンネル作成
 	let eventChannelToSend: NostrEvent | undefined;
-	if (targetEventToReply === undefined && channelNameToCreate.length > 0) {
+	if (pollItems !== undefined && pollItems.length > 0) {
+		//do nothing
+	} else if (targetEventToReply === undefined && channelNameToCreate.length > 0) {
+		//チャンネル作成
 		const eventTemplateChannel: EventTemplate = $state.snapshot({
 			content: JSON.stringify({
 				name: channelNameToCreate,
@@ -2459,7 +2463,24 @@ export const sendNote = async (
 	const mentionPubkeys: Set<string> = new Set();
 	let pubkeyToReply: string | undefined;
 	let kind: number;
-	if (targetEventToReply === undefined) {
+	if (pollItems !== undefined && pollItems.length > 0) {
+		kind = 1068;
+		const getRandomString = (n: number): string => {
+			const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
+			return [...Array(n)]
+				.map((_) => chars.charAt(Math.floor(Math.random() * chars.length)))
+				.join('');
+		};
+		const tagsToAdd: string[][] = [
+			...pollItems.map((item) => ['option', getRandomString(9), item]),
+			...relaysToWrite.map((relay) => ['relay', relay]),
+			['polltype', 'singlechoice'],
+			['endsAt', String(pollEndsAt ?? 0)]
+		];
+		for (const tag of tagsToAdd) {
+			tags.push(tag);
+		}
+	} else if (targetEventToReply === undefined) {
 		kind = 1;
 	} else if (targetEventToReply.kind === 40) {
 		kind = 42;

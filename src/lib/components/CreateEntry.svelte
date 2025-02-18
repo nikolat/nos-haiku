@@ -11,7 +11,7 @@
 		type OptionalFormDataFields
 	} from 'nostr-tools/nip96';
 	import { getToken } from 'nostr-tools/nip98';
-	import type { ProfileContent } from 'applesauce-core/helpers';
+	import { unixNow, type ProfileContent } from 'applesauce-core/helpers';
 	import { _ } from 'svelte-i18n';
 	import { browser } from '$app/environment';
 
@@ -122,6 +122,9 @@
 	let channelNameToCreate: string = $state('');
 	let addContentWarning: boolean = $state(false);
 	let reasonContentWarning: string = $state('');
+	let addPoll: boolean = $state(false);
+	let pollItems: string[] = $state([]);
+	let pollPeriod: number = $state(1 * 24 * 60 * 60);
 	let contentToSend: string = $state('');
 	$effect(() => {
 		if (channelToPost?.name !== undefined) {
@@ -132,6 +135,9 @@
 	});
 
 	const callSendNote = () => {
+		if (contentToSend.length === 0 || (isTopPage && channelNameToCreate.length === 0)) {
+			return;
+		}
 		const targetEventToReply =
 			channelToPost?.eventkind40 ??
 			eventToReply ??
@@ -143,17 +149,22 @@
 			: undefined;
 		sendNote(
 			contentToSend,
-			channelNameToCreate,
-			targetEventToReply,
+			addPoll ? '' : channelNameToCreate,
+			addPoll ? undefined : targetEventToReply,
 			emojiMap,
 			imetaMap,
-			contentWarningReason
+			contentWarningReason,
+			addPoll ? pollItems.filter((item) => item.length > 0) : undefined,
+			addPoll ? unixNow() + pollPeriod : undefined
 		).then(() => {
 			contentToSend = '';
 			channelToPost = undefined;
 			channelNameToCreate = '';
 			addContentWarning = false;
 			reasonContentWarning = '';
+			addPoll = false;
+			pollItems = [];
+			pollPeriod = 1 * 24 * 60 * 60;
 			filesToUpload = undefined;
 			showForm = false;
 		});
@@ -176,7 +187,7 @@
 	{/if}
 	<div class="CreateEntry__main">
 		<div class="InputGroup">
-			{#if currentChannelId === undefined && eventToReply === undefined}
+			{#if currentChannelId === undefined && eventToReply === undefined && !addPoll}
 				<div class="vue-simple-suggest Input CreateEntry__keyword">
 					<div
 						aria-haspopup="listbox"
@@ -252,15 +263,17 @@
 			>
 				<div class="RichTextEditor__toolbar ql-toolbar" style="">
 					<span class="ql-formats">
-						<span class="ql-formats"
-							><button
+						<span class="ql-formats">
+							<button
 								aria-label={$_('CreateEntry.add-image')}
 								title={$_('CreateEntry.add-image')}
 								class="ToolbarItem ql-image"
 								onclick={() => inputFile.click()}
 								disabled={isInProcess}
-								type="button"><i class="fa-fw far fa-camera"></i></button
+								type="button"
 							>
+								<i class="fa-fw far fa-camera"></i>
+							</button>
 							<input
 								class="select-upload-file"
 								type="file"
@@ -269,13 +282,30 @@
 								bind:files={filesToUpload}
 								onchange={uploadFileExec}
 							/>
+							{#if eventToReply === undefined}
+								<button
+									aria-label="poll"
+									title="poll"
+									class={addPoll ? 'ToolbarItem ql-poll on' : 'ToolbarItem ql-poll'}
+									type="button"
+									onclick={() => {
+										addPoll = !addPoll;
+									}}
+								>
+									<svg
+										xmlns="http://www.w3.org/2000/svg"
+										width="24"
+										height="24"
+										viewBox="0 0 24 24"
+									>
+										<path
+											fill-rule="evenodd"
+											d="M3,3 L21,3 C22.1045695,3 23,3.8954305 23,5 L23,19 C23,20.1045695 22.1045695,21 21,21 L3,21 C1.8954305,21 1,20.1045695 1,19 L1,5 C1,3.8954305 1.8954305,3 3,3 Z M3,5 L3,19 L21,19 L21,5 L3,5 Z M9,17 L7,17 L7,11 L9,11 L9,17 Z M13,17 L11,17 L11,7 L13,7 L13,17 Z M17,17 L15,17 L15,10 L17,10 L17,17 Z"
+										/>
+									</svg>
+								</button>
+							{/if}
 							<button
-								aria-label={$_('CreateEntry.add-emoji')}
-								title={$_('CreateEntry.add-emoji')}
-								class="ToolbarItem ql-emoji"
-								type="button"
-								onclick={callGetEmoji}><i class="fa-fw far fa-smile-plus"></i></button
-							><button
 								aria-label="Content Warning"
 								title="Content Warning"
 								class={addContentWarning ? 'ToolbarItem ql-cw on' : 'ToolbarItem ql-cw'}
@@ -283,14 +313,24 @@
 								onclick={() => {
 									addContentWarning = !addContentWarning;
 								}}
-								><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+							>
+								<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
 									<path
 										fill-rule="evenodd"
 										d="M15.4362056,3.97761907 L22.4415418,15.9531803 C23.1705647,17.1855523 23.1862871,18.7132183 22.4827809,19.960327 C21.7784409,21.2089137 20.4619131,21.9842458 19.0122617,21.9983464 L4.97439311,21.9982802 C3.53965557,21.9866122 2.22062199,21.2088986 1.51617253,19.9591997 C0.812307653,18.7105379 0.82874719,17.1794759 1.55542122,15.9576183 L8.56335758,3.97766866 C9.27539851,2.75195566 10.5866895,1.99834312 12.0044595,2.00000273 C13.4220774,2.00166216 14.7329114,2.75839786 15.4362056,3.97761907 Z M10.2912062,4.98490751 L3.27807854,16.973689 C2.91426165,17.5854502 2.90603166,18.3519329 3.25843298,18.9770956 C3.61122214,19.6029463 4.27192295,19.9925012 4.98252774,19.9983133 L19.0025048,19.998394 C19.7286764,19.9913068 20.3881019,19.6029566 20.7408294,18.977675 C21.0930548,18.3532834 21.0851837,17.588488 20.7176978,16.9672502 L13.7068317,4.98222313 C13.357551,4.37673307 12.7063962,4.00082577 12.0021183,4.00000136 C11.2977596,3.99917685 10.6463678,4.37353845 10.2912062,4.98490751 Z M12.0003283,17.9983464 C11.4478622,17.9983464 11,17.5506311 11,16.9983464 C11,16.4460616 11.4478622,15.9983464 12.0003283,15.9983464 C12.5527943,15.9983464 13.0006565,16.4460616 13.0006565,16.9983464 C13.0006565,17.5506311 12.5527943,17.9983464 12.0003283,17.9983464 Z M11.0029544,7.99834639 L13.0036109,7.99834639 L13.0036109,14.9983464 L11.0029544,14.9983464 L11.0029544,7.99834639 Z"
 									/>
-								</svg></button
-							></span
-						>
+								</svg>
+							</button>
+							<button
+								aria-label={$_('CreateEntry.add-emoji')}
+								title={$_('CreateEntry.add-emoji')}
+								class="ToolbarItem ql-emoji"
+								type="button"
+								onclick={callGetEmoji}
+							>
+								<i class="fa-fw far fa-smile-plus"></i>
+							</button>
+						</span>
 					</span>
 					<div class="emoji-picker-container" bind:this={emojiPickerContainer}></div>
 				</div>
@@ -310,6 +350,40 @@
 				<input type="file" style="display: none;" />
 			</div>
 		</div>
+		{#if addPoll}
+			<div class="vue-simple-suggest CreateEntry__poll">
+				<div class="input-wrapper">
+					<dl class="poll-settings">
+						<dt>poll items</dt>
+						<dd>
+							<ul>
+								{#each pollItems.concat('') as item, i}
+									{#if item.length > 0 || i === pollItems.length}
+										<li>
+											<input
+												class="RichTextEditor ql-editor"
+												type="text"
+												placeholder="item"
+												bind:value={pollItems[i]}
+											/>
+										</li>
+									{/if}
+								{/each}
+							</ul>
+						</dd>
+						<dt><label for="poll-period">poll period</label></dt>
+						<dd>
+							<select id="poll-period" bind:value={pollPeriod}>
+								<option value={1 * 60 * 60}>1 hour</option>
+								<option value={6 * 60 * 60}>6 hours</option>
+								<option value={12 * 60 * 60}>12 hours</option>
+								<option value={1 * 24 * 60 * 60}>1 day</option>
+							</select>
+						</dd>
+					</dl>
+				</div>
+			</div>
+		{/if}
 		<div class="CreateEntry__actions">
 			<button
 				class="Button"

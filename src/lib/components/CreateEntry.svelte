@@ -282,7 +282,7 @@
 								bind:files={filesToUpload}
 								onchange={uploadFileExec}
 							/>
-							{#if eventToReply === undefined}
+							{#if currentChannelId === undefined && eventToReply === undefined}
 								<button
 									aria-label="poll"
 									title="poll"

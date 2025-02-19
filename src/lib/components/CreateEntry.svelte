@@ -135,7 +135,12 @@
 	});
 
 	const callSendNote = () => {
-		if (contentToSend.length === 0 || (isTopPage && channelNameToCreate.length === 0)) {
+		if (
+			contentToSend.length === 0 ||
+			(isTopPage &&
+				((!addPoll && channelNameToCreate.length === 0) ||
+					(addPoll && pollItems.filter((item) => item.length > 0).length < 2)))
+		) {
 			return;
 		}
 		const targetEventToReply =
@@ -387,7 +392,10 @@
 		<div class="CreateEntry__actions">
 			<button
 				class="Button"
-				disabled={contentToSend.length === 0 || (isTopPage && channelNameToCreate.length === 0)}
+				disabled={contentToSend.length === 0 ||
+					(isTopPage &&
+						((!addPoll && channelNameToCreate.length === 0) ||
+							(addPoll && pollItems.filter((item) => item.length > 0).length < 2)))}
 				onclick={callSendNote}
 			>
 				<span>{$_('CreateEntry.post')}</span>

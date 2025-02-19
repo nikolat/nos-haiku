@@ -808,7 +808,7 @@
 											{level}
 										/>
 									</p>
-									<Poll {event} />
+									<Poll {event} {nowRealtime} />
 								{:else if event.kind === 1111}
 									{#if textAndUrlReplyTo !== undefined}
 										<i class="fa-fw fas fa-arrow-alt-from-right"></i>

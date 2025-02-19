@@ -2412,6 +2412,36 @@ export const sendChannelEdit = async (channel: ChannelContent) => {
 	sendEvent(eventToSend, options);
 };
 
+export const sendPollResponse = async (
+	targetEventToRespond: NostrEvent,
+	responses: string[],
+	relaysToWriteCustom?: string[]
+) => {
+	if (window.nostr === undefined) {
+		return;
+	}
+	const content = '';
+	const kind = 1018;
+	const tags: string[][] = [
+		['e', targetEventToRespond.id],
+		...responses.map((response) => ['response', response])
+	];
+	if (isEnabledUseClientTag) {
+		tags.push(clientTag);
+	}
+	const eventTemplate: EventTemplate = $state.snapshot({
+		content,
+		kind,
+		tags,
+		created_at: unixNow()
+	});
+	const eventToSend = await window.nostr.signEvent(eventTemplate);
+	const options: Partial<RxNostrSendOptions> = {
+		on: { relays: relaysToWriteCustom ?? relaysToWrite }
+	};
+	sendEvent(eventToSend, options);
+};
+
 export const sendNote = async (
 	content: string,
 	channelNameToCreate: string,

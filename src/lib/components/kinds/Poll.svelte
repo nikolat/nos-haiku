@@ -1,23 +1,28 @@
 <script lang="ts">
-	import { getEventsByKinds } from '$lib/resource.svelte';
+	import { getEventsByKinds, sendPollResponse } from '$lib/resource.svelte';
 	import type { NostrEvent } from 'nostr-tools/pure';
+	import { normalizeURL } from 'nostr-tools/utils';
 
 	const {
-		event
+		event,
+		nowRealtime
 	}: {
 		event: NostrEvent;
+		nowRealtime: number;
 	} = $props();
 
+	const getEndsAt = (event: NostrEvent): number =>
+		parseInt(
+			event.tags
+				.find((tag) => tag.length >= 2 && tag[0] === 'endsAt' && /^\d+$/.test(tag[1]))
+				?.at(1) ?? '0'
+		);
 	const oneVotePerPubkey = (event: NostrEvent): NostrEvent[] => {
 		const events1018 = getEventsByKinds(new Set<number>([1018])).filter((ev) =>
 			ev.tags.some((tag) => tag.length >= 2 && tag[0] === 'e' && tag[1] === event.id)
 		);
 		const eventMap: Map<string, NostrEvent> = new Map<string, NostrEvent>();
-		const endsAt: number = parseInt(
-			event.tags
-				.find((tag) => tag.length >= 2 && tag[0] === 'endsAt' && /^\d+$/.test(tag[1]))
-				?.at(1) ?? '0'
-		);
+		const endsAt: number = getEndsAt(event);
 		for (const ev of events1018) {
 			if (!eventMap.has(ev.pubkey) || ev.created_at > eventMap.get(ev.pubkey)!.created_at) {
 				if (ev.created_at <= endsAt) {
@@ -45,10 +50,49 @@
 	};
 
 	const pollResultMap: Map<string, [string, number]> = $derived(getPollResult(event));
+	const endsAt = $derived(getEndsAt(event));
+	let response: string | undefined = $state();
+
+	const callSendPollResponse = () => {
+		if (response === undefined) {
+			return;
+		}
+		const relaysToWrite: string[] = Array.from(
+			new Set<string>(
+				event.tags
+					.filter((tag) => tag.length >= 2 && tag[0] === 'relay' && URL.canParse(tag[1]))
+					.map((tag) => normalizeURL(tag[1]))
+			)
+		);
+		sendPollResponse(event, [response], relaysToWrite.length > 0 ? relaysToWrite : undefined);
+	};
 </script>
 
 <ol>
 	{#each pollResultMap as [k, [v, n]] (k)}
-		<li>{`(${k})${v}`}: {n}</li>
+		<li>
+			<input
+				type="radio"
+				name="poll"
+				value={k}
+				disabled={nowRealtime > endsAt}
+				bind:group={response}
+			/>
+			{v}: {n}
+		</li>
 	{/each}
 </ol>
+<button
+	class="Button"
+	disabled={nowRealtime > endsAt || response === undefined}
+	onclick={callSendPollResponse}
+>
+	<span>poll</span>
+</button>
+
+<style>
+	input:disabled,
+	button:disabled {
+		cursor: not-allowed;
+	}
+</style>

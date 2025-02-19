@@ -5,9 +5,11 @@
 
 	const {
 		event,
+		loginPubkey,
 		nowRealtime
 	}: {
 		event: NostrEvent;
+		loginPubkey: string | undefined;
 		nowRealtime: number;
 	} = $props();
 
@@ -75,7 +77,7 @@
 				type="radio"
 				name="poll"
 				value={k}
-				disabled={nowRealtime > 1000 * endsAt}
+				disabled={loginPubkey === undefined || nowRealtime > 1000 * endsAt}
 				bind:group={response}
 			/>
 			{v}: {n}
@@ -84,7 +86,7 @@
 </ol>
 <button
 	class="Button"
-	disabled={nowRealtime > 1000 * endsAt || response === undefined}
+	disabled={loginPubkey === undefined || nowRealtime > 1000 * endsAt || response === undefined}
 	onclick={callSendPollResponse}
 >
 	<span>poll</span>

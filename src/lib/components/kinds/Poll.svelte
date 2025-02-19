@@ -75,7 +75,7 @@
 				type="radio"
 				name="poll"
 				value={k}
-				disabled={nowRealtime > endsAt}
+				disabled={nowRealtime > 1000 * endsAt}
 				bind:group={response}
 			/>
 			{v}: {n}
@@ -84,7 +84,7 @@
 </ol>
 <button
 	class="Button"
-	disabled={nowRealtime > endsAt || response === undefined}
+	disabled={nowRealtime > 1000 * endsAt || response === undefined}
 	onclick={callSendPollResponse}
 >
 	<span>poll</span>

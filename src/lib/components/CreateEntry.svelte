@@ -200,7 +200,9 @@
 								? $_('CreateEntry.create-new-keyword')
 								: `${$_('CreateEntry.create-new-keyword')} (${$_('CreateEntry.optional')})`}
 							disabled={channelToPost !== undefined}
-							class="default-input Input"
+							class={isTopPage && channelNameToCreate.length === 0 && contentToSend.length > 0
+								? 'default-input Input empty-channel'
+								: 'default-input Input'}
 							aria-autocomplete="list"
 							aria-controls="19-suggestions"
 							bind:value={channelNameToCreate}
@@ -488,5 +490,10 @@
 	.CreateEntry__keyword .default-input-cw {
 		border-bottom-left-radius: 0;
 		border-bottom-right-radius: 0;
+	}
+	.empty-channel {
+		z-index: 2;
+		outline: none;
+		border-color: red;
 	}
 </style>

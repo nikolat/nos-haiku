@@ -35,7 +35,10 @@
 		return Array.from(eventMap.values());
 	};
 	const getPollResult = (event: NostrEvent): Map<string, [string, number]> => {
-		const events1018 = oneVotePerPubkey(event);
+		const events1018: NostrEvent[] = oneVotePerPubkey(event);
+		const isSingleChoice: boolean = !event.tags.some(
+			(tag) => tag.length >= 2 && tag[0] === 'polltype' && tag[1] === 'multiplechoice'
+		);
 		const rMap = new Map<string, number>();
 		for (const ev of events1018) {
 			const responses = ev.tags
@@ -43,6 +46,9 @@
 				.map((tag) => tag[1]);
 			for (const response of responses) {
 				rMap.set(response, (rMap.get(response) ?? 0) + 1);
+				if (isSingleChoice) {
+					break;
+				}
 			}
 		}
 		const nameMap: Map<string, [string, number]> = new Map<string, [string, number]>(

@@ -38,8 +38,10 @@
 		const events1018 = oneVotePerPubkey(event);
 		const rMap = new Map<string, number>();
 		for (const ev of events1018) {
-			const response = ev.tags.find((tag) => tag.length >= 2 && tag[0] === 'response')?.at(1);
-			if (response !== undefined) {
+			const responses = ev.tags
+				.filter((tag) => tag.length >= 2 && tag[0] === 'response')
+				.map((tag) => tag[1]);
+			for (const response of responses) {
 				rMap.set(response, (rMap.get(response) ?? 0) + 1);
 			}
 		}
@@ -87,6 +89,7 @@
 		);
 		await sendPollResponse(event, responses, relaysToWrite.length > 0 ? relaysToWrite : undefined);
 		responseRadio = undefined;
+		responseCheckbox = [];
 	};
 </script>
 

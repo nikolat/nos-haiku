@@ -64,6 +64,9 @@
 	const pollType: string | undefined = $derived(
 		event.tags.find((tag) => tag.length >= 2 && tag[0] === 'polltype')?.at(1)
 	);
+	const nMax: number = $derived(
+		Math.max(...Array.from(pollResultMap.values()).map(([_s, n]) => n))
+	);
 	let responseRadio: string | undefined = $state();
 	let responseCheckbox: boolean[] = $state([]);
 
@@ -109,7 +112,6 @@
 					disabled={loginPubkey === undefined || nowRealtime > 1000 * endsAt}
 					bind:checked={responseCheckbox[i]}
 				/>
-				<span>{v}: {n}</span>
 			{:else}
 				<input
 					type="radio"
@@ -118,8 +120,11 @@
 					disabled={loginPubkey === undefined || nowRealtime > 1000 * endsAt}
 					bind:group={responseRadio}
 				/>
-				<span>{v}: {n}</span>
 			{/if}
+			<span>{v}</span>
+			<br />
+			<meter min="0" max={nMax} value={n}>{n}</meter>
+			<span>{n}</span>
 		</li>
 	{/each}
 </ol>
@@ -138,6 +143,16 @@
 <style>
 	ol.poll {
 		list-style: none;
+	}
+	meter {
+		margin-left: 1em;
+		width: 60%;
+	}
+	meter::-webkit-meter-optimum-value {
+		background: var(--primary);
+	}
+	meter::-moz-meter-bar {
+		background: var(--primary);
 	}
 	input:disabled,
 	button:disabled {

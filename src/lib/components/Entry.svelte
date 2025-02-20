@@ -757,12 +757,16 @@
 										unknown channel
 									{/if}
 								{:else if event.kind === 1018}
-									{@const response = event.tags
-										.find((tag) => tag.length >= 2 && tag[0] === 'response')
-										?.at(1)}
+									{@const responses = event.tags
+										.filter((tag) => tag.length >= 2 && tag[0] === 'response')
+										.map((tag) => tag[1])}
 									{@const eId = event.tags.find((tag) => tag.length >= 2 && tag[0] === 'e')?.at(1)}
 									{@const event1068 = getEventById(eId ?? '')}
-									<p>response: {response}</p>
+									<ul>
+										{#each responses as response}
+											<li>{response}</li>
+										{/each}
+									</ul>
 									{#if event1068 !== undefined}
 										<Entry
 											event={event1068}

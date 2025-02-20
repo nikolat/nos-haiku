@@ -64,9 +64,6 @@
 	const callSendPollResponse = async () => {
 		let responses: string[];
 		if (pollType === 'multiplechoice') {
-			if (responseCheckbox.length === 0) {
-				return;
-			}
 			responses = [];
 			const pollResultArray: [string, [string, number]][] = Array.from(pollResultMap.entries());
 			for (let i = 0; i < responseCheckbox.length; i++) {
@@ -79,6 +76,9 @@
 				return;
 			}
 			responses = [responseRadio];
+		}
+		if (responses.length === 0) {
+			return;
 		}
 		const relaysToWrite: string[] = Array.from(
 			new Set<string>(
@@ -121,8 +121,7 @@
 	class="Button"
 	disabled={loginPubkey === undefined ||
 		nowRealtime > 1000 * endsAt ||
-		(pollType === 'multiplechoice' &&
-			responseCheckbox.every((b) => b === undefined || b === false)) ||
+		(pollType === 'multiplechoice' && responseCheckbox.every((b) => !b)) ||
 		(pollType !== 'multiplechoice' && responseRadio === undefined)}
 	onclick={callSendPollResponse}
 >

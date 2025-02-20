@@ -148,11 +148,26 @@
 		margin-left: 1em;
 		width: 60%;
 	}
+	meter::-webkit-meter-bar {
+		background-color: var(--page-background);
+	}
 	meter::-webkit-meter-optimum-value {
-		background: var(--primary);
+		background: repeating-linear-gradient(
+			-45deg,
+			var(--primary),
+			var(--primary) 10px,
+			var(--primary-darker) 10px,
+			var(--primary-darker) 20px
+		);
 	}
 	meter::-moz-meter-bar {
-		background: var(--primary);
+		background: repeating-linear-gradient(
+			-45deg,
+			var(--primary),
+			var(--primary) 10px,
+			var(--primary-darker) 10px,
+			var(--primary-darker) 20px
+		);
 	}
 	input:disabled,
 	button:disabled {

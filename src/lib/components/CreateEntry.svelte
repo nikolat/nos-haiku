@@ -125,6 +125,7 @@
 	let addPoll: boolean = $state(false);
 	let pollItems: string[] = $state([]);
 	let pollPeriod: number = $state(1 * 24 * 60 * 60);
+	let pollType: 'singlechoice' | 'multiplechoice' = $state('singlechoice');
 	let contentToSend: string = $state('');
 	$effect(() => {
 		if (channelToPost?.name !== undefined) {
@@ -155,7 +156,8 @@
 			imetaMap,
 			contentWarningReason,
 			addPoll ? pollItems.filter((item) => item.length > 0) : undefined,
-			addPoll ? unixNow() + pollPeriod : undefined
+			addPoll ? unixNow() + pollPeriod : undefined,
+			addPoll ? pollType : undefined
 		).then(() => {
 			contentToSend = '';
 			channelToPost = undefined;
@@ -380,6 +382,13 @@
 								<option value={6 * 60 * 60}>6 hours</option>
 								<option value={12 * 60 * 60}>12 hours</option>
 								<option value={1 * 24 * 60 * 60}>1 day</option>
+							</select>
+						</dd>
+						<dt><label for="poll-type">poll type</label></dt>
+						<dd>
+							<select id="poll-type" bind:value={pollType}>
+								<option value="singlechoice">single choice</option>
+								<option value="multiplechoice">multiple choice</option>
 							</select>
 						</dd>
 					</dl>

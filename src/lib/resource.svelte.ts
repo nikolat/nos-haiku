@@ -2450,7 +2450,8 @@ export const sendNote = async (
 	imetaMap?: Map<string, FileUploadResponse>,
 	contentWarningReason?: string | null | undefined,
 	pollItems?: string[],
-	pollEndsAt?: number
+	pollEndsAt?: number,
+	pollType?: 'singlechoice' | 'multiplechoice'
 ) => {
 	if (window.nostr === undefined) {
 		return;
@@ -2504,7 +2505,7 @@ export const sendNote = async (
 		const tagsToAdd: string[][] = [
 			...pollItems.map((item) => ['option', getRandomString(9), item]),
 			...relaysToWrite.map((relay) => ['relay', relay]),
-			['polltype', 'singlechoice'],
+			['polltype', pollType ?? 'singlechoice'],
 			['endsAt', String(pollEndsAt ?? 0)]
 		];
 		for (const tag of tagsToAdd) {

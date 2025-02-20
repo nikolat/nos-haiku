@@ -52,12 +52,31 @@
 	};
 
 	const pollResultMap: Map<string, [string, number]> = $derived(getPollResult(event));
-	const endsAt = $derived(getEndsAt(event));
-	let response: string | undefined = $state();
+	const endsAt: number = $derived(getEndsAt(event));
+	const pollType: string | undefined = $derived(
+		event.tags.find((tag) => tag.length >= 2 && tag[0] === 'polltype')?.at(1)
+	);
+	let responseRadio: string | undefined = $state();
+	let responseCheckbox: boolean[] = $state([]);
 
 	const callSendPollResponse = async () => {
-		if (response === undefined) {
-			return;
+		let responses: string[];
+		if (pollType === 'multiplechoice') {
+			if (responseCheckbox.length === 0) {
+				return;
+			}
+			responses = [];
+			const pollResultArray: [string, [string, number]][] = Array.from(pollResultMap.entries());
+			for (let i = 0; i < responseCheckbox.length; i++) {
+				if (responseCheckbox[i]) {
+					responses.push(pollResultArray[i][0]);
+				}
+			}
+		} else {
+			if (responseRadio === undefined) {
+				return;
+			}
+			responses = [responseRadio];
 		}
 		const relaysToWrite: string[] = Array.from(
 			new Set<string>(
@@ -66,28 +85,42 @@
 					.map((tag) => normalizeURL(tag[1]))
 			)
 		);
-		await sendPollResponse(event, [response], relaysToWrite.length > 0 ? relaysToWrite : undefined);
-		response = undefined;
+		await sendPollResponse(event, responses, relaysToWrite.length > 0 ? relaysToWrite : undefined);
+		responseRadio = undefined;
 	};
 </script>
 
 <ol>
-	{#each pollResultMap as [k, [v, n]] (k)}
+	{#each pollResultMap as [k, [v, n]], i (k)}
 		<li>
-			<input
-				type="radio"
-				name="poll"
-				value={k}
-				disabled={loginPubkey === undefined || nowRealtime > 1000 * endsAt}
-				bind:group={response}
-			/>
-			{v}: {n}
+			{#if pollType === 'multiplechoice'}
+				<input
+					type="checkbox"
+					name="poll"
+					disabled={loginPubkey === undefined || nowRealtime > 1000 * endsAt}
+					bind:checked={responseCheckbox[i]}
+				/>
+				<span>{v}: {n}</span>
+			{:else}
+				<input
+					type="radio"
+					name="poll"
+					value={k}
+					disabled={loginPubkey === undefined || nowRealtime > 1000 * endsAt}
+					bind:group={responseRadio}
+				/>
+				<span>{v}: {n}</span>
+			{/if}
 		</li>
 	{/each}
 </ol>
 <button
 	class="Button"
-	disabled={loginPubkey === undefined || nowRealtime > 1000 * endsAt || response === undefined}
+	disabled={loginPubkey === undefined ||
+		nowRealtime > 1000 * endsAt ||
+		(pollType === 'multiplechoice' &&
+			responseCheckbox.every((b) => b === undefined || b === false)) ||
+		(pollType !== 'multiplechoice' && responseRadio === undefined)}
 	onclick={callSendPollResponse}
 >
 	<span>poll</span>

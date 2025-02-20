@@ -228,7 +228,7 @@
 		if (loginPubkey !== undefined && pubkeysMentioningTo.includes(loginPubkey)) {
 			classNames.push('mentioning');
 		}
-		if (nowRealtime / 1000 < event.created_at - 5) {
+		if (nowRealtime < event.created_at - 5) {
 			classNames.push('future');
 		}
 		return classNames;
@@ -1281,8 +1281,8 @@
 										title={new Date(1000 * event.created_at).toLocaleString()}
 										class="NoticeItem__time"
 										>{isEnabledRelativeTime
-											? getRelativeTime(nowRealtime, 1000 * event.created_at)
-											: getAbsoluteTime(1000 * event.created_at)}</time
+											? getRelativeTime(nowRealtime, event.created_at)
+											: getAbsoluteTime(event.created_at)}</time
 									>
 								</a>
 							</span>

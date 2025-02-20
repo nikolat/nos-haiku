@@ -68,7 +68,7 @@
 	let urlSearchParams: URLSearchParams = $state(page.url.searchParams);
 	let isLoading: boolean = $state(false);
 	let idTimeoutLoading: number;
-	let nowRealtime: number = $state(1000 * unixNow());
+	let nowRealtime: number = $state(unixNow());
 	let intervalID: number;
 	const getEventsFirstWithLoading = () => {
 		isLoading = true;
@@ -117,7 +117,7 @@
 		document.addEventListener('nlAuth', nlAuth);
 		idTimeoutLoading = setTimeout(getEventsFirstWithLoading, 100);
 		intervalID = setInterval(() => {
-			nowRealtime = 1000 * unixNow();
+			nowRealtime = unixNow();
 		}, 5000);
 		urlSearchParams = page.url.searchParams;
 	});

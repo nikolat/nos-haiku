@@ -45,11 +45,11 @@ interface MyBaseEmoji extends BaseEmoji {
 }
 
 export const getAbsoluteTime = (unixTime: number): string => {
-	return new Date(unixTime).toLocaleString();
+	return new Date(1000 * unixTime).toLocaleString();
 };
 
 export const getRelativeTime = (nowRealtime: number, unixTime: number): string => {
-	const diff = (nowRealtime - unixTime) / 1000;
+	const diff = nowRealtime - unixTime;
 	const $_ = (s: string): string => get(_)(s);
 	let r: string;
 	let n: number;
@@ -79,6 +79,17 @@ export const getRelativeTime = (nowRealtime: number, unixTime: number): string =
 		r = r.replace('s ago', ' ago');
 	}
 	return r;
+};
+
+export const getTimeRemaining = (nowRealtime: number, unixTime: number): string => {
+	let diff = unixTime - nowRealtime;
+	if (diff < 0) {
+		diff = 0;
+	}
+	const hours = String(Math.floor(diff / (60 * 60))).padStart(2, '0');
+	const minutes = String(Math.floor((diff % (60 * 60)) / 60)).padStart(2, '0');
+	const seconds = String(diff % 60).padStart(2, '0');
+	return `${hours}:${minutes}:${seconds}`;
 };
 
 const getSats = (event9734: NostrEvent): number | null => {

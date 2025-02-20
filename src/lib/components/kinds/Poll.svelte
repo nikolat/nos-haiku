@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { getEventsByKinds, sendPollResponse } from '$lib/resource.svelte';
+	import { getTimeRemaining } from '$lib/utils';
 	import type { NostrEvent } from 'nostr-tools/pure';
 	import { normalizeURL } from 'nostr-tools/utils';
 
@@ -108,16 +109,15 @@
 			{#if pollType === 'multiplechoice'}
 				<input
 					type="checkbox"
-					name="poll"
-					disabled={loginPubkey === undefined || nowRealtime > 1000 * endsAt}
+					disabled={loginPubkey === undefined || nowRealtime > endsAt}
 					bind:checked={responseCheckbox[i]}
 				/>
 			{:else}
 				<input
 					type="radio"
-					name="poll"
+					name={event.id}
 					value={k}
-					disabled={loginPubkey === undefined || nowRealtime > 1000 * endsAt}
+					disabled={loginPubkey === undefined || nowRealtime > endsAt}
 					bind:group={responseRadio}
 				/>
 			{/if}
@@ -131,14 +131,14 @@
 <button
 	class="Button"
 	disabled={loginPubkey === undefined ||
-		nowRealtime > 1000 * endsAt ||
+		nowRealtime > endsAt ||
 		(pollType === 'multiplechoice' && responseCheckbox.every((b) => !b)) ||
 		(pollType !== 'multiplechoice' && responseRadio === undefined)}
 	onclick={callSendPollResponse}
 >
 	<span>poll</span>
 </button>
-<p>ends at: {new Date(1000 * endsAt).toLocaleString()}</p>
+<p>time remaining: {getTimeRemaining(nowRealtime, endsAt)}</p>
 
 <style>
 	ol.poll {

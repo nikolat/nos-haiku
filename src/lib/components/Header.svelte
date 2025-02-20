@@ -494,8 +494,8 @@
 										title={new Date(1000 * ev.created_at).toLocaleString()}
 										class="NoticeItem__time"
 										>{isEnabledRelativeTime
-											? getRelativeTime(nowRealtime, 1000 * ev.created_at)
-											: getAbsoluteTime(1000 * ev.created_at)}</time
+											? getRelativeTime(nowRealtime, ev.created_at)
+											: getAbsoluteTime(ev.created_at)}</time
 									></span
 								>
 							</div>

@@ -55,7 +55,7 @@
 	const endsAt = $derived(getEndsAt(event));
 	let response: string | undefined = $state();
 
-	const callSendPollResponse = () => {
+	const callSendPollResponse = async () => {
 		if (response === undefined) {
 			return;
 		}
@@ -66,7 +66,8 @@
 					.map((tag) => normalizeURL(tag[1]))
 			)
 		);
-		sendPollResponse(event, [response], relaysToWrite.length > 0 ? relaysToWrite : undefined);
+		await sendPollResponse(event, [response], relaysToWrite.length > 0 ? relaysToWrite : undefined);
+		response = undefined;
 	};
 </script>
 
@@ -91,6 +92,7 @@
 >
 	<span>poll</span>
 </button>
+<p>ends at: {new Date(1000 * endsAt).toLocaleString()}</p>
 
 <style>
 	input:disabled,

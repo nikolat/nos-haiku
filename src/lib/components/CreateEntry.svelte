@@ -135,12 +135,7 @@
 	});
 
 	const callSendNote = () => {
-		if (
-			contentToSend.length === 0 ||
-			(isTopPage &&
-				((!addPoll && channelNameToCreate.length === 0) ||
-					(addPoll && pollItems.filter((item) => item.length > 0).length < 2)))
-		) {
+		if (contentToSend.length === 0 || (isTopPage && channelNameToCreate.length === 0)) {
 			return;
 		}
 		const targetEventToReply =
@@ -287,7 +282,7 @@
 								bind:files={filesToUpload}
 								onchange={uploadFileExec}
 							/>
-							{#if currentChannelId === undefined && eventToReply === undefined}
+							{#if currentChannelId === undefined && eventToReply === undefined && !isTopPage}
 								<button
 									aria-label="poll"
 									title="poll"
@@ -392,10 +387,7 @@
 		<div class="CreateEntry__actions">
 			<button
 				class="Button"
-				disabled={contentToSend.length === 0 ||
-					(isTopPage &&
-						((!addPoll && channelNameToCreate.length === 0) ||
-							(addPoll && pollItems.filter((item) => item.length > 0).length < 2)))}
+				disabled={contentToSend.length === 0 || (isTopPage && channelNameToCreate.length === 0)}
 				onclick={callSendNote}
 			>
 				<span>{$_('CreateEntry.post')}</span>

@@ -99,7 +99,7 @@
 	};
 </script>
 
-<ol>
+<ol class="poll">
 	{#each pollResultMap as [k, [v, n]], i (k)}
 		<li>
 			{#if pollType === 'multiplechoice'}
@@ -136,6 +136,9 @@
 <p>ends at: {new Date(1000 * endsAt).toLocaleString()}</p>
 
 <style>
+	ol.poll {
+		list-style: none;
+	}
 	input:disabled,
 	button:disabled {
 		cursor: not-allowed;

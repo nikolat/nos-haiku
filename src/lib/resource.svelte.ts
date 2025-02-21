@@ -296,8 +296,20 @@ const channelBookmarkMap = $derived.by(() => {
 
 //====================[変数にアクセスする手段を提供]====================
 
+export const getProfileId = (prof: ProfileContent | undefined) => {
+	let name = prof?.name !== undefined ? `id:${prof.name}` : 'anonymouse';
+	if (name.length > 30) {
+		name = `${name.slice(0, 25)}...`;
+	}
+	return name;
+};
+
 export const getProfileName = (prof: ProfileContent | undefined) => {
-	return prof?.display_name || (prof?.name !== undefined ? `id:${prof?.name}` : 'anonymouse');
+	let name = prof?.display_name || (prof?.name !== undefined ? `id:${prof?.name}` : 'anonymouse');
+	if (name.length > 30) {
+		name = `${name.slice(0, 25)}...`;
+	}
+	return name;
 };
 
 export const getLoginPubkey = (): string | undefined => {

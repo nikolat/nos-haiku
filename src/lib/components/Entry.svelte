@@ -18,6 +18,7 @@
 		getEventByAddressPointer,
 		getEventById,
 		getEventsReplying,
+		getProfileId,
 		getProfileName,
 		getRelaysToUse,
 		getSeenOn,
@@ -404,7 +405,7 @@
 							{:else if event.kind === 0}
 								User Metadata
 							{:else if event.kind === 1}
-								<a href="/{nip19.npubEncode(event.pubkey)}">id:{prof?.name ?? 'none'}</a>
+								<a href="/{nip19.npubEncode(event.pubkey)}">{getProfileId(prof)}</a>
 							{:else if [6, 16].includes(event.kind)}
 								<span title={`kind:${event.kind} repost`}>🔁</span>
 								{#if event.kind === 6}

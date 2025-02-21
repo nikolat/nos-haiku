@@ -4,6 +4,7 @@
 	import {
 		followUser,
 		getEventByAddressPointer,
+		getProfileId,
 		getProfileName,
 		muteUser,
 		unfollowUser,
@@ -239,7 +240,7 @@
 					target="_blank"
 					rel="noopener noreferrer"
 					><img alt="" src={serviceIconImageUri} />
-					<h2>id:{prof?.name ?? 'none'}</h2></a
+					<h2>{getProfileId(prof)}</h2></a
 				>
 			</div>
 			{#if prof !== undefined}

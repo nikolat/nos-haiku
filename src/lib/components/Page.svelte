@@ -26,6 +26,7 @@
 		getEventsFirst,
 		getEventsReaction,
 		getEventsTimelineTop,
+		getProfileId,
 		getProfileName,
 		muteChannel,
 		muteHashTag,
@@ -493,7 +494,7 @@
 							{/if}
 						{:else if currentPubkey !== undefined}
 							{@const profile = profileMap.get(currentPubkey)}
-							{@const idView = `id:${profile?.name ?? 'none'}`}
+							{@const idView = getProfileId(profile)}
 							<h1 class="Feed__title">
 								<i class="fa-fw fas fa-book-user"></i>
 								<Content

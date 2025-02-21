@@ -256,7 +256,6 @@
 									}}
 								>
 									{#if loginPubkey !== undefined}
-										<option value="nip07">NIP-07</option>
 										<option value="kind10002">kind 10002</option>
 										{#if relaySets.length > 0}
 											<optgroup label="kind 30002">

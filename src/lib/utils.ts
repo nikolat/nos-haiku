@@ -411,10 +411,6 @@ export const getRelaysToUseByRelaysSelected = (
 			}
 			return Promise.resolve(newRelays);
 		}
-		case 'nip07': {
-			if (window.nostr?.getRelays === undefined) return Promise.resolve({});
-			return window.nostr.getRelays();
-		}
 		case 'default':
 		default: {
 			return Promise.resolve(defaultRelays);

@@ -1623,6 +1623,7 @@
 								isTopPage={false}
 								{profileMap}
 								{uploaderSelected}
+								{eventsEmojiSet}
 								channelToPost={undefined}
 								bind:showForm
 							/>

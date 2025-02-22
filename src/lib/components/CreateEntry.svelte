@@ -2,7 +2,7 @@
 	import { defaultAccountUri, getRoboHashURL } from '$lib/config';
 	import { getEmoji, type ChannelContent } from '$lib/utils';
 	import { uploadFile } from '$lib/nip96';
-	import { getChannelEventMap, getEventsEmojiSet, sendNote } from '$lib/resource.svelte';
+	import { getChannelEventMap, sendNote } from '$lib/resource.svelte';
 	import type { EventTemplate, NostrEvent } from 'nostr-tools/pure';
 	import * as nip19 from 'nostr-tools/nip19';
 	import {
@@ -22,6 +22,7 @@
 		isTopPage,
 		profileMap,
 		uploaderSelected,
+		eventsEmojiSet,
 		channelToPost = $bindable(),
 		showForm = $bindable()
 	}: {
@@ -31,6 +32,7 @@
 		isTopPage: boolean;
 		profileMap: Map<string, ProfileContent>;
 		uploaderSelected: string;
+		eventsEmojiSet: NostrEvent[];
 		channelToPost: ChannelContent | undefined;
 		showForm: boolean;
 	} = $props();
@@ -40,7 +42,6 @@
 	let inputFile: HTMLInputElement;
 	let textArea: HTMLTextAreaElement;
 
-	const eventsEmojiSet: NostrEvent[] = $derived(getEventsEmojiSet());
 	const emojiMap: Map<string, string> = $derived.by(() => {
 		const r = new Map<string, string>();
 		for (const ev of eventsEmojiSet) {
@@ -49,7 +50,26 @@
 					tag.length >= 3 && tag[0] === 'emoji' && /^\w+$/.test(tag[1]) && URL.canParse(tag[2])
 			);
 			for (const emojiTag of emojiTags) {
-				r.set(emojiTag[1], emojiTag[2]);
+				const shortcode = emojiTag[1];
+				const url = emojiTag[2];
+				const urlStored = r.get(shortcode);
+				if (urlStored === undefined) {
+					r.set(shortcode, url);
+				} else if (urlStored !== url) {
+					let i = 2;
+					while (true) {
+						const shortcodeAnother = `${shortcode}_${i}`;
+						const urlStored2 = r.get(shortcodeAnother);
+						if (urlStored2 === undefined) {
+							r.set(shortcodeAnother, url);
+							break;
+						}
+						if (urlStored2 === url) {
+							break;
+						}
+						i++;
+					}
+				}
 			}
 		}
 		return r;

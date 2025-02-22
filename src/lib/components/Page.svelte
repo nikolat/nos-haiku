@@ -930,6 +930,7 @@
 						{isTopPage}
 						{profileMap}
 						{uploaderSelected}
+						{eventsEmojiSet}
 						bind:channelToPost
 						showForm={true}
 					/>

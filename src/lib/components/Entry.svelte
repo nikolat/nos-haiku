@@ -460,6 +460,8 @@
 								Pinned notes
 							{:else if event.kind === 10002}
 								Relay list
+							{:else if event.kind === 10003}
+								Bookmarks
 							{:else if event.kind === 10005}
 								Public chats list
 							{:else if event.kind === 10030}
@@ -971,6 +973,65 @@
 									</p>
 								{:else if event.kind === 10002}
 									<RelayList relaysToUse={getRelaysToUseFromKind10002Event(event)} />
+								{:else if event.kind === 10003}
+									{#each event.tags as tag}
+										{#if tag[0] === 'e' && tag[1] !== undefined}
+											<p>
+												<Content
+													content={`nostr:${nip19.neventEncode({ id: tag[1] })}`}
+													tags={event.tags}
+													{channelMap}
+													{profileMap}
+													{loginPubkey}
+													{mutedPubkeys}
+													{mutedChannelIds}
+													{mutedWords}
+													{followingPubkeys}
+													{eventsTimeline}
+													{eventsReaction}
+													{eventsEmojiSet}
+													{uploaderSelected}
+													bind:channelToPost
+													{currentChannelId}
+													{isEnabledRelativeTime}
+													{nowRealtime}
+													{level}
+												/>
+											</p>
+										{:else if tag[0] === 'a' && tag[1] !== undefined}
+											{@const ap = getAddressPointerFromAId(tag[1])}
+											{#if ap !== null}
+												<p>
+													<Content
+														content={`nostr:${nip19.naddrEncode(ap)}`}
+														tags={event.tags}
+														{channelMap}
+														{profileMap}
+														{loginPubkey}
+														{mutedPubkeys}
+														{mutedChannelIds}
+														{mutedWords}
+														{followingPubkeys}
+														{eventsTimeline}
+														{eventsReaction}
+														{eventsEmojiSet}
+														{uploaderSelected}
+														bind:channelToPost
+														{currentChannelId}
+														{isEnabledRelativeTime}
+														{nowRealtime}
+														{level}
+													/>
+												</p>
+											{/if}
+										{:else if tag[0] === 't' && tag[1] !== undefined}
+											<Content content={`#${tag[1]}`} tags={[]} />
+										{:else if tag[0] === 'r' && URL.canParse(tag[1])}
+											<Content content={tag[1]} tags={[]} />
+										{:else if !['client'].includes(tag[0])}
+											<p>Invalid tag: {tag[0]}, {tag[1]}</p>
+										{/if}
+									{/each}
 								{:else if event.kind === 10005}
 									{@const channelBookmarkMap = getChannelBookmarkMap()}
 									{@const channelBookmarkIds = channelBookmarkMap.get(event.pubkey)}

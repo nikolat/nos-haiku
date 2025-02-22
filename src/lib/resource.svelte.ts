@@ -1354,6 +1354,11 @@ const _subTimeline = eventStore
 				fetchEventsByETags(event);
 				break;
 			}
+			case 10003: {
+				fetchEventsByETags(event);
+				fetchEventsByATags(event);
+				break;
+			}
 			case 10005: {
 				if (loginPubkey !== undefined && event.pubkey === loginPubkey) {
 					const { ePub, eSec } = await splitNip51List(event, loginPubkey);

@@ -1354,9 +1354,20 @@ const _subTimeline = eventStore
 				fetchEventsByETags(event);
 				break;
 			}
-			case 10003: {
-				fetchEventsByETags(event);
-				fetchEventsByATags(event);
+			case 10003:
+			case 30003: {
+				if (
+					event.tags.filter((tag) => tag.length >= 2 && tag[0] === 'e').map((tag) => tag[1])
+						.length <= 10
+				) {
+					fetchEventsByETags(event);
+				}
+				if (
+					event.tags.filter((tag) => tag.length >= 2 && tag[0] === 'a').map((tag) => tag[1])
+						.length <= 10
+				) {
+					fetchEventsByATags(event);
+				}
 				break;
 			}
 			case 10005: {

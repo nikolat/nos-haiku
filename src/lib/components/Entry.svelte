@@ -466,6 +466,8 @@
 								Public chats list
 							{:else if event.kind === 10030}
 								User emoji list
+							{:else if event.kind === 30003}
+								Bookmark sets
 							{:else if event.kind === 30008}
 								Profile Badges
 							{:else if event.kind === 30009}
@@ -973,63 +975,85 @@
 									</p>
 								{:else if event.kind === 10002}
 									<RelayList relaysToUse={getRelaysToUseFromKind10002Event(event)} />
-								{:else if event.kind === 10003}
-									{#each event.tags as tag}
-										{#if tag[0] === 'e' && tag[1] !== undefined}
-											<p>
-												<Content
-													content={`nostr:${nip19.neventEncode({ id: tag[1] })}`}
-													tags={event.tags}
-													{channelMap}
-													{profileMap}
-													{loginPubkey}
-													{mutedPubkeys}
-													{mutedChannelIds}
-													{mutedWords}
-													{followingPubkeys}
-													{eventsTimeline}
-													{eventsReaction}
-													{eventsEmojiSet}
-													{uploaderSelected}
-													bind:channelToPost
-													{currentChannelId}
-													{isEnabledRelativeTime}
-													{nowRealtime}
-													{level}
-												/>
-											</p>
-										{:else if tag[0] === 'a' && tag[1] !== undefined}
-											{@const ap = getAddressPointerFromAId(tag[1])}
-											{#if ap !== null}
-												<p>
-													<Content
-														content={`nostr:${nip19.naddrEncode(ap)}`}
-														tags={event.tags}
-														{channelMap}
-														{profileMap}
-														{loginPubkey}
-														{mutedPubkeys}
-														{mutedChannelIds}
-														{mutedWords}
-														{followingPubkeys}
-														{eventsTimeline}
-														{eventsReaction}
-														{eventsEmojiSet}
-														{uploaderSelected}
-														bind:channelToPost
-														{currentChannelId}
-														{isEnabledRelativeTime}
-														{nowRealtime}
-														{level}
-													/>
-												</p>
+								{:else if [10003, 30003].includes(event.kind)}
+									{#if event.kind === 30003}
+										{@const dTagName =
+											event.tags.find((tag) => tag.length >= 2 && tag[0] === 'd')?.at(1) ?? ''}
+										<p>{dTagName}</p>
+									{/if}
+									{#each event.tags as tag, i}
+										{#if i < 10}
+											{#if tag[0] === 'e' && tag[1] !== undefined}
+												{@const nevent = nip19.neventEncode({ id: tag[1] })}
+												{#if getEventById(tag[1]) === undefined}
+													<p><a href={`/entry/${nevent}`}>nostr:{nevent}</a></p>
+												{:else}
+													<p>
+														<Content
+															content={`nostr:${nevent}`}
+															tags={event.tags}
+															{channelMap}
+															{profileMap}
+															{loginPubkey}
+															{mutedPubkeys}
+															{mutedChannelIds}
+															{mutedWords}
+															{followingPubkeys}
+															{eventsTimeline}
+															{eventsReaction}
+															{eventsEmojiSet}
+															{uploaderSelected}
+															bind:channelToPost
+															{currentChannelId}
+															{isEnabledRelativeTime}
+															{nowRealtime}
+															{level}
+														/>
+													</p>
+												{/if}
+											{:else if tag[0] === 'a' && tag[1] !== undefined}
+												{@const ap = getAddressPointerFromAId(tag[1])}
+												{#if ap === null}
+													invalid a tag: {tag[0]}, {tag[1]}
+												{:else if getEventByAddressPointer(ap) === undefined}
+													<p>
+														<a href={`/entry/${nip19.naddrEncode(ap)}`}
+															>nostr:{nip19.naddrEncode(ap)}</a
+														>
+													</p>
+												{:else}
+													<p>
+														<Content
+															content={`nostr:${nip19.naddrEncode(ap)}`}
+															tags={event.tags}
+															{channelMap}
+															{profileMap}
+															{loginPubkey}
+															{mutedPubkeys}
+															{mutedChannelIds}
+															{mutedWords}
+															{followingPubkeys}
+															{eventsTimeline}
+															{eventsReaction}
+															{eventsEmojiSet}
+															{uploaderSelected}
+															bind:channelToPost
+															{currentChannelId}
+															{isEnabledRelativeTime}
+															{nowRealtime}
+															{level}
+														/>
+													</p>
+												{/if}
+											{:else if tag[0] === 't' && tag[1] !== undefined}
+												<p><Content content={`#${tag[1]}`} tags={[]} /></p>
+											{:else if tag[0] === 'r' && URL.canParse(tag[1])}
+												<p><Content content={tag[1]} tags={[]} /></p>
+											{:else if !['d', 'client'].includes(tag[0])}
+												<p>unsupported tag: {tag[0]}, {tag[1]}</p>
 											{/if}
-										{:else if tag[0] === 't' && tag[1] !== undefined}
-											<Content content={`#${tag[1]}`} tags={[]} />
-										{:else if tag[0] === 'r' && URL.canParse(tag[1])}
-											<Content content={tag[1]} tags={[]} />
-										{:else if !['client'].includes(tag[0])}
-											<p>Invalid tag: {tag[0]}, {tag[1]}</p>
+										{:else if i === 10}
+											<p>...</p>
 										{/if}
 									{/each}
 								{:else if event.kind === 10005}

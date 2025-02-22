@@ -406,6 +406,8 @@
 								User Metadata
 							{:else if event.kind === 1}
 								<a href="/{nip19.npubEncode(event.pubkey)}">{getProfileId(prof)}</a>
+							{:else if event.kind === 3}
+								Follows
 							{:else if [6, 16].includes(event.kind)}
 								<span title={`kind:${event.kind} repost`}>🔁</span>
 								{#if event.kind === 6}
@@ -570,6 +572,15 @@
 										{mutedHashTags}
 										{followingPubkeys}
 									/>
+								{:else if event.kind === 3}
+									{@const pubkeys = Array.from(
+										new Set<string>(
+											event.tags
+												.filter((tag) => tag.length >= 2 && tag[0] === 'p')
+												.map((tag) => tag[1])
+										)
+									)}
+									{`Followees: ${pubkeys.length}`}
 								{:else if event.kind === 7}
 									{@const reactedEventId = event.tags
 										.findLast((tag) => tag.length >= 2 && tag[0] === 'e')

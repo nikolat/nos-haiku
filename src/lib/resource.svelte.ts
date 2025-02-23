@@ -408,12 +408,12 @@ export const clearCache = (
 	filters: Filter[] = [{ kinds: [1, 3, 6, 7, 16, 42, 10000, 10001, 10030, 30002, 30008, 30078] }]
 ) => {
 	for (const ev of eventStore.getAll(filters)) {
-		eventStore.database.deleteEvent(ev);
+		eventStore.database.removeEvent(ev);
 	}
 	if (loginPubkey !== undefined) {
 		const ev = eventStore.getReplaceable(10005, loginPubkey);
 		if (ev !== undefined) {
-			eventStore.database.deleteEvent(ev);
+			eventStore.database.removeEvent(ev);
 		}
 	}
 	eventsTimeline = [];
@@ -766,14 +766,12 @@ const nextOnSubscribeEventStore = (event: NostrEvent | null, kindToDelete?: numb
 };
 
 eventStore
-	.stream([
+	.filters([
 		{
 			since: 0
 		}
 	])
-	.subscribe({
-		next: nextOnSubscribeEventStore
-	});
+	.subscribe(nextOnSubscribeEventStore);
 
 const getDeletedEventIdSet = (eventsDeletion: NostrEvent[]): Set<string> => {
 	const deletedEventIdSet = new Set<string>();
@@ -806,7 +804,7 @@ const next = (packet: EventPacket) => {
 			.map((tag) => tag[1]);
 		for (const id of ids) {
 			if (eventStore.hasEvent(id)) {
-				eventStore.database.deleteEvent(id);
+				eventStore.database.removeEvent(id);
 			}
 		}
 	}
@@ -1111,7 +1109,7 @@ const fetchEventsByATags = (event: NostrEvent) => {
 };
 
 const _subTimeline = eventStore
-	.stream([
+	.filters([
 		{
 			since: 0
 		}

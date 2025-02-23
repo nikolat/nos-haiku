@@ -22,6 +22,7 @@
 		resetRelaysDefault,
 		setLoginPubkey
 	} from '$lib/resource.svelte';
+	import Header from '$lib/components/Header.svelte';
 	import Settings from '$lib/components/Settings.svelte';
 	import Search from '$lib/components/Search.svelte';
 	import Page from '$lib/components/Page.svelte';
@@ -43,7 +44,8 @@
 		category,
 		query,
 		isSettings,
-		isAntenna
+		isAntenna,
+		is404
 	}: UrlParams = $derived(urlParams);
 	const loginPubkey: string | undefined = $derived(getLoginPubkey());
 	const lang: string = $derived(getLang());
@@ -142,6 +144,8 @@
 			title = `#${hashtag}`;
 		} else if (category !== undefined) {
 			title = `#${category}`;
+		} else if (is404) {
+			title = '404 Not Found';
 		} else if (page.url.pathname === '/') {
 			title = $_('App.title.home');
 		}
@@ -161,7 +165,33 @@
 </svelte:head>
 
 <div id="app" class={loginPubkey !== undefined && isEnabledDarkMode ? 'dark' : 'light'}>
-	{#if isSettings === true}
+	{#if is404}
+		<Header
+			{loginPubkey}
+			{query}
+			{urlSearchParams}
+			{profileMap}
+			{mutedPubkeys}
+			{mutedWords}
+			{mutedHashTags}
+			{isEnabledRelativeTime}
+			{nowRealtime}
+			isEnabledScrollInfinitely={false}
+		/>
+		<main class="SearchView View">
+			<div class="Layout">
+				<div class="Column Column--main">
+					<div class="Feed">
+						<div class="Feed__head">
+							<div class="Feed__info">
+								<h1 class="Feed__title">404 Not Found</h1>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</main>
+	{:else if isSettings === true}
 		<Settings
 			{loginPubkey}
 			{query}
@@ -182,9 +212,7 @@
 			{followingPubkeys}
 			{nowRealtime}
 		/>
-	{:else if query !== undefined && urlSearchParams
-			.entries()
-			.every(([k, v]) => k === 'kind' && /^\d+$/.test(v) && [40, 41].includes(parseInt(v)))}
+	{:else if query !== undefined && Array.from(urlSearchParams.entries()).every(([k, v]) => k === 'kind' && /^\d+$/.test(v) && [40, 41].includes(parseInt(v)))}
 		<Search
 			{loginPubkey}
 			{query}

@@ -37,6 +37,7 @@ export type UrlParams = {
 	urlSearchParams?: URLSearchParams;
 	isSettings?: boolean;
 	isAntenna?: boolean;
+	is404?: boolean;
 };
 
 interface MyBaseEmoji extends BaseEmoji {

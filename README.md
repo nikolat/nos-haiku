@@ -12,6 +12,10 @@ This is a mini-blog modeled after [Sudo Haiku](https://h.sudo.ne.jp/), built usi
 - [nostr-login](https://github.com/nostrband/nostr-login)
 - [nostr-zap](https://github.com/SamSamskies/nostr-zap)
 
+### [BOLT](https://github.com/lightning/bolts)
+
+- [light-bolt11-decoder](https://github.com/nbd-wtf/light-bolt11-decoder)
+
 ### [Svelte](https://svelte.dev/)
 
 - [svelte-persisted-store](https://github.com/joshnuss/svelte-persisted-store)

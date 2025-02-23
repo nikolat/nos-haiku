@@ -489,6 +489,7 @@
 							{loginPubkey}
 							{profileMap}
 							{eventsReactionToTheEvent}
+							{eventsEmojiSet}
 							{mutedWords}
 							bind:isEmojiPickerOpened
 						/>

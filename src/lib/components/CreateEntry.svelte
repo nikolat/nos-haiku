@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { defaultAccountUri, getRoboHashURL } from '$lib/config';
-	import { getEmoji, type ChannelContent } from '$lib/utils';
+	import { getEmoji, getEmojiMap, type ChannelContent } from '$lib/utils';
 	import { uploadFile } from '$lib/nip96';
 	import { getChannelEventMap, sendNote } from '$lib/resource.svelte';
 	import type { EventTemplate, NostrEvent } from 'nostr-tools/pure';
@@ -42,38 +42,7 @@
 	let inputFile: HTMLInputElement;
 	let textArea: HTMLTextAreaElement;
 
-	const emojiMap: Map<string, string> = $derived.by(() => {
-		const r = new Map<string, string>();
-		for (const ev of eventsEmojiSet) {
-			const emojiTags: string[][] = ev.tags.filter(
-				(tag) =>
-					tag.length >= 3 && tag[0] === 'emoji' && /^\w+$/.test(tag[1]) && URL.canParse(tag[2])
-			);
-			for (const emojiTag of emojiTags) {
-				const shortcode = emojiTag[1];
-				const url = emojiTag[2];
-				const urlStored = r.get(shortcode);
-				if (urlStored === undefined) {
-					r.set(shortcode, url);
-				} else if (urlStored !== url) {
-					let i = 2;
-					while (true) {
-						const shortcodeAnother = `${shortcode}_${i}`;
-						const urlStored2 = r.get(shortcodeAnother);
-						if (urlStored2 === undefined) {
-							r.set(shortcodeAnother, url);
-							break;
-						}
-						if (urlStored2 === url) {
-							break;
-						}
-						i++;
-					}
-				}
-			}
-		}
-		return r;
-	});
+	const emojiMap: Map<string, string> = $derived(getEmojiMap(eventsEmojiSet));
 
 	let emojiPickerContainer: HTMLElement | undefined = $state();
 	const callGetEmoji = async () => {

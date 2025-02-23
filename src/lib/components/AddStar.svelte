@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { expansionThreshold } from '$lib/config';
-	import { getEmoji, isValidEmoji } from '$lib/utils';
-	import { getEventsEmojiSet, sendReaction } from '$lib/resource.svelte';
+	import { getEmoji, getEmojiMap, isValidEmoji } from '$lib/utils';
+	import { sendReaction } from '$lib/resource.svelte';
 	import Reaction from '$lib/components/kinds/Reaction.svelte';
 	import type { NostrEvent } from 'nostr-tools/pure';
 	import type { ProfileContent } from 'applesauce-core/helpers';
@@ -11,6 +11,7 @@
 		loginPubkey,
 		profileMap,
 		eventsReactionToTheEvent,
+		eventsEmojiSet,
 		mutedWords,
 		isEmojiPickerOpened = $bindable()
 	}: {
@@ -18,11 +19,12 @@
 		loginPubkey: string | undefined;
 		profileMap: Map<string, ProfileContent>;
 		eventsReactionToTheEvent: NostrEvent[];
+		eventsEmojiSet: NostrEvent[];
 		mutedWords: string[];
 		isEmojiPickerOpened: boolean;
 	} = $props();
 
-	const reactionValidEvents = $derived(
+	const reactionValidEvents: NostrEvent[] = $derived(
 		[
 			...eventsReactionToTheEvent.filter(
 				(ev) =>
@@ -30,25 +32,12 @@
 			)
 		].reverse()
 	);
-	const reactionFirst = $derived(reactionValidEvents.at(0)!);
-	const reactionLast = $derived(reactionValidEvents.at(-1)!);
+	const reactionFirst: NostrEvent = $derived(reactionValidEvents.at(0)!);
+	const reactionLast: NostrEvent = $derived(reactionValidEvents.at(-1)!);
 
 	let isAllowedExpand: boolean = $state(false);
 
-	const eventsEmojiSet: NostrEvent[] = $derived(getEventsEmojiSet());
-	const emojiMap: Map<string, string> = $derived.by(() => {
-		const r = new Map<string, string>();
-		for (const ev of eventsEmojiSet) {
-			const emojiTags: string[][] = ev.tags.filter(
-				(tag) =>
-					tag.length >= 3 && tag[0] === 'emoji' && /^\w+$/.test(tag[1]) && URL.canParse(tag[2])
-			);
-			for (const emojiTag of emojiTags) {
-				r.set(emojiTag[1], emojiTag[2]);
-			}
-		}
-		return r;
-	});
+	const emojiMap: Map<string, string> = $derived(getEmojiMap(eventsEmojiSet));
 
 	let emojiPickerContainer: HTMLElement | undefined = $state();
 	const callSendEmoji = async (event: NostrEvent) => {

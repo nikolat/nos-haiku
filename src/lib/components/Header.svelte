@@ -1,6 +1,12 @@
 <script lang="ts">
 	import { faviconImageUri, getRoboHashURL, gitHubUrl, titleLogoImageUri } from '$lib/config';
-	import { getAbsoluteTime, getRelativeTime, type ProfileContentEvent } from '$lib/utils';
+	import {
+		getAbsoluteTime,
+		getEvent9734,
+		getTargetEvent,
+		getRelativeTime,
+		type ProfileContentEvent
+	} from '$lib/utils';
 	import {
 		fetchEventsMention,
 		getEventsMention,
@@ -16,6 +22,7 @@
 	import { isParameterizedReplaceableKind, isReplaceableKind } from 'nostr-tools/kinds';
 	import * as nip19 from 'nostr-tools/nip19';
 	import { unixNow } from 'applesauce-core/helpers';
+	import { decode } from 'light-bolt11-decoder';
 	import { _ } from 'svelte-i18n';
 
 	let {
@@ -42,42 +49,33 @@
 		isEnabledScrollInfinitely: boolean;
 	} = $props();
 
-	const removeMutedEvent = (
-		events: {
-			baseEvent: NostrEvent;
-			targetEvent: NostrEvent | undefined;
-		}[]
-	): {
-		baseEvent: NostrEvent;
-		targetEvent: NostrEvent | undefined;
-	}[] => {
+	const removeMutedEvent = (events: NostrEvent[]): NostrEvent[] => {
 		return events.filter(
-			({ baseEvent }) =>
-				!mutedPubkeys.includes(baseEvent.pubkey) &&
-				!mutedWords.some((word) => baseEvent.content.toLowerCase().includes(word)) &&
+			(event) =>
+				!mutedPubkeys.includes(event.pubkey) &&
+				!mutedWords.some((word) => event.content.toLowerCase().includes(word)) &&
 				!mutedHashTags.some((t) =>
-					baseEvent.tags
+					event.tags
 						.filter((tag) => tag.length >= 2 && tag[0] === 't')
 						.map((tag) => tag[1].toLowerCase())
 						.includes(t)
 				) &&
-				!baseEvent.tags.some(
+				!event.tags.some(
 					(tag) => tag.length >= 2 && tag[0] === 'p' && mutedPubkeys.includes(tag[1])
 				)
 		);
 	};
 
-	const eventsMention: { baseEvent: NostrEvent; targetEvent: NostrEvent | undefined }[] =
-		$derived(getEventsMention());
+	const eventsMention: NostrEvent[] = $derived(getEventsMention());
 	const readTimeOfNotification: number = $derived(getReadTimeOfNotification());
 	const countUnread: number = $derived.by(() => {
-		const created_at = eventsMention.at(-1)?.baseEvent?.created_at;
+		const created_at = eventsMention.at(-1)?.created_at;
 		if (created_at === undefined) {
 			return 0;
 		}
 		let r: number = 0;
 		for (const ev of removeMutedEvent(eventsMention)) {
-			if (readTimeOfNotification < ev.baseEvent.created_at) {
+			if (readTimeOfNotification < ev.created_at) {
 				r++;
 			} else {
 				break;
@@ -142,7 +140,7 @@
 	};
 
 	const updateReadTime = () => {
-		const created_at = eventsMention.at(0)?.baseEvent.created_at ?? 0;
+		const created_at = eventsMention.at(0)?.created_at ?? 0;
 		if (readTimeOfNotification < created_at) {
 			sendReadTime(created_at);
 		}
@@ -161,9 +159,9 @@
 				console.log('[Loading Start]');
 				isScrolledBottom = true;
 				isLoading = true;
-				const until: number = timelineSliced.at(-1)?.baseEvent.created_at ?? unixNow();
+				const until: number = timelineSliced.at(-1)?.created_at ?? unixNow();
 				const correctionCount: number = $state.snapshot(
-					timelineSliced.filter(({ baseEvent }) => baseEvent.created_at === until).length
+					timelineSliced.filter((event) => event.created_at === until).length
 				);
 				fetchEventsMention(until, () => {
 					console.log('[Loading Complete]');
@@ -184,9 +182,8 @@
 		noticeListBody.addEventListener('scroll', handlerNoticeListBody);
 		document.addEventListener('click', handlerNoticeList);
 		const correctionCount: number = $state.snapshot(
-			timelineSliced.filter(
-				({ baseEvent }) => baseEvent.created_at === timelineSliced.at(-1)?.baseEvent.created_at
-			).length
+			timelineSliced.filter((event) => event.created_at === timelineSliced.at(-1)?.created_at)
+				.length
 		);
 		countToShow = 10 - correctionCount;
 	});
@@ -405,10 +402,11 @@
 					></i>
 				</div>
 				<ul class="NoticeList__body" bind:this={noticeListBody}>
-					{#each mentionToShow as obj (obj.baseEvent.id)}
-						{@const ev = obj.baseEvent}
-						{@const evTo = obj.targetEvent}
-						{@const prof = profileMap.get(ev.pubkey)}
+					{#each mentionToShow as ev (ev.id)}
+						{@const evTo = getTargetEvent(ev)}
+						{@const ev9734 = getEvent9734(ev)}
+						{@const prof =
+							ev9734 === null ? profileMap.get(ev.pubkey) : profileMap.get(ev9734.pubkey)}
 						<li
 							data-type="star"
 							data-unread={readTimeOfNotification < ev.created_at ? 'true' : 'false'}
@@ -447,8 +445,17 @@
 										<a href="/entry/{nip19.neventEncode({ ...ev, author: ev.pubkey })}"
 											>🔁reposted</a
 										>
-									{:else if ev.kind === 9734}
-										⚡zapped
+									{:else if ev.kind === 9735}
+										{@const invoice = decode(
+											ev.tags.find((tag) => tag.length >= 2 && tag[0] === 'bolt11')?.at(1) ?? ''
+										)}
+										{@const sats =
+											parseInt(
+												invoice.sections.find((section) => section.name === 'amount')?.value ?? '-1'
+											) / 1000}
+										<a href="/entry/{nip19.neventEncode({ ...ev, author: ev.pubkey })}"
+											>⚡{#if sats > 0}{sats}{/if} zapped</a
+										>
 									{/if}
 									{#if ev.kind !== 8}
 										to

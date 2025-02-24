@@ -3,6 +3,7 @@ import type { RelayRecord } from 'nostr-tools/relay';
 import { normalizeURL } from 'nostr-tools/utils';
 import * as nip19 from 'nostr-tools/nip19';
 import { defaultRelays } from '$lib/config';
+import { getEventByAddressPointer, getEventById } from '$lib/resource.svelte';
 import type { ProfileContent } from 'applesauce-core/helpers';
 import data from '@emoji-mart/data';
 // @ts-expect-error なんもわからんかも
@@ -179,6 +180,30 @@ export const getEvent9734WithVerification = async (
 		return null;
 	}
 	return event9734;
+};
+
+export const getTargetEvent = (ev: NostrEvent): NostrEvent | undefined => {
+	const eId = (
+		ev.tags.find(
+			(tag) => tag.length >= 4 && tag[0] === 'e' && tag[3] === 'reply' && [1, 42].includes(ev.kind)
+		) ??
+		ev.tags.find(
+			(tag) => tag.length >= 4 && tag[0] === 'e' && tag[3] === 'root' && ev.kind === 1
+		) ??
+		ev.tags.find(
+			(tag) => tag.length >= 2 && tag[0] === 'e' && [6, 16, 1111, 9735].includes(ev.kind)
+		) ??
+		ev.tags.findLast((tag) => tag.length >= 2 && tag[0] === 'e' && ev.kind === 7)
+	)?.at(1);
+	const aId = ev.tags.findLast((tag) => tag.length >= 2 && tag[0] === 'a')?.at(1);
+	let targetEvent: NostrEvent | undefined;
+	if (eId !== undefined) {
+		targetEvent = getEventById(eId);
+	} else if (aId !== undefined && [7, 8, 16, 1111].includes(ev.kind)) {
+		const ap: nip19.AddressPointer | null = getAddressPointerFromAId(aId);
+		targetEvent = ap === null ? undefined : getEventByAddressPointer(ap);
+	}
+	return targetEvent;
 };
 
 export const getAddressPointerFromAId = (aId: string): nip19.AddressPointer | null => {

@@ -162,7 +162,7 @@ const rxNostr = createRxNostr({ verifier, authenticator: 'auto' });
 const [tie, seenOn] = createTie();
 let subF: Subscription;
 
-let eventsMention: { baseEvent: NostrEvent; targetEvent: NostrEvent | undefined }[] = $state([]);
+let eventsMention: NostrEvent[] = $state([]);
 let eventsProfile: NostrEvent[] = $state([]);
 let eventsChannel: NostrEvent[] = $state([]);
 let eventsChannelEdit: NostrEvent[] = $state([]);
@@ -433,10 +433,7 @@ export const clearCache = (
 	seenOn.clear();
 };
 
-export const getEventsMention = (): {
-	baseEvent: NostrEvent;
-	targetEvent: NostrEvent | undefined;
-}[] => {
+export const getEventsMention = (): NostrEvent[] => {
 	return eventsMention;
 };
 
@@ -713,16 +710,16 @@ const nextOnSubscribeEventStore = (event: NostrEvent | null, kindToDelete?: numb
 			break;
 	}
 	if (loginPubkey !== undefined) {
-		const eventsMentionKey = sortEvents(
+		eventsMention = sortEvents(
 			Array.from(
 				eventStore.getAll(
 					isEnabledSkipKind1
 						? [
-								{ '#p': [loginPubkey], kinds: [8, 42, 1111, 9734] },
+								{ '#p': [loginPubkey], kinds: [8, 42, 1111, 9735] },
 								{ '#p': [loginPubkey], kinds: [7, 16], '#k': ['42'] }
 							]
 						: [
-								{ '#p': [loginPubkey], kinds: [1, 6, 7, 8, 42, 1111, 9734] },
+								{ '#p': [loginPubkey], kinds: [1, 6, 7, 8, 42, 1111, 9735] },
 								{ '#p': [loginPubkey], kinds: [16], '#k': ['42'] }
 							]
 				)
@@ -733,33 +730,6 @@ const nextOnSubscribeEventStore = (event: NostrEvent | null, kindToDelete?: numb
 					ev.kind === 7 &&
 					ev.tags.findLast((tag) => tag.length >= 2 && tag[0] === 'p')?.at(1) !== loginPubkey
 				)
-		);
-		eventsMention = eventsMentionKey.map(
-			(ev: NostrEvent): { baseEvent: NostrEvent; targetEvent: NostrEvent | undefined } => {
-				const eId = (
-					ev.tags.find(
-						(tag) =>
-							tag.length >= 4 && tag[0] === 'e' && tag[3] === 'reply' && [1, 42].includes(ev.kind)
-					) ??
-					ev.tags.find(
-						(tag) => tag.length >= 4 && tag[0] === 'e' && tag[3] === 'root' && ev.kind === 1
-					) ??
-					ev.tags.find(
-						(tag) => tag.length >= 2 && tag[0] === 'e' && [6, 16, 1111, 9734].includes(ev.kind)
-					) ??
-					ev.tags.findLast((tag) => tag.length >= 2 && tag[0] === 'e' && ev.kind === 7)
-				)?.at(1);
-				const aId = ev.tags.findLast((tag) => tag.length >= 2 && tag[0] === 'a')?.at(1);
-				let targetEvent: NostrEvent | undefined;
-				if (eId !== undefined) {
-					targetEvent = eventStore.getEvent(eId);
-				} else if (aId !== undefined && [7, 8, 16, 1111].includes(ev.kind)) {
-					const ap: nip19.AddressPointer | null = getAddressPointerFromAId(aId);
-					targetEvent =
-						ap === null ? undefined : eventStore.getReplaceable(ap.kind, ap.pubkey, ap.identifier);
-				}
-				return { baseEvent: ev, targetEvent };
-			}
 		);
 	}
 	eventsAll = Array.from(eventStore.getAll([{ until: unixNow() }]));

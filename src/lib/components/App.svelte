@@ -168,6 +168,7 @@
 	{#if is404}
 		<Header
 			{loginPubkey}
+			{currentPubkey}
 			{query}
 			{urlSearchParams}
 			{profileMap}
@@ -215,6 +216,7 @@
 	{:else if query !== undefined && Array.from(urlSearchParams.entries()).every(([k, v]) => k === 'kind' && /^\d+$/.test(v) && [40, 41].includes(parseInt(v)))}
 		<Search
 			{loginPubkey}
+			{currentPubkey}
 			{query}
 			{urlSearchParams}
 			{profileMap}

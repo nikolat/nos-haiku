@@ -6,6 +6,7 @@
 
 	const {
 		loginPubkey,
+		currentPubkey,
 		query,
 		urlSearchParams,
 		profileMap,
@@ -17,6 +18,7 @@
 		nowRealtime
 	}: {
 		loginPubkey: string | undefined;
+		currentPubkey: string | undefined;
 		query: string;
 		urlSearchParams: URLSearchParams;
 		profileMap: Map<string, ProfileContentEvent>;
@@ -40,6 +42,7 @@
 
 <Header
 	{loginPubkey}
+	{currentPubkey}
 	{query}
 	{urlSearchParams}
 	{profileMap}

@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { getEventsByKinds, sendPollResponse } from '$lib/resource.svelte';
+	import { getEventsByFilter, sendPollResponse } from '$lib/resource.svelte';
 	import { getTimeRemaining } from '$lib/utils';
 	import type { NostrEvent } from 'nostr-tools/pure';
 	import { normalizeURL } from 'nostr-tools/utils';
@@ -22,7 +22,7 @@
 				?.at(1) ?? '0'
 		);
 	const oneVotePerPubkey = (event: NostrEvent): NostrEvent[] => {
-		const events1018 = getEventsByKinds(new Set<number>([1018])).filter((ev) =>
+		const events1018 = getEventsByFilter(new Set<number>([1018]), new Set<string>()).filter((ev) =>
 			ev.tags.some((tag) => tag.length >= 2 && tag[0] === 'e' && tag[1] === event.id)
 		);
 		const eventMap: Map<string, NostrEvent> = new Map<string, NostrEvent>();

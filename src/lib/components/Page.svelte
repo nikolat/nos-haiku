@@ -20,7 +20,7 @@
 		getChannelBookmarkMap,
 		getEventByAddressPointer,
 		getEventById,
-		getEventsByKinds,
+		getEventsByFilter,
 		getEventsChannel,
 		getEventsEmojiSet,
 		getEventsFirst,
@@ -117,11 +117,20 @@
 		}
 		return kindSet;
 	});
+	const authorSet: Set<string> = $derived.by(() => {
+		const authorSet: Set<string> = new Set<string>();
+		for (const [k, v] of urlSearchParams) {
+			if (k === 'author') {
+				authorSet.add(v);
+			}
+		}
+		return authorSet;
+	});
 	const eventsTimeline: NostrEvent[] = $derived(
 		category === undefined
-			? kindSet.size === 0
+			? kindSet.size === 0 && authorSet.size === 0
 				? getEventsTimelineTop()
-				: getEventsByKinds(kindSet)
+				: getEventsByFilter(kindSet, authorSet, query)
 			: getEventsChannel()
 	);
 	const channelBookmarkMap: Map<string, string[]> = $derived(getChannelBookmarkMap());
@@ -407,6 +416,7 @@
 
 <Header
 	{loginPubkey}
+	{currentPubkey}
 	{query}
 	{urlSearchParams}
 	{profileMap}

@@ -473,8 +473,17 @@ export const getEventById = (id: string): NostrEvent | undefined => {
 	return eventsAll.find((ev) => ev.id === id);
 };
 
-export const getEventsByKinds = (kindSet: Set<number>): NostrEvent[] => {
-	return eventsAll.filter((ev) => kindSet.has(ev.kind));
+export const getEventsByFilter = (
+	kindSet: Set<number>,
+	authorSet: Set<string>,
+	query?: string
+): NostrEvent[] => {
+	return eventsAll.filter(
+		(ev) =>
+			(kindSet.size === 0 || kindSet.has(ev.kind)) &&
+			(authorSet.size === 0 || authorSet.has(ev.pubkey)) &&
+			(query === undefined || ev.content.includes(query))
+	);
 };
 
 export const getEventsReplying = (event: NostrEvent): NostrEvent[] => {
@@ -1507,6 +1516,7 @@ export const getEventsFirst = (
 		eventFollowList?.tags.filter((tag) => tag.length >= 2 && tag[0] === 'p').map((tag) => tag[1]) ??
 		[];
 	const kindSet: Set<number> = new Set<number>();
+	const authorSet: Set<string> = new Set<string>();
 	const pSet: Set<string> = new Set<string>();
 	const relaySet: Set<string> = new Set<string>();
 	for (const [k, v] of urlSearchParams ?? []) {
@@ -1515,6 +1525,8 @@ export const getEventsFirst = (
 			if (0 <= kind && kind <= 65535) {
 				kindSet.add(kind);
 			}
+		} else if (k === 'author') {
+			authorSet.add(v);
 		} else if (k === 'p') {
 			try {
 				const _npub = nip19.npubEncode(v);
@@ -1568,7 +1580,13 @@ export const getEventsFirst = (
 	} else if (query !== undefined) {
 		options = { relays: searchRelays };
 		const kinds: number[] = kindSet.size === 0 ? [40, 41] : Array.from(kindSet);
-		filters.push({ kinds, search: query, limit: 10 });
+		const filter: LazyFilter = { kinds, limit: 10 };
+		if (authorSet.size > 0) {
+			filter.authors = Array.from(authorSet);
+		}
+		filter.search = query;
+		filters.push(filter);
+		console.log('[debug]', $state.snapshot(filter));
 	} else if (isAntenna) {
 		if (pubkeysFollowing.length > 0) {
 			const fs: LazyFilter[] = [];

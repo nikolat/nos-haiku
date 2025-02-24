@@ -27,6 +27,7 @@
 
 	let {
 		loginPubkey,
+		currentPubkey,
 		query,
 		urlSearchParams,
 		profileMap,
@@ -38,6 +39,7 @@
 		isEnabledScrollInfinitely = $bindable()
 	}: {
 		loginPubkey: string | undefined;
+		currentPubkey: string | undefined;
 		query: string | undefined;
 		urlSearchParams: URLSearchParams;
 		profileMap: Map<string, ProfileContentEvent>;
@@ -112,8 +114,11 @@
 			path = `/search/${encodeURI(queryInput)}`;
 			kinds = [40, 41];
 		}
-		const qp = kinds.map((k) => `kind=${k}`).join('&');
-		goto(`${path}?${qp}`);
+		const kvs: [string, string][] = kinds.map((k) => ['kind', String(k)]);
+		if (currentPubkey !== undefined) {
+			kvs.push(['author', currentPubkey]);
+		}
+		goto(`${path}?${new URLSearchParams(kvs).toString()}`);
 	};
 
 	let nav: HTMLElement;

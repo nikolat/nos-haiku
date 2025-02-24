@@ -69,6 +69,7 @@
 
 <Header
 	{loginPubkey}
+	currentPubkey={undefined}
 	{query}
 	{urlSearchParams}
 	{profileMap}

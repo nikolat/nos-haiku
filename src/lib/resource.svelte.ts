@@ -1586,7 +1586,6 @@ export const getEventsFirst = (
 		}
 		filter.search = query;
 		filters.push(filter);
-		console.log('[debug]', $state.snapshot(filter));
 	} else if (isAntenna) {
 		if (pubkeysFollowing.length > 0) {
 			const fs: LazyFilter[] = [];

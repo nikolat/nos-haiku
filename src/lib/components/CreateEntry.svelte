@@ -347,7 +347,7 @@
 			<div class="vue-simple-suggest CreateEntry__poll">
 				<div class="input-wrapper">
 					<dl class="poll-settings">
-						<dt>poll items</dt>
+						<dt>{$_('CreateEntry.poll-items')}</dt>
 						<dd>
 							<ul>
 								{#each pollItems.concat('') as item, i}
@@ -356,7 +356,7 @@
 											<input
 												class="RichTextEditor ql-editor"
 												type="text"
-												placeholder="item"
+												placeholder={$_('CreateEntry.poll-item')}
 												bind:value={pollItems[i]}
 											/>
 										</li>
@@ -364,20 +364,20 @@
 								{/each}
 							</ul>
 						</dd>
-						<dt><label for="poll-period">poll period</label></dt>
+						<dt><label for="poll-period">{$_('CreateEntry.poll-period')}</label></dt>
 						<dd>
 							<select id="poll-period" bind:value={pollPeriod}>
-								<option value={1 * 60 * 60}>1 hour</option>
-								<option value={6 * 60 * 60}>6 hours</option>
-								<option value={12 * 60 * 60}>12 hours</option>
-								<option value={1 * 24 * 60 * 60}>1 day</option>
+								<option value={1 * 60 * 60}>{$_('CreateEntry.poll-1-hour')}</option>
+								<option value={6 * 60 * 60}>{$_('CreateEntry.poll-6-hours')}</option>
+								<option value={12 * 60 * 60}>{$_('CreateEntry.poll-12-hours')}</option>
+								<option value={1 * 24 * 60 * 60}>{$_('CreateEntry.poll-1-day')}</option>
 							</select>
 						</dd>
-						<dt><label for="poll-type">poll type</label></dt>
+						<dt><label for="poll-type">{$_('CreateEntry.poll-type')}</label></dt>
 						<dd>
 							<select id="poll-type" bind:value={pollType}>
-								<option value="singlechoice">single choice</option>
-								<option value="multiplechoice">multiple choice</option>
+								<option value="singlechoice">{$_('CreateEntry.poll-single-choice')}</option>
+								<option value="multiplechoice">{$_('CreateEntry.poll-multiple-choice')}</option>
 							</select>
 						</dd>
 					</dl>

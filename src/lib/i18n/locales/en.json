@@ -79,6 +79,10 @@
 		"remove-from-favorites": "Remove from favorites",
 		"add-to-favorites": "Add to favorites"
 	},
+	"Poll": {
+		"vote": "vote",
+		"time-remaining": "time remaining"
+	},
 	"Entry": {
 		"kind42-event-without-valid-channel-id": "kind:42 event without valid channel id",
 		"kind42-event-of-unknown-channel": "kind:42 event of unknown channel",
@@ -111,6 +115,16 @@
 		"optional": "optional",
 		"create-new": "Create new",
 		"reason-for-warning": "Reason for warning",
+		"poll-items": "poll items",
+		"poll-item": "item",
+		"poll-period": "poll period",
+		"poll-1-hour": "1 hour",
+		"poll-6-hours": "6 hours",
+		"poll-12-hours": "12 hours",
+		"poll-1-day": "1 day",
+		"poll-type": "poll type",
+		"poll-single-choice": "single choice",
+		"poll-multiple-choice": "multiple choice",
 		"add-image": "Add image",
 		"add-emoji": "Add emoji",
 		"post": "Post",

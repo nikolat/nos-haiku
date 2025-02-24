@@ -3,6 +3,7 @@
 	import { getTimeRemaining } from '$lib/utils';
 	import type { NostrEvent } from 'nostr-tools/pure';
 	import { normalizeURL } from 'nostr-tools/utils';
+	import { _ } from 'svelte-i18n';
 
 	const {
 		event,
@@ -136,9 +137,9 @@
 		(pollType !== 'multiplechoice' && responseRadio === undefined)}
 	onclick={callSendPollResponse}
 >
-	<span>poll</span>
+	<span>{$_('Poll.vote')}</span>
 </button>
-<p>time remaining: {getTimeRemaining(nowRealtime, endsAt)}</p>
+<p>{$_('Poll.time-remaining')}: {getTimeRemaining(nowRealtime, endsAt)}</p>
 
 <style>
 	ol.poll {

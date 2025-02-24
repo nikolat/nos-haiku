@@ -79,6 +79,10 @@
 		"remove-from-favorites": "お気に入りから削除",
 		"add-to-favorites": "お気に入りに追加"
 	},
+	"Poll": {
+		"vote": "投票",
+		"time-remaining": "残り時間"
+	},
 	"Entry": {
 		"kind42-event-without-valid-channel-id": "チャンネルIDが不正な kind:42 イベント",
 		"kind42-event-of-unknown-channel": "チャンネルが不明な kind:42 イベント",
@@ -111,6 +115,16 @@
 		"optional": "オプション",
 		"create-new": "新規作成",
 		"reason-for-warning": "警告の理由",
+		"poll-items": "項目",
+		"poll-item": "項目",
+		"poll-period": "投票期間",
+		"poll-1-hour": "1時間",
+		"poll-6-hours": "6時間",
+		"poll-12-hours": "12時間",
+		"poll-1-day": "1日",
+		"poll-type": "投票方法",
+		"poll-single-choice": "単一選択",
+		"poll-multiple-choice": "複数選択",
 		"add-image": "画像を追加",
 		"add-emoji": "絵文字を追加",
 		"post": "投稿",

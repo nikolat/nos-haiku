@@ -465,8 +465,20 @@ export const getEventsReaction = (): NostrEvent[] => {
 	return eventsReaction;
 };
 
+const eventsEmojiSetLatest: NostrEvent[] = $derived.by(() => {
+	const eventMap: Map<string, NostrEvent> = new Map<string, NostrEvent>();
+	for (const ev of eventsEmojiSet) {
+		const s = `${ev.kind}:${ev.pubkey}:${ev.tags.find((tag) => tag.length >= 2 && tag[0] === 'd')?.at(1) ?? ''}`;
+		const event = eventMap.get(s);
+		if (event === undefined || ev.created_at > event.created_at) {
+			eventMap.set(s, ev);
+		}
+	}
+	return Array.from(eventMap.values());
+});
+
 export const getEventsEmojiSet = (): NostrEvent[] => {
-	return eventsEmojiSet;
+	return eventsEmojiSetLatest;
 };
 
 export const getEventById = (id: string): NostrEvent | undefined => {

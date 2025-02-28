@@ -2338,18 +2338,17 @@ export const sendReaction = async (
 	if (window.nostr === undefined) {
 		return;
 	}
-	const d = targetEvent.tags.find((tag) => tag.length >= 2 && tag[0] === 'd')?.at(1) ?? '';
-	const tags: string[][] = [
-		...targetEvent.tags.filter(
-			(tag) =>
-				tag.length >= 2 && (tag[0] === 'e' || (tag[0] === 'p' && tag[1] !== targetEvent.pubkey))
-		),
-		isReplaceableKind(targetEvent.kind) || isParameterizedReplaceableKind(targetEvent.kind)
-			? ['a', `${targetEvent.kind}:${targetEvent.pubkey}:${d}`]
-			: ['e', targetEvent.id],
+	const tags: string[][] = [];
+	const recommendedRelay: string = getSeenOn(targetEvent.id).at(0) ?? '';
+	if (isReplaceableKind(targetEvent.kind) || isParameterizedReplaceableKind(targetEvent.kind)) {
+		const d = targetEvent.tags.find((tag) => tag.length >= 2 && tag[0] === 'd')?.at(1) ?? '';
+		tags.push(['a', `${targetEvent.kind}:${targetEvent.pubkey}:${d}`, recommendedRelay]);
+	}
+	tags.push(
+		['e', targetEvent.id, recommendedRelay],
 		['p', targetEvent.pubkey],
 		['k', String(targetEvent.kind)]
-	];
+	);
 	if (emojiurl !== undefined && URL.canParse(emojiurl)) {
 		tags.push(['emoji', content.replaceAll(':', ''), emojiurl]);
 	}

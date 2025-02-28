@@ -2307,11 +2307,13 @@ export const sendRepost = async (targetEvent: NostrEvent): Promise<void> => {
 	}
 	let kind: number = 6;
 	const content: string = ''; //魚拓リポストはしない
+	const tags: string[][] = [];
 	const recommendedRelay: string = getSeenOn(targetEvent.id).at(0) ?? '';
-	const tags: string[][] = [
-		['e', targetEvent.id, recommendedRelay],
-		['p', targetEvent.pubkey]
-	];
+	if (isReplaceableKind(targetEvent.kind) || isParameterizedReplaceableKind(targetEvent.kind)) {
+		const d = targetEvent.tags.find((tag) => tag.length >= 2 && tag[0] === 'd')?.at(1) ?? '';
+		tags.push(['a', `${targetEvent.kind}:${targetEvent.pubkey}:${d}`, recommendedRelay]);
+	}
+	tags.push(['e', targetEvent.id, recommendedRelay], ['p', targetEvent.pubkey]);
 	if (targetEvent.kind !== 1) {
 		kind = 16;
 		tags.push(['k', String(targetEvent.kind)]);

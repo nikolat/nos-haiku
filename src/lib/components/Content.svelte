@@ -94,7 +94,7 @@
 	};
 </script>
 
-{plainTexts[0]}{#each Array.from(matchesIterator) as match, i}
+{plainTexts[0]}{#each Array.from(matchesIterator) as match, i (i)}
 	{#if /^https?:\/\/\S+/.test(match[1]) && URL.canParse(match[1])}
 		{@const [url, rest] = urlLinkString(match[1])}
 		{@const ytb1 = url.match(/^https?:\/\/(www|m)\.youtube\.com\/watch\?v=([\w-]+)/i)}

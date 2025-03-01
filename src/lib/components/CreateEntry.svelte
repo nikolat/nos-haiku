@@ -350,7 +350,7 @@
 						<dt>{$_('CreateEntry.poll-items')}</dt>
 						<dd>
 							<ul>
-								{#each pollItems.concat('') as item, i}
+								{#each pollItems.concat('') as item, i (i)}
 									{#if item.length > 0 || i === pollItems.length}
 										<li>
 											<input

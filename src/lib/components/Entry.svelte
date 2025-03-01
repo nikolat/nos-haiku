@@ -416,7 +416,7 @@
 									{@const channelIdReposted = getRootId(repostedEvent)}
 									{@const repostedChannel = channelMap.get(channelIdReposted ?? '')}
 									{#if channelIdReposted === undefined}
-										{'invalid channel'}
+										invalid channel
 									{:else if repostedChannel !== undefined}
 										<a href="/keyword/{nip19.neventEncode(repostedChannel)}"
 											>{repostedChannel.name ?? 'unknown'}</a
@@ -624,7 +624,7 @@
 										event.pubkey === asp?.at(1) && aId !== undefined && ap !== null}
 									{#if isValidAward}
 										{@const content = ap === null ? '' : `nostr:${nip19.naddrEncode(ap)}`}
-										{#each ps as p}
+										{#each ps as p (p)}
 											{@const profAwarded = profileMap.get(p)}
 											<div class="Entry__parentmarker">
 												<a href="/{nip19.npubEncode(p)}">
@@ -780,7 +780,7 @@
 									{@const eId = event.tags.find((tag) => tag.length >= 2 && tag[0] === 'e')?.at(1)}
 									{@const event1068 = getEventById(eId ?? '')}
 									<ul>
-										{#each responses as response}
+										{#each new Set<string>(responses) as response (response)}
 											<li>{response}</li>
 										{/each}
 									</ul>
@@ -993,7 +993,7 @@
 											event.tags.find((tag) => tag.length >= 2 && tag[0] === 'd')?.at(1) ?? ''}
 										<p>{dTagName}</p>
 									{/if}
-									{#each event.tags as tag, i}
+									{#each event.tags as tag, i (i)}
 										{#if i < 10}
 											{#if tag[0] === 'e' && tag[1] !== undefined}
 												{@const nevent = nip19.neventEncode({ id: tag[1] })}
@@ -1084,7 +1084,8 @@
 										.filter((tag) => tag.length >= 2 && tag[0] === 'a')
 										.map((tag) => tag[1])}
 									{#each new Set<string>(aIds) as aId, i (aId)}
-										{#if i > 0}{'\n'}{/if}
+										{@const newline = '\n'}
+										{#if i > 0}{newline}{/if}
 										{@const ap = getAddressPointerFromAId(aId)}
 										{@const ev = ap === null ? undefined : getEventByAddressPointer(ap)}
 										{#if ev === undefined}
@@ -1293,7 +1294,7 @@
 							{:else}
 								<p class="warning-message">
 									⚠️Content Warning⚠️
-									{#if contentWarningReason.length > 0}{'\n'}({$_('Entry.reason')}: {contentWarningReason}){/if}
+									{#if contentWarningReason.length > 0}{`\n(${$_('Entry.reason')}: ${contentWarningReason})`}{/if}
 								</p>
 								<button
 									class="Button toggle-cw"

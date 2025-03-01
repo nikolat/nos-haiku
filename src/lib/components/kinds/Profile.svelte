@@ -275,7 +275,7 @@
 					{eventsTimeline}
 					{eventsReaction}
 					{eventsEmojiSet}
-					uploaderSelected={''}
+					uploaderSelected=""
 					channelToPost={undefined}
 					currentChannelId={undefined}
 					isEnabledRelativeTime={true}

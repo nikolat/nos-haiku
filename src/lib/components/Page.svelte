@@ -451,8 +451,8 @@
 									<a href="/{nip19.npubEncode(pubkey)}">
 										<img
 											src={prof?.picture ?? getRoboHashURL(nip19.npubEncode(pubkey))}
-											alt={getProfileName(prof)}
-											title={getProfileName(prof)}
+											alt={getProfileName(pubkey)}
+											title={getProfileName(pubkey)}
 											class="Avatar"
 										/>
 									</a>
@@ -493,7 +493,7 @@
 								{@const profile = profileMap.get(currentPubkey)}
 								<h1 class="Feed__title">
 									<Content
-										content={getProfileName(profile)}
+										content={getProfileName(currentPubkey)}
 										tags={profile?.event.tags ?? []}
 										isAbout={true}
 									/>
@@ -508,7 +508,7 @@
 							<h1 class="Feed__title">
 								<i class="fa-fw fas fa-book-user"></i>
 								<Content
-									content={getProfileName(profile)}
+									content={getProfileName(currentPubkey)}
 									tags={profile?.event.tags ?? []}
 									isAbout={true}
 								/>

@@ -142,10 +142,10 @@
 			<a href="/{npubText}"
 				><img
 					src={prof?.picture ?? getRoboHashURL(nip19.npubEncode(d.data))}
-					alt={getProfileName(prof)}
-					title={getProfileName(prof)}
+					alt={getProfileName(d.data)}
+					title={getProfileName(d.data)}
 					class="Avatar"
-				/>{getProfileName(prof)}</a
+				/>{getProfileName(d.data)}</a
 			>
 		{:else}{matchedText}
 		{/if}
@@ -158,10 +158,10 @@
 			<a href="/{nprofileText}"
 				><img
 					src={prof?.picture ?? getRoboHashURL(nip19.npubEncode(d.data.pubkey))}
-					alt={getProfileName(prof)}
-					title={getProfileName(prof)}
+					alt={getProfileName(d.data.pubkey)}
+					title={getProfileName(d.data.pubkey)}
 					class="Avatar"
-				/>{getProfileName(prof)}</a
+				/>{getProfileName(d.data.pubkey)}</a
 			>
 		{:else}{matchedText}
 		{/if}

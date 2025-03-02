@@ -89,7 +89,7 @@
 					<a href={`/${nip19.npubEncode(currentPubkey)}`}>
 						<img
 							src={prof?.picture ?? getRoboHashURL(nip19.npubEncode(currentPubkey))}
-							alt={$_('Profile.profile-image-of').replace('{name}', getProfileName(prof))}
+							alt={$_('Profile.profile-image-of').replace('{name}', getProfileName(currentPubkey))}
 						/>
 					</a>
 				</div>
@@ -142,7 +142,7 @@
 										<i class="fa-fw fas fa-eye"></i>
 										{$_('Profile.unmute-pre')}
 										<Content
-											content={getProfileName(prof)}
+											content={getProfileName(currentPubkey)}
 											tags={prof?.event.tags ?? []}
 											isAbout={true}
 										/>
@@ -157,7 +157,7 @@
 										<i class="fa-fw fas fa-eye-slash"></i>
 										{$_('Profile.mute-pre')}
 										<Content
-											content={getProfileName(prof)}
+											content={getProfileName(currentPubkey)}
 											tags={prof?.event.tags ?? []}
 											isAbout={true}
 										/>
@@ -166,7 +166,7 @@
 								{/if}
 							{:else}
 								<a
-									title={`${$_('Profile.login-as-the-user-pre')}${getProfileName(prof)}${$_('Profile.login-as-the-user-suf')}`}
+									title={`${$_('Profile.login-as-the-user-pre')}${getProfileName(currentPubkey)}${$_('Profile.login-as-the-user-suf')}`}
 									onclick={() => {
 										loginWithNpub(nip19.npubEncode(currentPubkey));
 									}}
@@ -174,7 +174,7 @@
 									<i class="fa-fw fas fa-eye"></i>
 									{$_('Profile.login-as-the-user-pre')}
 									<Content
-										content={getProfileName(prof)}
+										content={getProfileName(currentPubkey)}
 										tags={prof?.event.tags ?? []}
 										isAbout={true}
 									/>
@@ -182,13 +182,13 @@
 								</a>
 							{/if}
 							<a
-								title={`${$_('Profile.view-custom-emoji-pre')}${getProfileName(prof)}${$_('Profile.view-custom-emoji-suf')}`}
+								title={`${$_('Profile.view-custom-emoji-pre')}${getProfileName(currentPubkey)}${$_('Profile.view-custom-emoji-suf')}`}
 								href={`/entry/${nip19.naddrEncode({ identifier: '', pubkey: currentPubkey, kind: 10030 })}`}
 							>
 								<i class="fa-fw fas fa-smile"></i>
 								{$_('Profile.view-custom-emoji-pre')}
 								<Content
-									content={getProfileName(prof)}
+									content={getProfileName(currentPubkey)}
 									tags={prof?.event.tags ?? []}
 									isAbout={true}
 								/>
@@ -231,7 +231,11 @@
 			<Badges {currentPubkey} {badgeEvent} />
 			<h3 class="router-link-exact-active router-link-active">
 				<a href={`/${nip19.npubEncode(currentPubkey)}`}>
-					<Content content={getProfileName(prof)} tags={prof?.event.tags ?? []} isAbout={true} />
+					<Content
+						content={getProfileName(currentPubkey)}
+						tags={prof?.event.tags ?? []}
+						isAbout={true}
+					/>
 				</a>
 			</h3>
 			<div class="HatenaID">

@@ -422,7 +422,7 @@
 									alt=""
 									loading="lazy"
 									src={prof?.picture ?? getRoboHashURL(nip19.npubEncode(ev.pubkey))}
-									title={getProfileName(prof)}
+									title={getProfileName(ev.pubkey)}
 									class="Avatar Avatar--md"
 								/>
 							</div>
@@ -430,7 +430,7 @@
 								<p>
 									<a href="/{nip19.npubEncode(ev.pubkey)}" class="">
 										<Content
-											content={getProfileName(prof)}
+											content={getProfileName(ev.pubkey)}
 											tags={prof?.event.tags ?? []}
 											isAbout={true}
 										/>

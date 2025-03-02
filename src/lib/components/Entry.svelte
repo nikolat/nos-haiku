@@ -362,7 +362,7 @@
 						<a href="/{nip19.npubEncode(event.pubkey)}">
 							<img
 								src={prof?.picture ?? getRoboHashURL(nip19.npubEncode(event.pubkey))}
-								alt={getProfileName(prof)}
+								alt={getProfileName(event.pubkey)}
 								class="Avatar"
 							/>
 						</a>
@@ -510,11 +510,11 @@
 											<img
 												src={profReplyTo?.picture ??
 													getRoboHashURL(nip19.npubEncode(pubkeyReplyTo))}
-												alt={getProfileName(profReplyTo)}
+												alt={getProfileName(pubkeyReplyTo)}
 												class="Avatar Avatar--sm"
 											/>
 											<Content
-												content={getProfileName(profReplyTo)}
+												content={getProfileName(pubkeyReplyTo)}
 												tags={profReplyTo?.event.tags ?? []}
 												isAbout={true}
 											/>
@@ -632,11 +632,11 @@
 													<span class="Mention">
 														<img
 															src={profAwarded?.picture ?? getRoboHashURL(nip19.npubEncode(p))}
-															alt={getProfileName(profAwarded)}
+															alt={getProfileName(p)}
 															class="Avatar Avatar--sm"
 														/>
 														<Content
-															content={getProfileName(profAwarded)}
+															content={getProfileName(p)}
 															tags={profAwarded?.event.tags ?? []}
 															isAbout={true}
 														/>
@@ -874,11 +874,11 @@
 													<img
 														src={profZapped?.picture ??
 															getRoboHashURL(nip19.npubEncode(pubkeyZapped))}
-														alt={getProfileName(profZapped)}
+														alt={getProfileName(pubkeyZapped)}
 														class="Avatar Avatar--sm"
 													/>
 													<Content
-														content={getProfileName(profZapped)}
+														content={getProfileName(pubkeyZapped)}
 														tags={profZapped?.event.tags ?? []}
 														isAbout={true}
 													/>
@@ -1362,11 +1362,11 @@
 								<a href="/{nip19.npubEncode(event.pubkey)}">
 									<img
 										src={prof?.picture ?? getRoboHashURL(nip19.npubEncode(event.pubkey))}
-										alt={getProfileName(prof)}
+										alt={getProfileName(event.pubkey)}
 										class="Avatar"
 									/>
 									<Content
-										content={getProfileName(prof)}
+										content={getProfileName(event.pubkey)}
 										tags={prof?.event.tags ?? []}
 										isAbout={true}
 									/>
@@ -1542,7 +1542,7 @@
 									{@const prof = profileMap.get(ev.pubkey)}
 									<img
 										src={prof?.picture ?? getRoboHashURL(nip19.npubEncode(ev.pubkey))}
-										alt={getProfileName(prof)}
+										alt={getProfileName(ev.pubkey)}
 										class="Avatar"
 									/>
 								{/each}

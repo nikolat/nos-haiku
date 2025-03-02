@@ -304,8 +304,17 @@ export const getProfileId = (prof: ProfileContent | undefined) => {
 	return name;
 };
 
-export const getProfileName = (prof: ProfileContent | undefined) => {
+export const getProfileName = (pubkey: string) => {
+	const prof = profileMap.get(pubkey);
 	let name = prof?.display_name || (prof?.name !== undefined ? `id:${prof?.name}` : 'anonymouse');
+	if (eventFollowList !== undefined) {
+		const petname = eventFollowList.tags
+			.find((tag) => tag.length >= 4 && tag[0] === 'p' && tag[1] === pubkey)
+			?.at(3);
+		if (petname !== undefined) {
+			name = `📛${petname}`;
+		}
+	}
 	if (name.length > 30) {
 		name = `${name.slice(0, 25)}...`;
 	}

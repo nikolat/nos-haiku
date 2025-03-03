@@ -1386,7 +1386,7 @@
 								</a>
 							</span>
 							{#if loginPubkey !== undefined}
-								{#if loginPubkey === event.pubkey}
+								{#if loginPubkey === event.pubkey && ![5, 62].includes(event.kind)}
 									<span class="Separator">·</span>
 									<!-- svelte-ignore a11y_click_events_have_key_events -->
 									<!-- svelte-ignore a11y_no_static_element_interactions -->

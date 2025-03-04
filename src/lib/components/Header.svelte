@@ -410,8 +410,8 @@
 					{#each mentionToShow as ev (ev.id)}
 						{@const evTo = getTargetEvent(ev)}
 						{@const ev9734 = getEvent9734(ev)}
-						{@const prof =
-							ev9734 === null ? profileMap.get(ev.pubkey) : profileMap.get(ev9734.pubkey)}
+						{@const evFrom = ev9734 ?? ev}
+						{@const prof = profileMap.get(evFrom.pubkey)}
 						<li
 							data-type="star"
 							data-unread={readTimeOfNotification < ev.created_at ? 'true' : 'false'}
@@ -421,16 +421,16 @@
 								<img
 									alt=""
 									loading="lazy"
-									src={prof?.picture ?? getRoboHashURL(nip19.npubEncode(ev.pubkey))}
-									title={getProfileName(ev.pubkey)}
+									src={prof?.picture ?? getRoboHashURL(nip19.npubEncode(evFrom.pubkey))}
+									title={getProfileName(evFrom.pubkey)}
 									class="Avatar Avatar--md"
 								/>
 							</div>
 							<div class="NoticeItem__body">
 								<p>
-									<a href="/{nip19.npubEncode(ev.pubkey)}" class="">
+									<a href="/{nip19.npubEncode(evFrom.pubkey)}" class="">
 										<Content
-											content={getProfileName(ev.pubkey)}
+											content={getProfileName(evFrom.pubkey)}
 											tags={prof?.event.tags ?? []}
 											isAbout={true}
 										/>

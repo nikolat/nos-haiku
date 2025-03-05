@@ -258,8 +258,9 @@
 		}
 		return tl;
 	});
+	const timelineSliced = $derived(timelineAll.slice(0, countToShow));
 	const timelineMuted: NostrEvent[] = $derived(
-		timelineAll.filter((ev) => {
+		timelineSliced.filter((ev) => {
 			const rootIds: string[] = ev.tags
 				.filter((tag) => tag.length >= 4 && tag[0] === 'e' && tag[3] === 'root')
 				.map((tag) => tag.at(1))
@@ -292,13 +293,12 @@
 			);
 		})
 	);
-	const timelineSliced = $derived(timelineMuted.slice(0, countToShow));
 	const maxToShow = 30;
 	const startToShow = $derived(
-		timelineSliced.length <= maxToShow ? 0 : timelineSliced.length - maxToShow
+		timelineMuted.length <= maxToShow ? 0 : timelineMuted.length - maxToShow
 	);
-	const endToShow = $derived(timelineSliced.length);
-	const timelineToShow = $derived(timelineSliced.slice(startToShow, endToShow));
+	const endToShow = $derived(timelineMuted.length);
+	const timelineToShow = $derived(timelineMuted.slice(startToShow, endToShow));
 
 	let isScrolledBottom = false;
 	const scrollThreshold = 300;

@@ -55,7 +55,7 @@
 	let {
 		loginPubkey,
 		isAntenna,
-		currentPubkey,
+		currentProfilePointer,
 		currentChannelId,
 		currentEventPointer,
 		currentAddressPointer,
@@ -77,7 +77,7 @@
 	}: {
 		loginPubkey: string | undefined;
 		isAntenna: boolean | undefined;
-		currentPubkey: string | undefined;
+		currentProfilePointer: nip19.ProfilePointer | undefined;
 		currentChannelId: string | undefined;
 		currentEventPointer: nip19.EventPointer | undefined;
 		currentAddressPointer: nip19.AddressPointer | undefined;
@@ -101,7 +101,7 @@
 	const isTopPage: boolean = $derived(
 		[
 			currentEventPointer,
-			currentPubkey,
+			currentProfilePointer,
 			currentChannelId,
 			currentAddressPointer,
 			hashtag,
@@ -190,9 +190,13 @@
 	const eventsReaction: NostrEvent[] = $derived(getEventsReaction());
 	const eventsEmojiSet: NostrEvent[] = $derived(getEventsEmojiSet());
 	const pinnedNotesEvent: NostrEvent | undefined = $derived(
-		currentPubkey === undefined || currentEventPointer !== undefined || kindSet.size > 0
+		currentProfilePointer === undefined || kindSet.size > 0
 			? undefined
-			: getEventByAddressPointer({ identifier: '', pubkey: currentPubkey, kind: 10001 })
+			: getEventByAddressPointer({
+					identifier: '',
+					pubkey: currentProfilePointer.pubkey,
+					kind: 10001
+				})
 	);
 
 	let countToShow: number = $state(10);
@@ -211,9 +215,11 @@
 		} else if (currentAddressPointer !== undefined) {
 			const entry = getEventByAddressPointer(currentAddressPointer);
 			tl = entry !== undefined ? [entry] : [];
-		} else if (currentPubkey !== undefined) {
+		} else if (currentProfilePointer !== undefined) {
 			tl = eventsTimeline.filter((ev) =>
-				ev.kind === 9735 ? getEvent9734(ev)?.pubkey === currentPubkey : ev.pubkey === currentPubkey
+				ev.kind === 9735
+					? getEvent9734(ev)?.pubkey === currentProfilePointer.pubkey
+					: ev.pubkey === currentProfilePointer.pubkey
 			);
 		} else if (currentChannelId !== undefined) {
 			tl = eventsTimeline.filter(
@@ -266,7 +272,7 @@
 				.map((tag) => tag.at(1))
 				.filter((id) => id !== undefined);
 			return (
-				!(currentPubkey === undefined && mutedPubkeys.includes(ev.pubkey)) &&
+				!(currentProfilePointer === undefined && mutedPubkeys.includes(ev.pubkey)) &&
 				!(
 					currentChannelId === undefined &&
 					rootIds.some((rootId) => mutedChannelIds.includes(rootId))
@@ -304,7 +310,7 @@
 	const scrollThreshold = 300;
 
 	const urlParams: UrlParams = $derived({
-		currentPubkey,
+		currentProfilePointer,
 		currentChannelId,
 		currentEventPointer,
 		currentAddressPointer,
@@ -416,7 +422,7 @@
 
 <Header
 	{loginPubkey}
-	{currentPubkey}
+	{currentProfilePointer}
 	{query}
 	{urlSearchParams}
 	{profileMap}
@@ -430,20 +436,24 @@
 <main class="Homepage View">
 	<div class="Layout">
 		<div
-			class={currentPubkey === undefined
+			class={currentProfilePointer === undefined
 				? 'Column Column--left Column--nomobile'
 				: 'Column Column--left'}
 		>
-			<div class={currentPubkey === undefined ? 'Card' : 'Card Card--nomargin'}>
-				{#if currentPubkey === undefined}
+			<div class={currentProfilePointer === undefined ? 'Card' : 'Card Card--nomargin'}>
+				{#if currentProfilePointer === undefined}
 					<div class="Card__head">
 						<h3 class="Card__title">
 							<i class="fa-fw fas fa-users"></i>{$_('Page.left.recent-users')}
 						</h3>
 					</div>
 				{/if}
-				<div class={currentPubkey === undefined ? 'Card__body' : 'Card__body Card__body--nopad'}>
-					{#if currentPubkey === undefined}
+				<div
+					class={currentProfilePointer === undefined
+						? 'Card__body'
+						: 'Card__body Card__body--nopad'}
+				>
+					{#if currentProfilePointer === undefined}
 						<div class="UserList UserList--grid">
 							{#each profilePubkeysActive as pubkey (pubkey)}
 								{@const prof = profileMap.get(pubkey)}
@@ -462,7 +472,7 @@
 					{:else}
 						<Profile
 							{loginPubkey}
-							{currentPubkey}
+							currentPubkey={currentProfilePointer.pubkey}
 							{profileMap}
 							{channelMap}
 							{eventsTimeline}
@@ -502,13 +512,13 @@
 							{:else}
 								<h1 class="Feed__title">{$_('Page.main.entry')}</h1>
 							{/if}
-						{:else if currentPubkey !== undefined}
-							{@const profile = profileMap.get(currentPubkey)}
+						{:else if currentProfilePointer !== undefined}
+							{@const profile = profileMap.get(currentProfilePointer.pubkey)}
 							{@const idView = getProfileId(profile)}
 							<h1 class="Feed__title">
 								<i class="fa-fw fas fa-book-user"></i>
 								<Content
-									content={getProfileName(currentPubkey)}
+									content={getProfileName(currentProfilePointer.pubkey)}
 									tags={profile?.event.tags ?? []}
 									isAbout={true}
 								/>
@@ -519,7 +529,7 @@
 							</h3>
 							{#if loginPubkey !== undefined}
 								<div class="Actions">
-									{#if followingPubkeys.includes(currentPubkey)}
+									{#if followingPubkeys.includes(currentProfilePointer.pubkey)}
 										<div
 											title={$_('Page.main.remove-from-favorites')}
 											class="FavoriteButton FavoriteButton--active"
@@ -529,7 +539,7 @@
 											<span
 												class="fa-fw fas fa-heart"
 												onclick={() => {
-													unfollowUser(currentPubkey);
+													unfollowUser(currentProfilePointer.pubkey);
 												}}
 											></span>
 										</div>
@@ -540,7 +550,7 @@
 											<span
 												class="fa-fw fas fa-heart"
 												onclick={() => {
-													followUser(currentPubkey);
+													followUser(currentProfilePointer.pubkey);
 												}}
 											></span>
 										</div>
@@ -557,11 +567,11 @@
 										<div class="SettingButton__Button"><span class="fa-fw fas fa-cog"></span></div>
 										<div class="SettingButton__Dropdown Dropdown--left">
 											<!-- svelte-ignore a11y_missing_attribute -->
-											{#if mutedPubkeys.includes(currentPubkey)}
+											{#if mutedPubkeys.includes(currentProfilePointer.pubkey)}
 												<a
 													title={$_('Page.main.unmute-it').replace('{idView}', idView)}
 													onclick={() => {
-														unmuteUser(currentPubkey, loginPubkey);
+														unmuteUser(currentProfilePointer.pubkey, loginPubkey);
 													}}
 													><i class="fa-fw fas fa-eye"></i>
 													{$_('Page.main.unmute-it').replace('{idView}', idView)}</a
@@ -570,7 +580,7 @@
 												<a
 													title={$_('Page.main.mute-it').replace('{idView}', idView)}
 													onclick={() => {
-														muteUser(currentPubkey, loginPubkey);
+														muteUser(currentProfilePointer.pubkey, loginPubkey);
 													}}
 													><i class="fa-fw fas fa-eye-slash"></i>
 													{$_('Page.main.mute-it').replace('{idView}', idView)}</a
@@ -578,7 +588,7 @@
 											{/if}
 											<a
 												title={$_('Page.main.view-custom-emoji').replace('{idView}', idView)}
-												href={`/entry/${nip19.naddrEncode({ identifier: '', pubkey: currentPubkey, kind: 10030 })}`}
+												href={`/entry/${nip19.naddrEncode({ identifier: '', pubkey: currentProfilePointer.pubkey, kind: 10030 })}`}
 												><i class="fa-fw fas fa-smile"></i>
 												{$_('Page.main.view-custom-emoji').replace('{idView}', idView)}</a
 											>
@@ -1001,9 +1011,9 @@
 			</div>
 		</div>
 		<div class="Column Column--right">
-			{#if isAntenna ? loginPubkey !== undefined : currentPubkey !== undefined}
+			{#if isAntenna ? loginPubkey !== undefined : currentProfilePointer !== undefined}
 				{@const channelBookmarkIds = channelBookmarkMap.get(
-					(isAntenna ? loginPubkey : currentPubkey)!
+					(isAntenna ? loginPubkey : currentProfilePointer?.pubkey)!
 				)}
 				<div class="Card">
 					<div class="Card__head">

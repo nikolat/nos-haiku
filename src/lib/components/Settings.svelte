@@ -69,7 +69,7 @@
 
 <Header
 	{loginPubkey}
-	currentPubkey={undefined}
+	currentProfilePointer={undefined}
 	{query}
 	{urlSearchParams}
 	{profileMap}

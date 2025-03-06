@@ -6,7 +6,7 @@
 
 	const {
 		loginPubkey,
-		currentPubkey,
+		currentProfilePointer,
 		query,
 		urlSearchParams,
 		profileMap,
@@ -18,7 +18,7 @@
 		nowRealtime
 	}: {
 		loginPubkey: string | undefined;
-		currentPubkey: string | undefined;
+		currentProfilePointer: nip19.ProfilePointer | undefined;
 		query: string;
 		urlSearchParams: URLSearchParams;
 		profileMap: Map<string, ProfileContentEvent>;
@@ -42,7 +42,7 @@
 
 <Header
 	{loginPubkey}
-	{currentPubkey}
+	{currentProfilePointer}
 	{query}
 	{urlSearchParams}
 	{profileMap}

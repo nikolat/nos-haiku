@@ -28,7 +28,7 @@ export interface ChannelContent extends nip19.EventPointer {
 }
 
 export type UrlParams = {
-	currentPubkey?: string;
+	currentProfilePointer?: nip19.ProfilePointer;
 	currentChannelId?: string;
 	currentEventPointer?: nip19.EventPointer;
 	currentAddressPointer?: nip19.AddressPointer;

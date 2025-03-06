@@ -36,7 +36,7 @@
 
 	const urlParams: UrlParams = $props();
 	const {
-		currentPubkey,
+		currentProfilePointer,
 		currentChannelId,
 		currentEventPointer,
 		currentAddressPointer,
@@ -134,9 +134,9 @@
 			title = $_('App.title.antenna');
 		} else if (currentEventPointer !== undefined || currentAddressPointer !== undefined) {
 			title = $_('App.title.entry');
-		} else if (currentPubkey !== undefined) {
-			const prof = profileMap.get(currentPubkey);
-			title = `${prof?.display_name ?? ''} (id:${prof?.name ?? `${currentPubkey.slice(0, 15)}...`})`;
+		} else if (currentProfilePointer !== undefined) {
+			const prof = profileMap.get(currentProfilePointer.pubkey);
+			title = `${prof?.display_name ?? ''} (id:${prof?.name ?? `${currentProfilePointer.pubkey.slice(0, 15)}...`})`;
 		} else if (currentChannelId !== undefined) {
 			const channel = channelMap.get(currentChannelId);
 			title = channel?.name ?? 'unknown channel';
@@ -168,7 +168,7 @@
 	{#if is404}
 		<Header
 			{loginPubkey}
-			{currentPubkey}
+			{currentProfilePointer}
 			{query}
 			{urlSearchParams}
 			{profileMap}
@@ -216,7 +216,7 @@
 	{:else if query !== undefined && Array.from(urlSearchParams.entries()).every(([k, v]) => k === 'kind' && /^\d+$/.test(v) && [40, 41].includes(parseInt(v)))}
 		<Search
 			{loginPubkey}
-			{currentPubkey}
+			{currentProfilePointer}
 			{query}
 			{urlSearchParams}
 			{profileMap}
@@ -231,7 +231,7 @@
 		<Page
 			{loginPubkey}
 			{isAntenna}
-			{currentPubkey}
+			{currentProfilePointer}
 			{currentChannelId}
 			{currentEventPointer}
 			{currentAddressPointer}

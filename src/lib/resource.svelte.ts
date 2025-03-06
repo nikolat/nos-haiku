@@ -1498,7 +1498,7 @@ export const getEventsFirst = (
 	isFirstFetch: boolean = true
 ): void => {
 	const {
-		currentPubkey,
+		currentProfilePointer,
 		currentChannelId,
 		currentEventPointer,
 		currentAddressPointer,
@@ -1524,7 +1524,7 @@ export const getEventsFirst = (
 	const isTopPage =
 		[
 			currentEventPointer,
-			currentPubkey,
+			currentProfilePointer,
 			currentChannelId,
 			currentAddressPointer,
 			hashtag,
@@ -1559,21 +1559,24 @@ export const getEventsFirst = (
 			relaySet.add(normalizeURL(v));
 		}
 	}
-	if (currentPubkey !== undefined) {
+	if (currentProfilePointer !== undefined) {
 		const fs: LazyFilter[] = [];
 		if (kindSet.has(9735)) {
-			fs.push({ kinds: [9735], '#P': [currentPubkey] });
+			fs.push({ kinds: [9735], '#P': [currentProfilePointer.pubkey] });
 		}
 		const kinds: number[] =
 			kindSet.size === 0 ? [1, 6, 16, 42, 1111] : Array.from(kindSet).filter((k) => k !== 9735);
 		if (kinds.length > 0) {
-			fs.push({ kinds, authors: [currentPubkey] });
+			fs.push({ kinds, authors: [currentProfilePointer.pubkey] });
 		}
 		for (const f of fs) {
 			if (pSet.size > 0) {
 				f['#p'] = Array.from(pSet);
 			}
 			filters.push(f);
+		}
+		for (const relay of currentProfilePointer.relays ?? []) {
+			relaySet.add(normalizeURL(relay));
 		}
 	} else if (currentChannelId !== undefined) {
 		filters.push({ kinds: [42], '#e': [currentChannelId] });
@@ -1677,7 +1680,7 @@ export const getEventsFirst = (
 		});
 	rxReqBFirst.emit(filters);
 	rxReqBFirst.over();
-	if (currentPubkey !== undefined && isFirstFetch) {
+	if (currentProfilePointer !== undefined && isFirstFetch) {
 		const kinds = [10001, 10005, 30008];
 		const rxReqBBookmark = createRxBackwardReq();
 		rxNostr
@@ -1690,10 +1693,10 @@ export const getEventsFirst = (
 				next,
 				complete
 			});
-		rxReqBBookmark.emit({ kinds, authors: [currentPubkey], until });
+		rxReqBBookmark.emit({ kinds, authors: [currentProfilePointer.pubkey], until });
 		rxReqBBookmark.over();
 		for (const kind of kinds) {
-			filters.find((f) => f.authors?.join(':') === currentPubkey)?.kinds?.push(kind);
+			filters.find((f) => f.authors?.join(':') === currentProfilePointer.pubkey)?.kinds?.push(kind);
 		}
 	}
 	//無限スクロール用Reqはここまでで終了
@@ -1714,11 +1717,11 @@ export const getEventsFirst = (
 			authors: [loginPubkey]
 		});
 	}
-	if (currentPubkey !== undefined) {
+	if (currentProfilePointer !== undefined) {
 		if (isEnabledSkipKind1) {
-			filters.push({ kinds: [7], '#p': [currentPubkey], '#k': ['42'] });
+			filters.push({ kinds: [7], '#p': [currentProfilePointer.pubkey], '#k': ['42'] });
 		} else {
-			filters.push({ kinds: [7], '#p': [currentPubkey] });
+			filters.push({ kinds: [7], '#p': [currentProfilePointer.pubkey] });
 		}
 	} else if (currentChannelId !== undefined) {
 		filters.push({ kinds: [7], '#e': [currentChannelId] });

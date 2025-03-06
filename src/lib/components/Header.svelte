@@ -27,7 +27,7 @@
 
 	let {
 		loginPubkey,
-		currentPubkey,
+		currentProfilePointer,
 		query,
 		urlSearchParams,
 		profileMap,
@@ -39,7 +39,7 @@
 		isEnabledScrollInfinitely = $bindable()
 	}: {
 		loginPubkey: string | undefined;
-		currentPubkey: string | undefined;
+		currentProfilePointer: nip19.ProfilePointer | undefined;
 		query: string | undefined;
 		urlSearchParams: URLSearchParams;
 		profileMap: Map<string, ProfileContentEvent>;
@@ -115,8 +115,8 @@
 			kinds = [40, 41];
 		}
 		const kvs: [string, string][] = kinds.map((k) => ['kind', String(k)]);
-		if (currentPubkey !== undefined) {
-			kvs.push(['author', currentPubkey]);
+		if (currentProfilePointer !== undefined) {
+			kvs.push(['author', currentProfilePointer.pubkey]);
 		}
 		goto(`${path}?${new URLSearchParams(kvs).toString()}`);
 	};

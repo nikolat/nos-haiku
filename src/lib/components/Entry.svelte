@@ -1140,6 +1140,32 @@
 												class="badge"
 											/>
 										</p>{/if}
+								{:else if event.kind === 30023}
+									{@const title =
+										event.tags.find((tag) => tag.length >= 2 && tag[0] === 'title')?.at(1) ?? ''}
+									<h2 class="title">{title}</h2>
+									<p>
+										<Content
+											content={event.content}
+											tags={event.tags}
+											{channelMap}
+											{profileMap}
+											{loginPubkey}
+											{mutedPubkeys}
+											{mutedChannelIds}
+											{mutedWords}
+											{followingPubkeys}
+											{eventsTimeline}
+											{eventsReaction}
+											{eventsEmojiSet}
+											{uploaderSelected}
+											bind:channelToPost
+											{currentChannelId}
+											{isEnabledRelativeTime}
+											{nowRealtime}
+											{level}
+										/>
+									</p>
 								{:else if event.kind === 30030}
 									{@const dTagName =
 										event.tags.find((tag) => tag.length >= 2 && tag[0] === 'd')?.at(1) ?? ''}
@@ -1810,6 +1836,9 @@
 	.badge {
 		width: 200px;
 		height: 200px;
+	}
+	.title {
+		font-size: 1.5em;
 	}
 	.handler-information img.banner {
 		max-height: 100px;

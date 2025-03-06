@@ -1500,7 +1500,7 @@ export const getEventsFirst = (
 	const {
 		currentPubkey,
 		currentChannelId,
-		currentNoteId,
+		currentEventPointer,
 		currentAddressPointer,
 		query,
 		urlSearchParams,
@@ -1523,7 +1523,7 @@ export const getEventsFirst = (
 	}
 	const isTopPage =
 		[
-			currentNoteId,
+			currentEventPointer,
 			currentPubkey,
 			currentChannelId,
 			currentAddressPointer,
@@ -1559,7 +1559,7 @@ export const getEventsFirst = (
 			relaySet.add(normalizeURL(v));
 		}
 	}
-	if (currentNoteId === undefined && currentPubkey !== undefined) {
+	if (currentPubkey !== undefined) {
 		const fs: LazyFilter[] = [];
 		if (kindSet.has(9735)) {
 			fs.push({ kinds: [9735], '#P': [currentPubkey] });
@@ -1578,8 +1578,11 @@ export const getEventsFirst = (
 	} else if (currentChannelId !== undefined) {
 		filters.push({ kinds: [42], '#e': [currentChannelId] });
 		filters.push({ kinds: [16], '#k': ['42'] });
-	} else if (currentNoteId !== undefined) {
-		filters.push({ ids: [currentNoteId] });
+	} else if (currentEventPointer !== undefined) {
+		filters.push({ ids: [currentEventPointer.id] });
+		for (const relay of currentEventPointer.relays ?? []) {
+			relaySet.add(normalizeURL(relay));
+		}
 	} else if (currentAddressPointer !== undefined) {
 		if (currentAddressPointer.identifier.length > 0) {
 			filters.push({
@@ -1592,6 +1595,9 @@ export const getEventsFirst = (
 				kinds: [currentAddressPointer.kind],
 				authors: [currentAddressPointer.pubkey]
 			});
+		}
+		for (const relay of currentAddressPointer.relays ?? []) {
+			relaySet.add(normalizeURL(relay));
 		}
 	} else if (hashtag !== undefined) {
 		const kinds: number[] = kindSet.size === 0 ? [1, 42, 1111] : Array.from(kindSet);
@@ -1708,7 +1714,7 @@ export const getEventsFirst = (
 			authors: [loginPubkey]
 		});
 	}
-	if (currentNoteId === undefined && currentPubkey !== undefined) {
+	if (currentPubkey !== undefined) {
 		if (isEnabledSkipKind1) {
 			filters.push({ kinds: [7], '#p': [currentPubkey], '#k': ['42'] });
 		} else {
@@ -1716,8 +1722,8 @@ export const getEventsFirst = (
 		}
 	} else if (currentChannelId !== undefined) {
 		filters.push({ kinds: [7], '#e': [currentChannelId] });
-	} else if (currentNoteId !== undefined) {
-		filters.push({ kinds: [7], '#e': [currentNoteId] });
+	} else if (currentEventPointer !== undefined) {
+		filters.push({ kinds: [7], '#e': [currentEventPointer.id] });
 	} else if (currentAddressPointer !== undefined) {
 		filters.push({
 			kinds: [7],

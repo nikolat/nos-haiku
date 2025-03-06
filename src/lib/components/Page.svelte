@@ -57,7 +57,7 @@
 		isAntenna,
 		currentPubkey,
 		currentChannelId,
-		currentNoteId,
+		currentEventPointer,
 		currentAddressPointer,
 		query,
 		urlSearchParams,
@@ -79,7 +79,7 @@
 		isAntenna: boolean | undefined;
 		currentPubkey: string | undefined;
 		currentChannelId: string | undefined;
-		currentNoteId: string | undefined;
+		currentEventPointer: nip19.EventPointer | undefined;
 		currentAddressPointer: nip19.AddressPointer | undefined;
 		query: string | undefined;
 		urlSearchParams: URLSearchParams;
@@ -100,7 +100,7 @@
 
 	const isTopPage: boolean = $derived(
 		[
-			currentNoteId,
+			currentEventPointer,
 			currentPubkey,
 			currentChannelId,
 			currentAddressPointer,
@@ -190,7 +190,7 @@
 	const eventsReaction: NostrEvent[] = $derived(getEventsReaction());
 	const eventsEmojiSet: NostrEvent[] = $derived(getEventsEmojiSet());
 	const pinnedNotesEvent: NostrEvent | undefined = $derived(
-		currentPubkey === undefined || currentNoteId !== undefined || kindSet.size > 0
+		currentPubkey === undefined || currentEventPointer !== undefined || kindSet.size > 0
 			? undefined
 			: getEventByAddressPointer({ identifier: '', pubkey: currentPubkey, kind: 10001 })
 	);
@@ -205,8 +205,8 @@
 					? followingPubkeys.includes(getEvent9734(ev)?.pubkey ?? '')
 					: followingPubkeys.includes(ev.pubkey)
 			);
-		} else if (currentNoteId !== undefined) {
-			const entry = getEventById(currentNoteId);
+		} else if (currentEventPointer !== undefined) {
+			const entry = getEventById(currentEventPointer.id);
 			tl = entry !== undefined ? [entry] : [];
 		} else if (currentAddressPointer !== undefined) {
 			const entry = getEventByAddressPointer(currentAddressPointer);
@@ -306,7 +306,7 @@
 	const urlParams: UrlParams = $derived({
 		currentPubkey,
 		currentChannelId,
-		currentNoteId,
+		currentEventPointer,
 		currentAddressPointer,
 		isAntenna,
 		urlSearchParams
@@ -488,12 +488,12 @@
 								{$_('Page.main.antenna-title')}
 							</h1>
 							<h3 class="Feed__subtitle">{$_('Page.main.antenna-subtitle')}</h3>
-						{:else if currentNoteId !== undefined}
-							{#if currentPubkey !== undefined}
-								{@const profile = profileMap.get(currentPubkey)}
+						{:else if currentEventPointer !== undefined}
+							{#if currentEventPointer.author !== undefined}
+								{@const profile = profileMap.get(currentEventPointer.author)}
 								<h1 class="Feed__title">
 									<Content
-										content={getProfileName(currentPubkey)}
+										content={getProfileName(currentEventPointer.author)}
 										tags={profile?.event.tags ?? []}
 										isAbout={true}
 									/>

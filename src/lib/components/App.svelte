@@ -38,7 +38,7 @@
 	const {
 		currentPubkey,
 		currentChannelId,
-		currentNoteId,
+		currentEventPointer,
 		currentAddressPointer,
 		hashtag,
 		category,
@@ -132,7 +132,7 @@
 			title = $_('App.title.search');
 		} else if (isAntenna) {
 			title = $_('App.title.antenna');
-		} else if (currentNoteId !== undefined || currentAddressPointer !== undefined) {
+		} else if (currentEventPointer !== undefined || currentAddressPointer !== undefined) {
 			title = $_('App.title.entry');
 		} else if (currentPubkey !== undefined) {
 			const prof = profileMap.get(currentPubkey);
@@ -233,7 +233,7 @@
 			{isAntenna}
 			{currentPubkey}
 			{currentChannelId}
-			{currentNoteId}
+			{currentEventPointer}
 			{currentAddressPointer}
 			{query}
 			{urlSearchParams}

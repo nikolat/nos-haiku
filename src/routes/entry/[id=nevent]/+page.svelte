@@ -5,8 +5,7 @@
 	import { nip19 } from 'nostr-tools';
 
 	let { data }: { data: PageData } = $props();
-	let currentNoteId: string | undefined = $state();
-	let currentPubkey: string | undefined = $state();
+	let currentEventPointer: nip19.EventPointer | undefined = $state();
 	const getEvent = (urlId: string): nip19.EventPointer => {
 		if (/^(nevent|note)/.test(urlId)) {
 			const d = nip19.decode(urlId);
@@ -30,10 +29,8 @@
 	};
 
 	afterNavigate(() => {
-		const event = getEvent(data.params.id);
-		currentNoteId = event.id;
-		currentPubkey = event.author;
+		currentEventPointer = getEvent(data.params.id);
 	});
 </script>
 
-<App {currentNoteId} {currentPubkey} />
+<App {currentEventPointer} />

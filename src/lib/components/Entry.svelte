@@ -322,11 +322,11 @@
 		return obj;
 	};
 
-	const getEncode = (event: NostrEvent): string => {
+	const getEncode = (event: NostrEvent, relays?: string[]): string => {
 		const d = event.tags.find((tag) => tag.length >= 2 && tag[0] === 'd')?.at(1) ?? '';
 		return isReplaceableKind(event.kind) || isParameterizedReplaceableKind(event.kind)
-			? nip19.naddrEncode({ identifier: d, pubkey: event.pubkey, kind: event.kind })
-			: nip19.neventEncode({ ...event, author: event.pubkey });
+			? nip19.naddrEncode({ identifier: d, pubkey: event.pubkey, kind: event.kind, relays })
+			: nip19.neventEncode({ ...event, author: event.pubkey, relays });
 	};
 
 	const eventsReplying = $derived(getEventsReplying(event));
@@ -1614,6 +1614,8 @@
 											{/each}
 										</ul>
 									</dd>
+									<dt>Event ID with relay hints</dt>
+									<dd><code>{getEncode(event, getSeenOn(event.id))}</code></dd>
 								</dl>
 							{/each}
 						</aside>

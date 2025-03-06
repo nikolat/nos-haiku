@@ -5,27 +5,27 @@
 	import { nip19 } from 'nostr-tools';
 
 	let { data }: { data: PageData } = $props();
-	let currentChannelId: string | undefined = $state();
-	const getChannelId = (urlId: string) => {
+	let currentChannelPointer: nip19.EventPointer | undefined = $state();
+	const getChannelPointer = (urlId: string): nip19.EventPointer | undefined => {
 		if (/^(nevent|note)/.test(urlId)) {
 			const d = nip19.decode(urlId);
 			if (d.type === 'nevent') {
-				return d.data.id;
-			} else if (d.type === 'note') {
 				return d.data;
+			} else if (d.type === 'note') {
+				return { id: d.data };
 			} else {
 				throw new TypeError(`"${urlId}" must be nevent or note`);
 			}
 		} else if (urlId.length === 64) {
-			return urlId;
+			return { id: urlId };
 		} else {
 			throw new TypeError(`"${urlId}" has no channel id`);
 		}
 	};
 
 	afterNavigate(() => {
-		currentChannelId = getChannelId(data.params.id);
+		currentChannelPointer = getChannelPointer(data.params.id);
 	});
 </script>
 
-<App {currentChannelId} />
+<App {currentChannelPointer} />

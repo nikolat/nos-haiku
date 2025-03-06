@@ -56,7 +56,7 @@
 		loginPubkey,
 		isAntenna,
 		currentProfilePointer,
-		currentChannelId,
+		currentChannelPointer,
 		currentEventPointer,
 		currentAddressPointer,
 		query,
@@ -78,7 +78,7 @@
 		loginPubkey: string | undefined;
 		isAntenna: boolean | undefined;
 		currentProfilePointer: nip19.ProfilePointer | undefined;
-		currentChannelId: string | undefined;
+		currentChannelPointer: nip19.EventPointer | undefined;
 		currentEventPointer: nip19.EventPointer | undefined;
 		currentAddressPointer: nip19.AddressPointer | undefined;
 		query: string | undefined;
@@ -102,7 +102,7 @@
 		[
 			currentEventPointer,
 			currentProfilePointer,
-			currentChannelId,
+			currentChannelPointer,
 			currentAddressPointer,
 			hashtag,
 			category
@@ -160,14 +160,14 @@
 			new Set<string>(
 				eventsTimeline
 					.filter((ev) => {
-						if (currentChannelId !== undefined) {
+						if (currentChannelPointer !== undefined) {
 							return (
 								ev.kind === 42 &&
 								ev.tags.some(
 									(tag) =>
 										tag.length >= 4 &&
 										tag[0] === 'e' &&
-										tag[1] === currentChannelId &&
+										tag[1] === currentChannelPointer.id &&
 										tag[3] === 'root'
 								)
 							);
@@ -221,20 +221,20 @@
 					? getEvent9734(ev)?.pubkey === currentProfilePointer.pubkey
 					: ev.pubkey === currentProfilePointer.pubkey
 			);
-		} else if (currentChannelId !== undefined) {
+		} else if (currentChannelPointer !== undefined) {
 			tl = eventsTimeline.filter(
 				(ev) =>
 					(ev.kind === 42 &&
 						ev.tags
 							.filter((tag) => tag.length >= 4 && tag[0] === 'e' && tag[3] === 'root')
 							.map((tag) => tag[1])
-							.includes(currentChannelId)) ||
+							.includes(currentChannelPointer.id)) ||
 					(ev.kind === 16 &&
 						ev.tags.some((tag) => tag.length >= 2 && tag[0] === 'k' && tag[1] === '42') &&
 						getEventById(ev.tags.findLast((tag) => tag.length >= 2 && tag[0] === 'e')?.at(1) ?? '')
 							?.tags.filter((tag) => tag.length >= 4 && tag[0] === 'e' && tag[3] === 'root')
 							.map((tag) => tag[1])
-							.includes(currentChannelId))
+							.includes(currentChannelPointer.id))
 			);
 		} else if (query !== undefined) {
 			tl = eventsTimeline.filter((ev) => ev.content.toLowerCase().includes(query.toLowerCase()));
@@ -274,7 +274,7 @@
 			return (
 				!(currentProfilePointer === undefined && mutedPubkeys.includes(ev.pubkey)) &&
 				!(
-					currentChannelId === undefined &&
+					currentChannelPointer === undefined &&
 					rootIds.some((rootId) => mutedChannelIds.includes(rootId))
 				) &&
 				!mutedWords.some(
@@ -311,7 +311,7 @@
 
 	const urlParams: UrlParams = $derived({
 		currentProfilePointer,
-		currentChannelId,
+		currentChannelPointer,
 		currentEventPointer,
 		currentAddressPointer,
 		isAntenna,
@@ -596,8 +596,8 @@
 									</div>
 								</div>
 							{/if}
-						{:else if currentChannelId !== undefined}
-							{@const channel = channelMap.get(currentChannelId)}
+						{:else if currentChannelPointer !== undefined}
+							{@const channel = channelMap.get(currentChannelPointer.id)}
 							{#if channel?.name !== undefined}
 								<h1 class="Feed__title"><i class="fa-fw fas fa-tags"></i> {channel.name}</h1>
 								<h3 class="Feed__subtitle">
@@ -707,7 +707,7 @@
 									</div>
 								{/if}
 								{#if loginPubkey !== undefined}
-									{#if mutedChannelIds.includes(currentChannelId)}
+									{#if mutedChannelIds.includes(currentChannelPointer.id)}
 										<span class="Feed__muted"
 											><i class="fa-fw fas fa-eye-slash"></i>
 											{$_('Page.main.muted-entries-keyword')}
@@ -715,13 +715,13 @@
 											<!-- svelte-ignore a11y_no_static_element_interactions -->
 											<span
 												onclick={() => {
-													unmuteChannel(currentChannelId, loginPubkey);
+													unmuteChannel(currentChannelPointer.id, loginPubkey);
 												}}>{$_('Page.main.unmute')}</span
 											></span
 										>
 									{/if}
 									<div class="Actions">
-										{#if followingChannelIds.includes(currentChannelId)}
+										{#if followingChannelIds.includes(currentChannelPointer.id)}
 											<div
 												title={$_('Page.main.remove-from-favorites')}
 												class="FavoriteButton FavoriteButton--active"
@@ -731,7 +731,7 @@
 												<span
 													class="fa-fw fas fa-heart"
 													onclick={() => {
-														unbookmarkChannel(currentChannelId, loginPubkey);
+														unbookmarkChannel(currentChannelPointer.id, loginPubkey);
 													}}
 												></span>
 											</div>
@@ -742,7 +742,7 @@
 												<span
 													class="fa-fw fas fa-heart"
 													onclick={() => {
-														bookmarkChannel(currentChannelId);
+														bookmarkChannel(currentChannelPointer.id);
 													}}
 												></span>
 											</div>
@@ -761,11 +761,11 @@
 											</div>
 											<!-- svelte-ignore a11y_missing_attribute -->
 											<div class="SettingButton__Dropdown Dropdown--left">
-												{#if mutedChannelIds.includes(currentChannelId)}
+												{#if mutedChannelIds.includes(currentChannelPointer.id)}
 													<a
 														title={$_('Page.main.unmute-it').replace('{idView}', channel.name)}
 														onclick={() => {
-															unmuteChannel(currentChannelId, loginPubkey);
+															unmuteChannel(currentChannelPointer.id, loginPubkey);
 														}}
 														><i class="fa-fw fas fa-eye"></i>
 														{$_('Page.main.unmute-it').replace('{idView}', channel.name)}</a
@@ -774,7 +774,7 @@
 													<a
 														title={$_('Page.main.mute-it').replace('{idView}', channel.name)}
 														onclick={() => {
-															muteChannel(currentChannelId, loginPubkey);
+															muteChannel(currentChannelPointer.id, loginPubkey);
 														}}
 														><i class="fa-fw fas fa-eye-slash"></i>
 														{$_('Page.main.mute-it').replace('{idView}', channel.name)}</a
@@ -945,7 +945,7 @@
 					{/if}
 					<CreateEntry
 						{loginPubkey}
-						{currentChannelId}
+						currentChannelId={currentChannelPointer?.id}
 						eventToReply={undefined}
 						{isTopPage}
 						{profileMap}
@@ -972,7 +972,7 @@
 							{eventsEmojiSet}
 							{uploaderSelected}
 							bind:channelToPost
-							{currentChannelId}
+							currentChannelId={currentChannelPointer?.id}
 							{isEnabledRelativeTime}
 							{nowRealtime}
 							level={0}
@@ -994,7 +994,7 @@
 							{eventsEmojiSet}
 							{uploaderSelected}
 							bind:channelToPost
-							{currentChannelId}
+							currentChannelId={currentChannelPointer?.id}
 							{isEnabledRelativeTime}
 							{nowRealtime}
 							level={0}
@@ -1035,8 +1035,8 @@
 						</div>
 					</div>
 				</div>
-			{:else if currentChannelId !== undefined}
-				{@const channel = channelMap.get(currentChannelId)}
+			{:else if currentChannelPointer !== undefined}
+				{@const channel = channelMap.get(currentChannelPointer.id)}
 				{#if channel !== undefined}
 					<div class="Card BlogTagsInfo">
 						<div class="Card__head">

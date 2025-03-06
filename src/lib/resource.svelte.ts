@@ -1499,7 +1499,7 @@ export const getEventsFirst = (
 ): void => {
 	const {
 		currentProfilePointer,
-		currentChannelId,
+		currentChannelPointer,
 		currentEventPointer,
 		currentAddressPointer,
 		query,
@@ -1525,7 +1525,7 @@ export const getEventsFirst = (
 		[
 			currentEventPointer,
 			currentProfilePointer,
-			currentChannelId,
+			currentChannelPointer,
 			currentAddressPointer,
 			hashtag,
 			category,
@@ -1578,9 +1578,12 @@ export const getEventsFirst = (
 		for (const relay of currentProfilePointer.relays ?? []) {
 			relaySet.add(normalizeURL(relay));
 		}
-	} else if (currentChannelId !== undefined) {
-		filters.push({ kinds: [42], '#e': [currentChannelId] });
+	} else if (currentChannelPointer !== undefined) {
+		filters.push({ kinds: [42], '#e': [currentChannelPointer.id] });
 		filters.push({ kinds: [16], '#k': ['42'] });
+		for (const relay of currentChannelPointer.relays ?? []) {
+			relaySet.add(normalizeURL(relay));
+		}
 	} else if (currentEventPointer !== undefined) {
 		filters.push({ ids: [currentEventPointer.id] });
 		for (const relay of currentEventPointer.relays ?? []) {
@@ -1723,8 +1726,8 @@ export const getEventsFirst = (
 		} else {
 			filters.push({ kinds: [7], '#p': [currentProfilePointer.pubkey] });
 		}
-	} else if (currentChannelId !== undefined) {
-		filters.push({ kinds: [7], '#e': [currentChannelId] });
+	} else if (currentChannelPointer !== undefined) {
+		filters.push({ kinds: [7], '#e': [currentChannelPointer.id] });
 	} else if (currentEventPointer !== undefined) {
 		filters.push({ kinds: [7], '#e': [currentEventPointer.id] });
 	} else if (currentAddressPointer !== undefined) {

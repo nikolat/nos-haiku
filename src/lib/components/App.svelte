@@ -37,7 +37,7 @@
 	const urlParams: UrlParams = $props();
 	const {
 		currentProfilePointer,
-		currentChannelId,
+		currentChannelPointer,
 		currentEventPointer,
 		currentAddressPointer,
 		hashtag,
@@ -137,8 +137,8 @@
 		} else if (currentProfilePointer !== undefined) {
 			const prof = profileMap.get(currentProfilePointer.pubkey);
 			title = `${prof?.display_name ?? ''} (id:${prof?.name ?? `${currentProfilePointer.pubkey.slice(0, 15)}...`})`;
-		} else if (currentChannelId !== undefined) {
-			const channel = channelMap.get(currentChannelId);
+		} else if (currentChannelPointer !== undefined) {
+			const channel = channelMap.get(currentChannelPointer.id);
 			title = channel?.name ?? 'unknown channel';
 		} else if (hashtag !== undefined) {
 			title = `#${hashtag}`;
@@ -232,7 +232,7 @@
 			{loginPubkey}
 			{isAntenna}
 			{currentProfilePointer}
-			{currentChannelId}
+			{currentChannelPointer}
 			{currentEventPointer}
 			{currentAddressPointer}
 			{query}

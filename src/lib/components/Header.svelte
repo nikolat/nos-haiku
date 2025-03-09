@@ -435,7 +435,10 @@
 											isAbout={true}
 										/>
 									</a>
-									{#if ev.kind === 7}
+									{#if ev.kind === 4}
+										<a href="/entry/{nip19.neventEncode({ ...ev, author: ev.pubkey })}">📧sent DM</a
+										>
+									{:else if ev.kind === 7}
 										added a <a href="/entry/{nip19.neventEncode({ ...ev, author: ev.pubkey })}"
 											><Reaction reactionEvent={ev} profile={undefined} isAuthor={false} /></a
 										>

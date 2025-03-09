@@ -745,11 +745,11 @@ const nextOnSubscribeEventStore = (event: NostrEvent | null, kindToDelete?: numb
 				eventStore.getAll(
 					isEnabledSkipKind1
 						? [
-								{ '#p': [loginPubkey], kinds: [8, 42, 1111, 9735] },
+								{ '#p': [loginPubkey], kinds: [4, 8, 42, 1111, 9735] },
 								{ '#p': [loginPubkey], kinds: [7, 16], '#k': ['42'] }
 							]
 						: [
-								{ '#p': [loginPubkey], kinds: [1, 6, 7, 8, 42, 1111, 9735] },
+								{ '#p': [loginPubkey], kinds: [1, 4, 6, 7, 8, 42, 1111, 9735] },
 								{ '#p': [loginPubkey], kinds: [16], '#k': ['42'] }
 							]
 				)
@@ -1459,11 +1459,11 @@ export const fetchEventsMention = (until: number, completeCustom: () => void): v
 	let filters: LazyFilter[] = [];
 	if (isEnabledSkipKind1) {
 		filters = [
-			{ kinds: [42, 9735], '#p': [loginPubkey], limit: 10, until },
+			{ kinds: [4, 42, 1111, 9735], '#p': [loginPubkey], limit: 10, until },
 			{ kinds: [7, 16], '#p': [loginPubkey], '#k': ['42'], limit: 10, until }
 		];
 	} else {
-		filters = [{ kinds: [1, 6, 7, 16, 42, 9735], '#p': [loginPubkey], limit: 10, until }];
+		filters = [{ kinds: [1, 4, 6, 7, 16, 42, 1111, 9735], '#p': [loginPubkey], limit: 10, until }];
 	}
 	const rxReqBFirst = createRxBackwardReq();
 	rxNostr.use(rxReqBFirst).pipe(tie, completeOnTimeout(secOnCompleteTimeout)).subscribe({
@@ -1663,10 +1663,10 @@ export const getEventsFirst = (
 	}
 	if (isFirstFetch && loginPubkey !== undefined) {
 		if (isEnabledSkipKind1) {
-			filters.push({ kinds: [8, 42, 1111, 9735], '#p': [loginPubkey] });
+			filters.push({ kinds: [4, 8, 42, 1111, 9735], '#p': [loginPubkey] });
 			filters.push({ kinds: [7, 16], '#p': [loginPubkey], '#k': ['42'] });
 		} else {
-			filters.push({ kinds: [1, 6, 7, 8, 16, 42, 1111, 9735], '#p': [loginPubkey] });
+			filters.push({ kinds: [1, 4, 6, 7, 8, 16, 42, 1111, 9735], '#p': [loginPubkey] });
 		}
 	}
 	if (isEnabledSkipKind1) {
@@ -1723,7 +1723,7 @@ export const getEventsFirst = (
 	//ここから先はForwardReq用追加分(受信しっぱなし)
 	if (loginPubkey !== undefined) {
 		let kinds = [
-			0, 1, 3, 5, 6, 7, 40, 41, 42, 1018, 1068, 1111, 9735, 10000, 10001, 10002, 10005, 10030,
+			0, 1, 3, 4, 5, 6, 7, 40, 41, 42, 1018, 1068, 1111, 9735, 10000, 10001, 10002, 10005, 10030,
 			30002, 30008
 		];
 		if (!pubkeysFollowing.includes(loginPubkey)) {
@@ -1783,9 +1783,10 @@ export const getEventsFirst = (
 		//削除反映漏れに備えて kind:5 は少し前から取得する
 		filters.push({
 			kinds: [5],
-			'#k': (isEnabledSkipKind1 ? [7, 8, 16, 40, 41, 42] : [1, 6, 7, 8, 16, 40, 41, 42]).map((n) =>
-				String(n)
-			),
+			'#k': (isEnabledSkipKind1
+				? [4, 7, 8, 16, 40, 41, 42, 1018, 1068, 1111]
+				: [1, 4, 6, 7, 8, 16, 40, 41, 42, 1018, 1068, 1111]
+			).map((n) => String(n)),
 			authors: pubkeysFollowing,
 			since: unixNow() - 60 * 60 * 12,
 			limit: 10

@@ -79,6 +79,9 @@
 		"remove-from-favorites": "お気に入りから削除",
 		"add-to-favorites": "お気に入りに追加"
 	},
+	"DirectMessage": {
+		"decrypt": "復号"
+	},
 	"Poll": {
 		"vote": "投票",
 		"time-remaining": "残り時間"

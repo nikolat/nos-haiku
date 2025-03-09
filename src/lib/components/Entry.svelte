@@ -29,6 +29,7 @@
 		unbookmarkEmojiSets
 	} from '$lib/resource.svelte';
 	import Profile from '$lib/components/kinds/Profile.svelte';
+	import DirectMessage from '$lib/components/kinds/DirectMessage.svelte';
 	import Reaction from '$lib/components/kinds/Reaction.svelte';
 	import ChannelMeta from '$lib/components/kinds/ChannelMeta.svelte';
 	import MuteList from '$lib/components/kinds/MuteList.svelte';
@@ -427,6 +428,8 @@
 								{/if}
 							{:else if [7, 17].includes(event.kind)}
 								Reaction <Reaction reactionEvent={event} profile={undefined} isAuthor={false} />
+							{:else if event.kind === 4}
+								Encrypted Direct Messages
 							{:else if event.kind === 8}
 								Badge Award
 							{:else if event.kind === 20}
@@ -582,6 +585,37 @@
 										)
 									)}
 									{`Followees: ${pubkeys.length}`}
+								{:else if event.kind === 4}
+									{@const pubkeyToSend = event.tags
+										.find((tag) => tag.length >= 2 && tag[0] === 'p')
+										?.at(1)}
+									{#if pubkeyToSend !== undefined}
+										{@const profAwarded = profileMap.get(pubkeyToSend)}
+										<div class="Entry__parentmarker">
+											<a href="/{nip19.npubEncode(pubkeyToSend)}">
+												<i class="fa-fw fas fa-arrow-alt-from-right"></i>
+												<span class="Mention">
+													<img
+														src={profAwarded?.picture ??
+															getRoboHashURL(nip19.npubEncode(pubkeyToSend))}
+														alt={getProfileName(pubkeyToSend)}
+														class="Avatar Avatar--sm"
+													/>
+													<Content
+														content={getProfileName(pubkeyToSend)}
+														tags={profAwarded?.event.tags ?? []}
+														isAbout={true}
+													/>
+												</span>
+											</a>
+										</div>
+									{/if}
+									<DirectMessage
+										content={event.content}
+										currentPubkey={event.pubkey}
+										{loginPubkey}
+										{pubkeyToSend}
+									/>
 								{:else if event.kind === 7}
 									{@const reactedEventId = event.tags
 										.findLast((tag) => tag.length >= 2 && tag[0] === 'e')

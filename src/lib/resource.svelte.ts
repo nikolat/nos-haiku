@@ -1130,6 +1130,20 @@ const _subTimeline = eventStore
 				}
 				break;
 			}
+			case 4: {
+				const pubkeys = Array.from(
+					new Set<string>(
+						event.tags
+							.filter((tag) => tag.length >= 2 && tag[0] === 'p')
+							.map((tag) => tag[1])
+							.filter((pubkey) => !profileMap.has(pubkey))
+					)
+				);
+				if (pubkeys.length > 0) {
+					rxReqB0.emit({ kinds: [0], authors: pubkeys, until: unixNow() });
+				}
+				break;
+			}
 			case 6:
 			case 16: {
 				if (

@@ -649,13 +649,9 @@ const nextOnSubscribeEventStore = (event: NostrEvent | null, kindToDelete?: numb
 				Array.from(
 					eventStore.getAll(
 						loginPubkey === undefined
-							? [
-									{ kinds: isEnabledSkipKind1 ? [42, 1111] : [1, 6, 42, 1068, 1111] },
-									{ kinds: [16], '#k': ['42'] }
-								]
+							? [{ kinds: isEnabledSkipKind1 ? [16, 42, 1111] : [1, 6, 16, 42, 1068, 1111] }]
 							: [
-									{ kinds: isEnabledSkipKind1 ? [42, 1111] : [1, 6, 42, 1068, 1111] },
-									{ kinds: [16], '#k': ['42'] },
+									{ kinds: isEnabledSkipKind1 ? [16, 42, 1111] : [1, 6, 16, 42, 1068, 1111] },
 									{ kinds: [8], '#p': [loginPubkey] },
 									{ kinds: [9735], '#P': [loginPubkey] }
 								]
@@ -745,13 +741,10 @@ const nextOnSubscribeEventStore = (event: NostrEvent | null, kindToDelete?: numb
 				eventStore.getAll(
 					isEnabledSkipKind1
 						? [
-								{ '#p': [loginPubkey], kinds: [4, 8, 42, 1111, 9735] },
-								{ '#p': [loginPubkey], kinds: [7, 16], '#k': ['42'] }
+								{ '#p': [loginPubkey], kinds: [4, 8, 16, 42, 1111, 9735] },
+								{ '#p': [loginPubkey], kinds: [7], '#k': ['42', '1111'] }
 							]
-						: [
-								{ '#p': [loginPubkey], kinds: [1, 4, 6, 7, 8, 42, 1111, 9735] },
-								{ '#p': [loginPubkey], kinds: [16], '#k': ['42'] }
-							]
+						: [{ '#p': [loginPubkey], kinds: [1, 4, 6, 7, 8, 16, 42, 1111, 9735] }]
 				)
 			)
 		).filter(
@@ -1146,12 +1139,6 @@ const _subTimeline = eventStore
 			}
 			case 6:
 			case 16: {
-				if (
-					event.kind === 16 &&
-					event.tags.find((tag) => tag.length >= 2 && tag[0] === 'k')?.at(1) !== '42'
-				) {
-					break;
-				}
 				fetchEventsByETags(event);
 				break;
 			}

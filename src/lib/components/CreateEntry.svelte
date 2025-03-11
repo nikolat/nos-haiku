@@ -393,7 +393,8 @@
 		<div class="CreateEntry__actions">
 			<button
 				class="Button"
-				disabled={contentToSend.length === 0 || (isTopPage && channelNameToCreate.length === 0)}
+				disabled={contentToSend.length === 0 ||
+					(isTopPage && channelNameToCreate.length === 0 && !addPoll)}
 				onclick={callSendNote}
 			>
 				<span>{$_('CreateEntry.post')}</span>

@@ -126,7 +126,11 @@
 	});
 
 	const callSendNote = () => {
-		if (contentToSend.length === 0 || (isTopPage && channelNameToCreate.length === 0 && !addPoll)) {
+		if (
+			contentToSend.length === 0 ||
+			(!addPoll && channelNameToCreate.length === 0) ||
+			(addPoll && pollItems.filter((item) => item.length > 0).length < 2)
+		) {
 			return;
 		}
 		const targetEventToReply =
@@ -394,7 +398,8 @@
 			<button
 				class="Button"
 				disabled={contentToSend.length === 0 ||
-					(isTopPage && channelNameToCreate.length === 0 && !addPoll)}
+					(!addPoll && channelNameToCreate.length === 0) ||
+					(addPoll && pollItems.filter((item) => item.length > 0).length < 2)}
 				onclick={callSendNote}
 			>
 				<span>{$_('CreateEntry.post')}</span>

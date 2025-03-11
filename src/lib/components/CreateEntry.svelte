@@ -128,7 +128,7 @@
 	const callSendNote = () => {
 		if (
 			contentToSend.length === 0 ||
-			(!addPoll && channelNameToCreate.length === 0) ||
+			(!addPoll && channelNameToCreate.length === 0 && isTopPage) ||
 			(addPoll && pollItems.filter((item) => item.length > 0).length < 2)
 		) {
 			return;
@@ -398,7 +398,7 @@
 			<button
 				class="Button"
 				disabled={contentToSend.length === 0 ||
-					(!addPoll && channelNameToCreate.length === 0) ||
+					(!addPoll && channelNameToCreate.length === 0 && isTopPage) ||
 					(addPoll && pollItems.filter((item) => item.length > 0).length < 2)}
 				onclick={callSendNote}
 			>

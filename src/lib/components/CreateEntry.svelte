@@ -126,7 +126,7 @@
 	});
 
 	const callSendNote = () => {
-		if (contentToSend.length === 0 || (isTopPage && channelNameToCreate.length === 0)) {
+		if (contentToSend.length === 0 || (isTopPage && channelNameToCreate.length === 0 && !addPoll)) {
 			return;
 		}
 		const targetEventToReply =

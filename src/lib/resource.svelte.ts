@@ -2501,9 +2501,9 @@ export const sendNote = async (
 	pollItems?: string[],
 	pollEndsAt?: number,
 	pollType?: 'singlechoice' | 'multiplechoice'
-) => {
+): Promise<NostrEvent | null> => {
 	if (window.nostr === undefined) {
-		return;
+		return null;
 	}
 	const relaysToAdd: Set<string> = new Set<string>();
 	let eventChannelToSend: NostrEvent | undefined;
@@ -2767,6 +2767,7 @@ export const sendNote = async (
 		sendEvent(eventChannelToSend, options);
 	}
 	sendEvent(eventToSend, options);
+	return eventToSend;
 };
 
 export const sendEvent = (eventToSend: NostrEvent, options?: Partial<RxNostrSendOptions>): void => {

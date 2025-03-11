@@ -3,6 +3,7 @@
 	import { getEmoji, getEmojiMap, type ChannelContent } from '$lib/utils';
 	import { uploadFile } from '$lib/nip96';
 	import { getChannelEventMap, sendNote } from '$lib/resource.svelte';
+	import { goto } from '$app/navigation';
 	import type { EventTemplate, NostrEvent } from 'nostr-tools/pure';
 	import * as nip19 from 'nostr-tools/nip19';
 	import {
@@ -147,7 +148,8 @@
 			addPoll ? pollItems.filter((item) => item.length > 0) : undefined,
 			addPoll ? unixNow() + pollPeriod : undefined,
 			addPoll ? pollType : undefined
-		).then(() => {
+		).then((event: NostrEvent | null) => {
+			const isNeededShowEvent: boolean = isTopPage && addPoll;
 			contentToSend = '';
 			channelToPost = undefined;
 			channelNameToCreate = '';
@@ -158,6 +160,10 @@
 			pollPeriod = 1 * 24 * 60 * 60;
 			filesToUpload = undefined;
 			showForm = false;
+			if (isNeededShowEvent && event !== null) {
+				const nevent: string = nip19.neventEncode({ ...event, author: event.pubkey });
+				goto(`/entry/${nevent}`);
+			}
 		});
 	};
 </script>
@@ -275,7 +281,7 @@
 								bind:files={filesToUpload}
 								onchange={uploadFileExec}
 							/>
-							{#if currentChannelId === undefined && eventToReply === undefined && !isTopPage}
+							{#if currentChannelId === undefined && eventToReply === undefined}
 								<button
 									aria-label="poll"
 									title="poll"

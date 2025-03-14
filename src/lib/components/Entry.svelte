@@ -41,7 +41,7 @@
 	import Content from '$lib/components/Content.svelte';
 	import Entry from '$lib/components/Entry.svelte';
 	import CreateEntry from '$lib/components/CreateEntry.svelte';
-	import type { NostrEvent, UnsignedEvent } from 'nostr-tools/pure';
+	import { getEventHash, type NostrEvent, type UnsignedEvent } from 'nostr-tools/pure';
 	import { isParameterizedReplaceableKind, isReplaceableKind } from 'nostr-tools/kinds';
 	import * as nip19 from 'nostr-tools/nip19';
 	import { decode } from 'light-bolt11-decoder';
@@ -1712,6 +1712,29 @@
 						{/if}
 					</div>
 					<div class="Entry__replies">
+						{#if previewEvent}
+							<Entry
+								event={{ ...previewEvent, id: getEventHash(previewEvent), sig: '' }}
+								{channelMap}
+								{profileMap}
+								{loginPubkey}
+								{mutedPubkeys}
+								{mutedChannelIds}
+								{mutedWords}
+								{mutedHashTags}
+								{followingPubkeys}
+								{eventsTimeline}
+								{eventsReaction}
+								{eventsEmojiSet}
+								{uploaderSelected}
+								{channelToPost}
+								{currentChannelId}
+								{isEnabledRelativeTime}
+								{nowRealtime}
+								level={level + 1}
+								isPreview={true}
+							/>
+						{/if}
 						{#if showReplies}
 							{#each eventsReplying as ev (ev.id)}
 								<Entry

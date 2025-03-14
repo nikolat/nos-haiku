@@ -47,7 +47,7 @@
 	import CreateEntry from '$lib/components/CreateEntry.svelte';
 	import Entry from '$lib/components/Entry.svelte';
 	import { afterNavigate, beforeNavigate } from '$app/navigation';
-	import type { NostrEvent } from 'nostr-tools/pure';
+	import { getEventHash, type NostrEvent, type UnsignedEvent } from 'nostr-tools/pure';
 	import * as nip19 from 'nostr-tools/nip19';
 	import { unixNow } from 'applesauce-core/helpers';
 	import { _ } from 'svelte-i18n';
@@ -380,6 +380,7 @@
 	};
 
 	let channelToPost: ChannelContent | undefined = $state();
+	let previewEvent: UnsignedEvent | undefined = $state();
 	let isEnabledScrollInfinitely: boolean = $state(true);
 	let zapWindowContainer: HTMLElement | undefined = $state();
 	let isEnabledToEditChannel: boolean = $state(false);
@@ -953,9 +954,33 @@
 						{eventsEmojiSet}
 						bind:channelToPost
 						showForm={true}
+						bind:previewEvent
 					/>
 				</div>
 				<div class="FeedList">
+					{#if previewEvent !== undefined}
+						<Entry
+							event={{ ...previewEvent, id: getEventHash(previewEvent), sig: '' }}
+							{channelMap}
+							{profileMap}
+							{loginPubkey}
+							{mutedPubkeys}
+							{mutedChannelIds}
+							{mutedWords}
+							{mutedHashTags}
+							{followingPubkeys}
+							{eventsTimeline}
+							{eventsReaction}
+							{eventsEmojiSet}
+							{uploaderSelected}
+							bind:channelToPost
+							currentChannelId={currentChannelPointer?.id}
+							{isEnabledRelativeTime}
+							{nowRealtime}
+							level={0}
+							isPreview={true}
+						/>
+					{/if}
 					{#if pinnedNotesEvent !== undefined && pinnedNotesEvent.tags.filter((tag) => tag.length >= 2 && tag[0] === 'e').length > 0}
 						<Entry
 							event={pinnedNotesEvent}

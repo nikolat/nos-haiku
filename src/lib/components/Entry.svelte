@@ -41,7 +41,7 @@
 	import Content from '$lib/components/Content.svelte';
 	import Entry from '$lib/components/Entry.svelte';
 	import CreateEntry from '$lib/components/CreateEntry.svelte';
-	import type { NostrEvent } from 'nostr-tools/pure';
+	import type { NostrEvent, UnsignedEvent } from 'nostr-tools/pure';
 	import { isParameterizedReplaceableKind, isReplaceableKind } from 'nostr-tools/kinds';
 	import * as nip19 from 'nostr-tools/nip19';
 	import { decode } from 'light-bolt11-decoder';
@@ -65,7 +65,8 @@
 		currentChannelId,
 		isEnabledRelativeTime,
 		nowRealtime,
-		level
+		level,
+		isPreview = false
 	}: {
 		event: NostrEvent;
 		channelMap: Map<string, ChannelContent>;
@@ -85,7 +86,10 @@
 		isEnabledRelativeTime: boolean;
 		nowRealtime: number;
 		level: number;
+		isPreview?: boolean;
 	} = $props();
+
+	let previewEvent: UnsignedEvent | undefined = $state();
 
 	const getRootId = (event: NostrEvent | undefined): string | undefined => {
 		if (event === undefined) {
@@ -486,16 +490,21 @@
 							{:else}
 								{`unsupported kind:${event.kind} event`}
 							{/if}
+							{#if isPreview}
+								Preview Mode
+							{/if}
 						</h3>
-						<AddStar
-							{event}
-							{loginPubkey}
-							{profileMap}
-							{eventsReactionToTheEvent}
-							{eventsEmojiSet}
-							{mutedWords}
-							bind:isEmojiPickerOpened
-						/>
+						{#if !isPreview}
+							<AddStar
+								{event}
+								{loginPubkey}
+								{profileMap}
+								{eventsReactionToTheEvent}
+								{eventsEmojiSet}
+								{mutedWords}
+								bind:isEmojiPickerOpened
+							/>
+						{/if}
 					</div>
 					<div class="Entry__body">
 						{#if idReplyTo !== undefined || addressReplyTo !== undefined}
@@ -1417,88 +1426,57 @@
 						</dvi>
 					</div>
 					<div class="Entry__foot">
-						<div class="EntryMeta">
-							<span class="User">
-								<a href="/{nip19.npubEncode(event.pubkey)}">
-									<img
-										src={prof?.picture ?? getRoboHashURL(nip19.npubEncode(event.pubkey))}
-										alt={getProfileName(event.pubkey)}
-										class="Avatar"
-									/>
-									<Content
-										content={getProfileName(event.pubkey)}
-										tags={prof?.event.tags ?? []}
-										isAbout={true}
-									/>
-								</a>
-							</span>
-							<span class="Separator">·</span>
-							<span class="Time">
-								<a href={`/entry/${getEncode(event)}`}>
-									<time
-										datetime={new Date(1000 * event.created_at).toISOString()}
-										title={new Date(1000 * event.created_at).toLocaleString()}
-										class="NoticeItem__time"
-										>{isEnabledRelativeTime
-											? getRelativeTime(nowRealtime, event.created_at)
-											: getAbsoluteTime(event.created_at)}</time
-									>
-								</a>
-							</span>
-							{#if loginPubkey !== undefined}
-								{#if loginPubkey === event.pubkey && ![5, 62].includes(event.kind)}
-									<span class="Separator">·</span>
-									<!-- svelte-ignore a11y_click_events_have_key_events -->
-									<!-- svelte-ignore a11y_no_static_element_interactions -->
-									<span
-										class="DeleteButton"
-										onclick={() => {
-											if (confirm($_('Entry.confirm-delete'))) {
-												sendDeletion(event);
-											}
-										}}><i class="far fa-times-circle"></i></span
-									>
-								{/if}
-								<span class="Separator">·</span>
-								<span class="repost">
-									<button
-										aria-label="Repost Button"
-										class="repost"
-										title="repost"
-										onclick={() => {
-											sendRepost(event);
-										}}
-									>
-										<svg
-											xmlns="http://www.w3.org/2000/svg"
-											width="24"
-											height="24"
-											viewBox="0 0 24 24"
-										>
-											<path
-												fill-rule="evenodd"
-												d="M17.8069373,7 C16.4464601,5.07869636 14.3936238,4 12,4 C7.581722,4 4,7.581722 4,12 L2,12 C2,6.4771525 6.4771525,2 12,2 C14.8042336,2 17.274893,3.18251178 19,5.27034886 L19,2 L21,2 L21,9 L14,9 L14,7 L17.8069373,7 Z M6.19306266,17 C7.55353989,18.9213036 9.60637619,20 12,20 C16.418278,20 20,16.418278 20,12 L22,12 C22,17.5228475 17.5228475,22 12,22 C9.19576641,22 6.72510698,20.8174882 5,18.7296511 L5,22 L3,22 L3,15 L10,15 L10,17 L6.19306266,17 Z"
-											/>
-										</svg>
-									</button>
+						{#if !isPreview}
+							<div class="EntryMeta">
+								<span class="User">
+									<a href="/{nip19.npubEncode(event.pubkey)}">
+										<img
+											src={prof?.picture ?? getRoboHashURL(nip19.npubEncode(event.pubkey))}
+											alt={getProfileName(event.pubkey)}
+											class="Avatar"
+										/>
+										<Content
+											content={getProfileName(event.pubkey)}
+											tags={prof?.event.tags ?? []}
+											isAbout={true}
+										/>
+									</a>
 								</span>
-								{#if (profileMap.get(event.pubkey)?.lud16 ?? profileMap.get(event.pubkey)?.lud06) !== undefined}
-									<span class="Separator">·</span>
-									<span class="zap">
-										<button
-											aria-label="Zap Button"
-											class="zap"
-											title="zap"
+								<span class="Separator">·</span>
+								<span class="Time">
+									<a href={`/entry/${getEncode(event)}`}>
+										<time
+											datetime={new Date(1000 * event.created_at).toISOString()}
+											title={new Date(1000 * event.created_at).toLocaleString()}
+											class="NoticeItem__time"
+											>{isEnabledRelativeTime
+												? getRelativeTime(nowRealtime, event.created_at)
+												: getAbsoluteTime(event.created_at)}</time
+										>
+									</a>
+								</span>
+								{#if loginPubkey !== undefined}
+									{#if loginPubkey === event.pubkey && ![5, 62].includes(event.kind)}
+										<span class="Separator">·</span>
+										<!-- svelte-ignore a11y_click_events_have_key_events -->
+										<!-- svelte-ignore a11y_no_static_element_interactions -->
+										<span
+											class="DeleteButton"
 											onclick={() => {
-												const relaysToWrite: string[] = Object.entries(getRelaysToUse())
-													.filter((v) => v[1].write)
-													.map((v) => v[0]);
-												zap(
-													nip19.npubEncode(event.pubkey),
-													nip19.noteEncode(event.id),
-													relaysToWrite,
-													zapWindowContainer
-												);
+												if (confirm($_('Entry.confirm-delete'))) {
+													sendDeletion(event);
+												}
+											}}><i class="far fa-times-circle"></i></span
+										>
+									{/if}
+									<span class="Separator">·</span>
+									<span class="repost">
+										<button
+											aria-label="Repost Button"
+											class="repost"
+											title="repost"
+											onclick={() => {
+												sendRepost(event);
 											}}
 										>
 											<svg
@@ -1509,32 +1487,88 @@
 											>
 												<path
 													fill-rule="evenodd"
-													d="M9,15 L3.91937515,15 L15,1.14921894 L15,9 L20.0806248,9 L9,22.8507811 L9,15 Z M8.08062485,13 L11,13 L11,17.1492189 L15.9193752,11 L13,11 L13,6.85078106 L8.08062485,13 Z"
+													d="M17.8069373,7 C16.4464601,5.07869636 14.3936238,4 12,4 C7.581722,4 4,7.581722 4,12 L2,12 C2,6.4771525 6.4771525,2 12,2 C14.8042336,2 17.274893,3.18251178 19,5.27034886 L19,2 L21,2 L21,9 L14,9 L14,7 L17.8069373,7 Z M6.19306266,17 C7.55353989,18.9213036 9.60637619,20 12,20 C16.418278,20 20,16.418278 20,12 L22,12 C22,17.5228475 17.5228475,22 12,22 C9.19576641,22 6.72510698,20.8174882 5,18.7296511 L5,22 L3,22 L3,15 L10,15 L10,17 L6.19306266,17 Z"
 												/>
 											</svg>
 										</button>
 									</span>
-									<div class="zap-window-container" bind:this={zapWindowContainer}></div>
+									{#if (profileMap.get(event.pubkey)?.lud16 ?? profileMap.get(event.pubkey)?.lud06) !== undefined}
+										<span class="Separator">·</span>
+										<span class="zap">
+											<button
+												aria-label="Zap Button"
+												class="zap"
+												title="zap"
+												onclick={() => {
+													const relaysToWrite: string[] = Object.entries(getRelaysToUse())
+														.filter((v) => v[1].write)
+														.map((v) => v[0]);
+													zap(
+														nip19.npubEncode(event.pubkey),
+														nip19.noteEncode(event.id),
+														relaysToWrite,
+														zapWindowContainer
+													);
+												}}
+											>
+												<svg
+													xmlns="http://www.w3.org/2000/svg"
+													width="24"
+													height="24"
+													viewBox="0 0 24 24"
+												>
+													<path
+														fill-rule="evenodd"
+														d="M9,15 L3.91937515,15 L15,1.14921894 L15,9 L20.0806248,9 L9,22.8507811 L9,15 Z M8.08062485,13 L11,13 L11,17.1492189 L15.9193752,11 L13,11 L13,6.85078106 L8.08062485,13 Z"
+													/>
+												</svg>
+											</button>
+										</span>
+										<div class="zap-window-container" bind:this={zapWindowContainer}></div>
+									{/if}
 								{/if}
-							{/if}
-							{#if !event.tags.some((tag) => tag[0] === '-') || event.pubkey === loginPubkey}
+								{#if !event.tags.some((tag) => tag[0] === '-') || event.pubkey === loginPubkey}
+									<span class="Separator">·</span>
+									<span class="broadcast">
+										<button
+											aria-label="Broadcast Button"
+											class="broadcast"
+											title="broadcast"
+											onclick={() => {
+												const relaysToWrite: string[] = Object.entries(getRelaysToUse())
+													.filter((v) => v[1].write)
+													.map((v) => v[0]);
+												const message = [$_('Entry.confirm-broadcast'), '', ...relaysToWrite].join(
+													'\n'
+												);
+												if (confirm(message)) {
+													const options = { on: { relays: relaysToWrite } };
+													sendEvent(event, options);
+												}
+											}}
+										>
+											<svg
+												xmlns="http://www.w3.org/2000/svg"
+												width="24"
+												height="24"
+												viewBox="0 0 24 24"
+											>
+												<path
+													fill-rule="evenodd"
+													d="M9.38742589,20 L8.72075922,22 L6.61257411,22 L9.89881747,12.1412699 C9.34410225,11.5968755 9,10.8386225 9,10 C9,8.34314575 10.3431458,7 12,7 C13.6568542,7 15,8.34314575 15,10 C15,10.8386225 14.6558977,11.5968755 14.1011825,12.1412699 L17.3874259,22 L15.2792408,22 L14.6125741,20 L9.38742589,20 Z M10.7207592,16 L10.0540926,18 L13.9459074,18 L13.2792408,16 L10.7207592,16 Z M11.3874259,14 L12.6125741,14 L12.2750928,12.987556 C12.1844984,12.9957918 12.0927406,13 12,13 C11.9072594,13 11.8155016,12.9957918 11.7249072,12.987556 L11.3874259,14 Z M12,11 C12.5522847,11 13,10.5522847 13,10 C13,9.44771525 12.5522847,9 12,9 C11.4477153,9 11,9.44771525 11,10 C11,10.5522847 11.4477153,11 12,11 Z M20.108743,2.56698557 C21.9041909,4.52460368 23,7.13433188 23,10 C23,12.8656681 21.9041909,15.4753963 20.108743,17.4330144 L18.6344261,16.0815573 C20.103429,14.4798697 21,12.3446376 21,10 C21,7.65536245 20.103429,5.52013028 18.6344261,3.91844274 L20.108743,2.56698557 Z M17.1601092,5.26989991 C18.302667,6.51565689 19,8.17639301 19,10 C19,11.823607 18.302667,13.4843431 17.1601092,14.7301001 L15.6857923,13.3786429 C16.501905,12.4888165 17,11.3025764 17,10 C17,8.69742358 16.501905,7.51118349 15.6857923,6.62135708 L17.1601092,5.26989991 Z M3.89125699,2.56665655 L5.3655739,3.91811372 C3.89657104,5.51980126 3,7.65503343 3,9.99967098 C3,12.3443085 3.89657104,14.4795407 5.3655739,16.0812282 L3.89125699,17.4326854 C2.09580905,15.4750673 1,12.8653391 1,9.99967098 C1,7.13400286 2.09580905,4.52427466 3.89125699,2.56665655 Z M6.83989081,5.26957089 L8.31420772,6.62102806 C7.49809502,7.51085447 7,8.69709456 7,9.99967098 C7,11.3022474 7.49809502,12.4884875 8.31420772,13.3783139 L6.83989081,14.7297711 C5.69733303,13.4840141 5,11.823278 5,9.99967098 C5,8.17606399 5.69733303,6.51532787 6.83989081,5.26957089 Z"
+												/>
+											</svg>
+										</button>
+									</span>
+								{/if}
 								<span class="Separator">·</span>
-								<span class="broadcast">
+								<span class="show-json">
 									<button
-										aria-label="Broadcast Button"
-										class="broadcast"
-										title="broadcast"
+										aria-label="Show JSON"
+										class="show-json"
+										title="Show JSON"
 										onclick={() => {
-											const relaysToWrite: string[] = Object.entries(getRelaysToUse())
-												.filter((v) => v[1].write)
-												.map((v) => v[0]);
-											const message = [$_('Entry.confirm-broadcast'), '', ...relaysToWrite].join(
-												'\n'
-											);
-											if (confirm(message)) {
-												const options = { on: { relays: relaysToWrite } };
-												sendEvent(event, options);
-											}
+											showJson = !showJson;
 										}}
 									>
 										<svg
@@ -1545,46 +1579,23 @@
 										>
 											<path
 												fill-rule="evenodd"
-												d="M9.38742589,20 L8.72075922,22 L6.61257411,22 L9.89881747,12.1412699 C9.34410225,11.5968755 9,10.8386225 9,10 C9,8.34314575 10.3431458,7 12,7 C13.6568542,7 15,8.34314575 15,10 C15,10.8386225 14.6558977,11.5968755 14.1011825,12.1412699 L17.3874259,22 L15.2792408,22 L14.6125741,20 L9.38742589,20 Z M10.7207592,16 L10.0540926,18 L13.9459074,18 L13.2792408,16 L10.7207592,16 Z M11.3874259,14 L12.6125741,14 L12.2750928,12.987556 C12.1844984,12.9957918 12.0927406,13 12,13 C11.9072594,13 11.8155016,12.9957918 11.7249072,12.987556 L11.3874259,14 Z M12,11 C12.5522847,11 13,10.5522847 13,10 C13,9.44771525 12.5522847,9 12,9 C11.4477153,9 11,9.44771525 11,10 C11,10.5522847 11.4477153,11 12,11 Z M20.108743,2.56698557 C21.9041909,4.52460368 23,7.13433188 23,10 C23,12.8656681 21.9041909,15.4753963 20.108743,17.4330144 L18.6344261,16.0815573 C20.103429,14.4798697 21,12.3446376 21,10 C21,7.65536245 20.103429,5.52013028 18.6344261,3.91844274 L20.108743,2.56698557 Z M17.1601092,5.26989991 C18.302667,6.51565689 19,8.17639301 19,10 C19,11.823607 18.302667,13.4843431 17.1601092,14.7301001 L15.6857923,13.3786429 C16.501905,12.4888165 17,11.3025764 17,10 C17,8.69742358 16.501905,7.51118349 15.6857923,6.62135708 L17.1601092,5.26989991 Z M3.89125699,2.56665655 L5.3655739,3.91811372 C3.89657104,5.51980126 3,7.65503343 3,9.99967098 C3,12.3443085 3.89657104,14.4795407 5.3655739,16.0812282 L3.89125699,17.4326854 C2.09580905,15.4750673 1,12.8653391 1,9.99967098 C1,7.13400286 2.09580905,4.52427466 3.89125699,2.56665655 Z M6.83989081,5.26957089 L8.31420772,6.62102806 C7.49809502,7.51085447 7,8.69709456 7,9.99967098 C7,11.3022474 7.49809502,12.4884875 8.31420772,13.3783139 L6.83989081,14.7297711 C5.69733303,13.4840141 5,11.823278 5,9.99967098 C5,8.17606399 5.69733303,6.51532787 6.83989081,5.26957089 Z"
+												d="M5,14 C3.8954305,14 3,13.1045695 3,12 C3,10.8954305 3.8954305,10 5,10 C6.1045695,10 7,10.8954305 7,12 C7,13.1045695 6.1045695,14 5,14 Z M12,14 C10.8954305,14 10,13.1045695 10,12 C10,10.8954305 10.8954305,10 12,10 C13.1045695,10 14,10.8954305 14,12 C14,13.1045695 13.1045695,14 12,14 Z M19,14 C17.8954305,14 17,13.1045695 17,12 C17,10.8954305 17.8954305,10 19,10 C20.1045695,10 21,10.8954305 21,12 C21,13.1045695 20.1045695,14 19,14 Z"
 											/>
 										</svg>
 									</button>
 								</span>
-							{/if}
-							<span class="Separator">·</span>
-							<span class="show-json">
-								<button
-									aria-label="Show JSON"
-									class="show-json"
-									title="Show JSON"
-									onclick={() => {
-										showJson = !showJson;
-									}}
-								>
-									<svg
-										xmlns="http://www.w3.org/2000/svg"
-										width="24"
-										height="24"
-										viewBox="0 0 24 24"
+								{#if loginPubkey !== undefined}
+									<!-- svelte-ignore a11y_click_events_have_key_events -->
+									<!-- svelte-ignore a11y_no_static_element_interactions -->
+									<span
+										class="Entry__reply"
+										onclick={() => {
+											showForm = !showForm;
+										}}><i class="fal fa-comment-lines"></i> {$_('Entry.reply')}</span
 									>
-										<path
-											fill-rule="evenodd"
-											d="M5,14 C3.8954305,14 3,13.1045695 3,12 C3,10.8954305 3.8954305,10 5,10 C6.1045695,10 7,10.8954305 7,12 C7,13.1045695 6.1045695,14 5,14 Z M12,14 C10.8954305,14 10,13.1045695 10,12 C10,10.8954305 10.8954305,10 12,10 C13.1045695,10 14,10.8954305 14,12 C14,13.1045695 13.1045695,14 12,14 Z M19,14 C17.8954305,14 17,13.1045695 17,12 C17,10.8954305 17.8954305,10 19,10 C20.1045695,10 21,10.8954305 21,12 C21,13.1045695 20.1045695,14 19,14 Z"
-										/>
-									</svg>
-								</button>
-							</span>
-							{#if loginPubkey !== undefined}
-								<!-- svelte-ignore a11y_click_events_have_key_events -->
-								<!-- svelte-ignore a11y_no_static_element_interactions -->
-								<span
-									class="Entry__reply"
-									onclick={() => {
-										showForm = !showForm;
-									}}><i class="fal fa-comment-lines"></i> {$_('Entry.reply')}</span
-								>
-							{/if}
-						</div>
+								{/if}
+							</div>
+						{/if}
 					</div>
 					{#if eventsReplying.length > 0 && !showReplies}
 						<div class="Entry__replyline">
@@ -1692,6 +1703,7 @@
 								{eventsEmojiSet}
 								channelToPost={undefined}
 								bind:showForm
+								bind:previewEvent
 							/>
 						{/if}
 					</div>

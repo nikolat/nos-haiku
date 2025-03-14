@@ -18,9 +18,11 @@ import { verifier } from 'rx-nostr-crypto';
 import { EventStore } from 'applesauce-core';
 import { unixNow, getProfileContent, type ProfileContent } from 'applesauce-core/helpers';
 import {
+	getEventHash,
 	sortEvents,
 	type EventTemplate,
 	type NostrEvent,
+	type UnsignedEvent,
 	type VerifiedEvent
 } from 'nostr-tools/pure';
 import { isParameterizedReplaceableKind, isReplaceableKind } from 'nostr-tools/kinds';
@@ -2491,7 +2493,8 @@ export const sendPollResponse = async (
 	sendEvent(eventToSend, options);
 };
 
-export const sendNote = async (
+export const makeEvent = (
+	loginPubkey: string,
 	content: string,
 	channelNameToCreate: string,
 	targetEventToReply?: NostrEvent,
@@ -2501,17 +2504,18 @@ export const sendNote = async (
 	pollItems?: string[],
 	pollEndsAt?: number,
 	pollType?: 'singlechoice' | 'multiplechoice'
-): Promise<NostrEvent | null> => {
-	if (window.nostr === undefined) {
-		return null;
-	}
+): {
+	eventToSend: UnsignedEvent;
+	eventChannelToSend: UnsignedEvent | undefined;
+	options: Partial<RxNostrSendOptions>;
+} => {
 	const relaysToAdd: Set<string> = new Set<string>();
-	let eventChannelToSend: NostrEvent | undefined;
+	let eventChannelToSend: UnsignedEvent | undefined;
 	if (pollItems !== undefined && pollItems.length > 0) {
 		//do nothing
 	} else if (targetEventToReply === undefined && channelNameToCreate.length > 0) {
 		//チャンネル作成
-		const eventTemplateChannel: EventTemplate = $state.snapshot({
+		const eventTemplateChannel: UnsignedEvent = $state.snapshot({
 			content: JSON.stringify({
 				name: channelNameToCreate,
 				about: '',
@@ -2520,10 +2524,15 @@ export const sendNote = async (
 			}),
 			kind: 40,
 			tags: isEnabledUseClientTag ? [clientTag] : [],
-			created_at: unixNow()
+			created_at: unixNow(),
+			pubkey: loginPubkey
 		});
-		eventChannelToSend = await window.nostr.signEvent(eventTemplateChannel);
-		targetEventToReply = eventChannelToSend;
+		eventChannelToSend = eventTemplateChannel;
+		targetEventToReply = {
+			...eventTemplateChannel,
+			id: getEventHash(eventTemplateChannel),
+			sig: ''
+		};
 	} else if (targetEventToReply !== undefined && [40, 42].includes(targetEventToReply.kind)) {
 		const channelId: string | undefined =
 			targetEventToReply.kind === 40
@@ -2752,22 +2761,54 @@ export const sendNote = async (
 	if (isEnabledUseClientTag) {
 		tags.push(clientTag);
 	}
-	const eventTemplate: EventTemplate = $state.snapshot({
+	const eventToSend: UnsignedEvent = $state.snapshot({
 		content,
 		kind,
 		tags,
-		created_at: unixNow()
+		created_at: unixNow(),
+		pubkey: loginPubkey
 	});
-	const eventToSend = await window.nostr.signEvent(eventTemplate);
 	for (const relay of relaysToWrite) {
 		relaysToAdd.add(relay);
 	}
 	const options: Partial<RxNostrSendOptions> = { on: { relays: Array.from(relaysToAdd) } };
-	if (eventChannelToSend !== undefined) {
-		sendEvent(eventChannelToSend, options);
+	return { eventToSend, eventChannelToSend, options };
+};
+
+export const sendNote = async (
+	loginPubkey: string,
+	content: string,
+	channelNameToCreate: string,
+	targetEventToReply?: NostrEvent,
+	emojiMap?: Map<string, string>,
+	imetaMap?: Map<string, FileUploadResponse>,
+	contentWarningReason?: string | null | undefined,
+	pollItems?: string[],
+	pollEndsAt?: number,
+	pollType?: 'singlechoice' | 'multiplechoice'
+): Promise<NostrEvent | null> => {
+	if (window.nostr === undefined) {
+		return null;
 	}
-	sendEvent(eventToSend, options);
-	return eventToSend;
+	const { eventToSend, eventChannelToSend, options } = makeEvent(
+		loginPubkey,
+		content,
+		channelNameToCreate,
+		targetEventToReply,
+		emojiMap,
+		imetaMap,
+		contentWarningReason,
+		pollItems,
+		pollEndsAt,
+		pollType
+	);
+	if (eventChannelToSend !== undefined) {
+		const signedEventChannelToSend = await window.nostr.signEvent(eventChannelToSend);
+		sendEvent(signedEventChannelToSend, options);
+	}
+	const signedEventToSend = await window.nostr.signEvent(eventToSend);
+	sendEvent(signedEventToSend, options);
+	return signedEventToSend;
 };
 
 export const sendEvent = (eventToSend: NostrEvent, options?: Partial<RxNostrSendOptions>): void => {

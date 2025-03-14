@@ -2,9 +2,9 @@
 	import { defaultAccountUri, getRoboHashURL } from '$lib/config';
 	import { getEmoji, getEmojiMap, type ChannelContent } from '$lib/utils';
 	import { uploadFile } from '$lib/nip96';
-	import { getChannelEventMap, sendNote } from '$lib/resource.svelte';
+	import { getChannelEventMap, makeEvent, sendNote } from '$lib/resource.svelte';
 	import { goto } from '$app/navigation';
-	import type { EventTemplate, NostrEvent } from 'nostr-tools/pure';
+	import type { EventTemplate, NostrEvent, UnsignedEvent } from 'nostr-tools/pure';
 	import * as nip19 from 'nostr-tools/nip19';
 	import {
 		readServerConfig,
@@ -25,7 +25,8 @@
 		uploaderSelected,
 		eventsEmojiSet,
 		channelToPost = $bindable(),
-		showForm = $bindable()
+		showForm = $bindable(),
+		previewEvent = $bindable()
 	}: {
 		loginPubkey: string | undefined;
 		currentChannelId?: string | undefined;
@@ -36,6 +37,7 @@
 		eventsEmojiSet: NostrEvent[];
 		channelToPost: ChannelContent | undefined;
 		showForm: boolean;
+		previewEvent: UnsignedEvent | undefined;
 	} = $props();
 
 	let filesToUpload: FileList | undefined = $state();
@@ -125,12 +127,46 @@
 		}
 	});
 
-	const callSendNote = () => {
-		if (
+	const previewEvents = $derived.by(() => {
+		const targetEventToReply =
+			channelToPost?.eventkind40 ??
+			eventToReply ??
+			(currentChannelId !== undefined ? getChannelEventMap().get(currentChannelId) : undefined);
+		const contentWarningReason = addContentWarning
+			? reasonContentWarning.length > 0
+				? reasonContentWarning
+				: null
+			: undefined;
+		return makeEvent(
+			loginPubkey ?? '',
+			contentToSend,
+			addPoll ? '' : channelNameToCreate,
+			addPoll ? undefined : targetEventToReply,
+			emojiMap,
+			imetaMap,
+			contentWarningReason,
+			addPoll ? pollItems.filter((item) => item.length > 0) : undefined,
+			addPoll ? unixNow() + pollPeriod : undefined,
+			addPoll ? pollType : undefined
+		);
+	});
+	const canSendNote: boolean = $derived(
+		!(
 			contentToSend.length === 0 ||
 			(!addPoll && channelNameToCreate.length === 0 && isTopPage) ||
 			(addPoll && pollItems.filter((item) => item.length > 0).length < 2)
-		) {
+		)
+	);
+	$effect(() => {
+		if (canSendNote) {
+			previewEvent = previewEvents.eventToSend;
+		} else {
+			previewEvent = undefined;
+		}
+	});
+
+	const callSendNote = () => {
+		if (loginPubkey === undefined || !canSendNote) {
 			return;
 		}
 		const targetEventToReply =
@@ -143,6 +179,7 @@
 				: null
 			: undefined;
 		sendNote(
+			loginPubkey,
 			contentToSend,
 			addPoll ? '' : channelNameToCreate,
 			addPoll ? undefined : targetEventToReply,
@@ -395,13 +432,7 @@
 			</div>
 		{/if}
 		<div class="CreateEntry__actions">
-			<button
-				class="Button"
-				disabled={contentToSend.length === 0 ||
-					(!addPoll && channelNameToCreate.length === 0 && isTopPage) ||
-					(addPoll && pollItems.filter((item) => item.length > 0).length < 2)}
-				onclick={callSendNote}
-			>
+			<button class="Button" disabled={!canSendNote} onclick={callSendNote}>
 				<span>{$_('CreateEntry.post')}</span>
 			</button>
 			{#if eventToReply !== undefined}

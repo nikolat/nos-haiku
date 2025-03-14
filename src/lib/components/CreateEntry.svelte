@@ -201,6 +201,7 @@
 			pollPeriod = 1 * 24 * 60 * 60;
 			filesToUpload = undefined;
 			showForm = false;
+			previewEvent = undefined;
 			if (isNeededShowEvent && event !== null) {
 				const nevent: string = nip19.neventEncode({ ...event, author: event.pubkey });
 				goto(`/entry/${nevent}`);

@@ -345,7 +345,7 @@
 	data-npub={nip19.npubEncode(event.pubkey)}
 >
 	{#if (!isMutedPubkey || showMutedPubkey) && (!isMutedChannel || showMutedChannel) && (!isMutedContent || showMutedContent) && (!isMutedHashTag || showMutedHashTag)}
-		{#if event.kind === 42 && (channelId === undefined || channel === undefined || channel.name === undefined)}
+		{#if !isPreview && event.kind === 42 && (channelId === undefined || channel === undefined || channel.name === undefined)}
 			<details>
 				<summary>
 					{#if channelId === undefined}
@@ -376,36 +376,40 @@
 				<div class={isEmojiPickerOpened ? 'Post emoji-picker-opened' : 'Post'}>
 					<div class="Entry__head">
 						<h3 class="Entry__keyword">
-							{#if event.kind === 42 && channel !== undefined}
-								<a href="/keyword/{nip19.neventEncode(channel)}">{channel.name}</a>
-								{#if currentChannelId === undefined}
-									<span class="post-channel">
-										<button
-											aria-label="Post to this keyword"
-											class="post-chennel"
-											disabled={loginPubkey === undefined}
-											title="Post to this keyword"
-											onclick={() => {
-												channelToPost = channel;
-												window.scroll({
-													top: 0,
-													behavior: 'smooth'
-												});
-											}}
-										>
-											<svg
-												xmlns="http://www.w3.org/2000/svg"
-												width="24"
-												height="24"
-												viewBox="0 0 24 24"
+							{#if event.kind === 42}
+								{#if channel === undefined}
+									Channel Message
+								{:else}
+									<a href="/keyword/{nip19.neventEncode(channel)}">{channel.name}</a>
+									{#if currentChannelId === undefined}
+										<span class="post-channel">
+											<button
+												aria-label="Post to this keyword"
+												class="post-chennel"
+												disabled={loginPubkey === undefined}
+												title="Post to this keyword"
+												onclick={() => {
+													channelToPost = channel;
+													window.scroll({
+														top: 0,
+														behavior: 'smooth'
+													});
+												}}
 											>
-												<path
-													fill-rule="evenodd"
-													d="M12,21.2037682 L1.48140774,12 L12,2.79623177 L12,8.02302014 C18.5486628,8.33140969 22,11.7344566 22,18 L22,20.4142136 L20.2928932,18.7071068 C18.0460687,16.4602823 15.3097943,15.5189215 12,15.8718462 L12,21.2037682 Z M10,7.20376823 L4.51859226,12 L10,16.7962318 L10,14.1528729 L10.835601,14.0136061 C14.2501827,13.4445091 17.255572,14.0145027 19.7987459,15.7165365 C19.0504666,11.8510227 16.2006399,10 11,10 L10,10 L10,7.20376823 Z"
-												/>
-											</svg>
-										</button>
-									</span>
+												<svg
+													xmlns="http://www.w3.org/2000/svg"
+													width="24"
+													height="24"
+													viewBox="0 0 24 24"
+												>
+													<path
+														fill-rule="evenodd"
+														d="M12,21.2037682 L1.48140774,12 L12,2.79623177 L12,8.02302014 C18.5486628,8.33140969 22,11.7344566 22,18 L22,20.4142136 L20.2928932,18.7071068 C18.0460687,16.4602823 15.3097943,15.5189215 12,15.8718462 L12,21.2037682 Z M10,7.20376823 L4.51859226,12 L10,16.7962318 L10,14.1528729 L10.835601,14.0136061 C14.2501827,13.4445091 17.255572,14.0145027 19.7987459,15.7165365 C19.0504666,11.8510227 16.2006399,10 11,10 L10,10 L10,7.20376823 Z"
+													/>
+												</svg>
+											</button>
+										</span>
+									{/if}
 								{/if}
 							{:else if event.kind === 0}
 								User Metadata
@@ -491,7 +495,7 @@
 								{`unsupported kind:${event.kind} event`}
 							{/if}
 							{#if isPreview}
-								Preview Mode
+								(Preview Mode)
 							{/if}
 						</h3>
 						{#if !isPreview}

@@ -2497,6 +2497,7 @@ export const makeEvent = (
 	loginPubkey: string,
 	content: string,
 	channelNameToCreate: string,
+	pubkeysExcluded: string[],
 	targetEventToReply?: NostrEvent,
 	emojiMap?: Map<string, string>,
 	imetaMap?: Map<string, FileUploadResponse>,
@@ -2737,7 +2738,9 @@ export const makeEvent = (
 		mentionPubkeys.add(ap.pubkey);
 	}
 	for (const p of mentionPubkeys) {
-		tags.push(['p', p]);
+		if (!pubkeysExcluded.includes(p)) {
+			tags.push(['p', p]);
+		}
 	}
 	for (const t of hashtags) {
 		tags.push(['t', t]);
@@ -2779,6 +2782,7 @@ export const sendNote = async (
 	loginPubkey: string,
 	content: string,
 	channelNameToCreate: string,
+	pubkeysExcluded: string[],
 	targetEventToReply?: NostrEvent,
 	emojiMap?: Map<string, string>,
 	imetaMap?: Map<string, FileUploadResponse>,
@@ -2794,6 +2798,7 @@ export const sendNote = async (
 		loginPubkey,
 		content,
 		channelNameToCreate,
+		pubkeysExcluded,
 		targetEventToReply,
 		emojiMap,
 		imetaMap,

@@ -498,22 +498,7 @@
 								(Preview Mode)
 							{/if}
 						</h3>
-						{#if isPreview}
-							{@const ps = event.tags
-								.filter((tag) => tag.length >= 2 && tag[0] === 'p')
-								.map((tag) => tag[1])}
-							{#if ps.length > 0}
-								mention to:
-							{/if}
-							{#each ps as p (p)}
-								{@const prof = profileMap.get(p)}
-								<img
-									src={prof?.picture ?? getRoboHashURL(nip19.npubEncode(p))}
-									alt={getProfileName(p)}
-									class="Avatar Avatar--sm"
-								/>
-							{/each}
-						{:else}
+						{#if !isPreview}
 							<AddStar
 								{event}
 								{loginPubkey}

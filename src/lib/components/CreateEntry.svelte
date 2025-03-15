@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { defaultAccountUri, getRoboHashURL } from '$lib/config';
 	import { getEmoji, getEmojiMap, type ChannelContent } from '$lib/utils';
-	import { getChannelEventMap, makeEvent, sendNote } from '$lib/resource.svelte';
+	import { getChannelEventMap, getProfileName, makeEvent, sendNote } from '$lib/resource.svelte';
 	import { goto } from '$app/navigation';
 	import type { EventTemplate, NostrEvent, UnsignedEvent } from 'nostr-tools/pure';
 	import * as nip19 from 'nostr-tools/nip19';
@@ -40,6 +40,7 @@
 		previewEvent: UnsignedEvent | undefined;
 	} = $props();
 
+	let pubkeysExcluded: string[] = $state([]);
 	let filesToUpload: FileList | undefined = $state();
 	let imetaMap: Map<string, FileUploadResponse> = new Map<string, FileUploadResponse>();
 	let inputFile: HTMLInputElement;
@@ -141,6 +142,7 @@
 			loginPubkey ?? '',
 			contentToSend,
 			addPoll ? '' : channelNameToCreate,
+			[], //除外をプレビューに反映させると選択できなくなってしまう
 			addPoll ? undefined : targetEventToReply,
 			emojiMap,
 			imetaMap,
@@ -182,6 +184,7 @@
 			loginPubkey,
 			contentToSend,
 			addPoll ? '' : channelNameToCreate,
+			pubkeysExcluded,
 			addPoll ? undefined : targetEventToReply,
 			emojiMap,
 			imetaMap,
@@ -208,6 +211,10 @@
 			}
 		});
 	};
+
+	const pubkeysMentioningTo = $derived(
+		previewEvent?.tags.filter((tag) => tag.length >= 2 && tag[0] === 'p').map((tag) => tag[1]) ?? []
+	);
 </script>
 
 <div class="CreateEntry">
@@ -371,6 +378,28 @@
 							>
 								<i class="fa-fw far fa-smile-plus"></i>
 							</button>
+							{#if pubkeysMentioningTo.length > 0}
+								mention to:
+								{#each pubkeysMentioningTo as p (p)}
+									{@const prof = profileMap.get(p)}
+									{@const isExcluded = pubkeysExcluded.includes(p)}
+									<button
+										class={isExcluded ? 'Button toggle-mention excluded' : 'Button toggle-mention'}
+										onclick={() => {
+											if (isExcluded) {
+												pubkeysExcluded = pubkeysExcluded.filter((pubkey) => pubkey !== p);
+											} else {
+												pubkeysExcluded.push(p);
+											}
+										}}
+										><img
+											src={prof?.picture ?? getRoboHashURL(nip19.npubEncode(p))}
+											alt={getProfileName(p)}
+											class="Avatar Avatar--sm"
+										/></button
+									>
+								{/each}
+							{/if}
 						</span>
 					</span>
 					<div class="emoji-picker-container" bind:this={emojiPickerContainer}></div>
@@ -537,5 +566,13 @@
 		z-index: 2;
 		outline: none;
 		border-color: red;
+	}
+	.toggle-mention {
+		padding: 1px 3px;
+	}
+	.Button.toggle-mention.excluded:before {
+		background-color: #cccccc;
+		border: 2px solid #bfbfbf;
+		box-shadow: 0 2px 0 #bebebe;
 	}
 </style>

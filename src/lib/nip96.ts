@@ -1,8 +1,7 @@
 export async function listFiles(
 	serverApiUrl: string,
 	nip98AuthorizationHeader: string
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-): Promise<any> {
+): Promise<FileListResponse> {
 	// Send the GET request
 	const response = await fetch(serverApiUrl, {
 		method: 'GET',
@@ -23,3 +22,16 @@ export async function listFiles(
 		throw new Error('Error parsing JSON response!');
 	}
 }
+
+export type FileListResponse = {
+	count: number;
+	total: number;
+	page: number;
+	files: [
+		{
+			tags: Array<[string, string]>;
+			content: string;
+			created_at: number;
+		}
+	];
+};

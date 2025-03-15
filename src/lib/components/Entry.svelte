@@ -42,7 +42,7 @@
 	import Entry from '$lib/components/Entry.svelte';
 	import CreateEntry from '$lib/components/CreateEntry.svelte';
 	import { getEventHash, type NostrEvent, type UnsignedEvent } from 'nostr-tools/pure';
-	import { isParameterizedReplaceableKind, isReplaceableKind } from 'nostr-tools/kinds';
+	import { isAddressableKind, isReplaceableKind } from 'nostr-tools/kinds';
 	import * as nip19 from 'nostr-tools/nip19';
 	import { decode } from 'light-bolt11-decoder';
 	import { _ } from 'svelte-i18n';
@@ -329,7 +329,7 @@
 
 	const getEncode = (event: NostrEvent, relays?: string[]): string => {
 		const d = event.tags.find((tag) => tag.length >= 2 && tag[0] === 'd')?.at(1) ?? '';
-		return isReplaceableKind(event.kind) || isParameterizedReplaceableKind(event.kind)
+		return isReplaceableKind(event.kind) || isAddressableKind(event.kind)
 			? nip19.naddrEncode({ identifier: d, pubkey: event.pubkey, kind: event.kind, relays })
 			: nip19.neventEncode({ ...event, author: event.pubkey, relays });
 	};

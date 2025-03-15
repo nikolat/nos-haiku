@@ -25,7 +25,7 @@ import {
 	type UnsignedEvent,
 	type VerifiedEvent
 } from 'nostr-tools/pure';
-import { isParameterizedReplaceableKind, isReplaceableKind } from 'nostr-tools/kinds';
+import { isAddressableKind, isReplaceableKind } from 'nostr-tools/kinds';
 import { normalizeURL } from 'nostr-tools/utils';
 import type { Filter } from 'nostr-tools/filter';
 import type { RelayRecord } from 'nostr-tools/relay';
@@ -2334,7 +2334,7 @@ export const sendRepost = async (targetEvent: NostrEvent): Promise<void> => {
 	const content: string = ''; //魚拓リポストはしない
 	const tags: string[][] = [];
 	const recommendedRelay: string = getSeenOn(targetEvent.id).at(0) ?? '';
-	if (isReplaceableKind(targetEvent.kind) || isParameterizedReplaceableKind(targetEvent.kind)) {
+	if (isReplaceableKind(targetEvent.kind) || isAddressableKind(targetEvent.kind)) {
 		const d = targetEvent.tags.find((tag) => tag.length >= 2 && tag[0] === 'd')?.at(1) ?? '';
 		tags.push(['a', `${targetEvent.kind}:${targetEvent.pubkey}:${d}`, recommendedRelay]);
 	}
@@ -2367,7 +2367,7 @@ export const sendReaction = async (
 	}
 	const tags: string[][] = [];
 	const recommendedRelay: string = getSeenOn(targetEvent.id).at(0) ?? '';
-	if (isReplaceableKind(targetEvent.kind) || isParameterizedReplaceableKind(targetEvent.kind)) {
+	if (isReplaceableKind(targetEvent.kind) || isAddressableKind(targetEvent.kind)) {
 		const d = targetEvent.tags.find((tag) => tag.length >= 2 && tag[0] === 'd')?.at(1) ?? '';
 		tags.push(['a', `${targetEvent.kind}:${targetEvent.pubkey}:${d}`, recommendedRelay]);
 	}
@@ -2611,7 +2611,7 @@ export const makeEvent = (
 			tags.push(['k', String(targetEventToReply.kind)]);
 		} else if (
 			isReplaceableKind(targetEventToReply.kind) ||
-			isParameterizedReplaceableKind(targetEventToReply.kind)
+			isAddressableKind(targetEventToReply.kind)
 		) {
 			const d =
 				targetEventToReply.tags.find((tag) => tag.length >= 2 && tag[0] === 'd')?.at(1) ?? '';

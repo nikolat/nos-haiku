@@ -1,13 +1,13 @@
 <script lang="ts">
 	import { defaultAccountUri, getRoboHashURL } from '$lib/config';
 	import { getEmoji, getEmojiMap, type ChannelContent } from '$lib/utils';
-	import { uploadFile } from '$lib/nip96';
 	import { getChannelEventMap, makeEvent, sendNote } from '$lib/resource.svelte';
 	import { goto } from '$app/navigation';
 	import type { EventTemplate, NostrEvent, UnsignedEvent } from 'nostr-tools/pure';
 	import * as nip19 from 'nostr-tools/nip19';
 	import {
 		readServerConfig,
+		uploadFile,
 		type FileUploadResponse,
 		type OptionalFormDataFields
 	} from 'nostr-tools/nip96';

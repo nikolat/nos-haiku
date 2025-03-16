@@ -729,7 +729,7 @@ div.FollowContainer > span {
 	transition: all 0.1s;
 }
 .Link img,
-.Mention img {
+.Mention img:not(.emoji) {
 	vertical-align: sub;
 	margin-right: 4px;
 	width: 16px;

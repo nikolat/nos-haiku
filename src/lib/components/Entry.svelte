@@ -294,6 +294,14 @@
 	const profReplyTo: ProfileContentEvent | undefined = $derived(
 		pubkeyReplyTo === undefined ? undefined : profileMap.get(pubkeyReplyTo)
 	);
+	const eventReplyTo: NostrEvent | undefined = $derived.by(() => {
+		if (idReplyTo !== undefined) {
+			return getEventById(idReplyTo);
+		} else if (addressReplyTo !== undefined) {
+			return getEventByAddressPointer(addressReplyTo);
+		}
+		return undefined;
+	});
 
 	let showForm: boolean = $state(false);
 	let showJson: boolean = $state(false);
@@ -511,6 +519,21 @@
 						{/if}
 					</div>
 					<div class="Entry__body">
+						{#if !isPreview && pubkeysMentioningTo.length > 0}
+							<span class="Mention">
+								To:
+								{#each pubkeysMentioningTo as p (p)}
+									{@const prof = profileMap.get(p)}
+									<a href="/{nip19.npubEncode(p)}">
+										<img
+											src={prof?.picture ?? getRoboHashURL(nip19.npubEncode(p))}
+											alt={getProfileName(p)}
+											class="Avatar Avatar--sm"
+										/>
+									</a>
+								{/each}
+							</span>
+						{/if}
 						{#if idReplyTo !== undefined || addressReplyTo !== undefined}
 							{@const link =
 								idReplyTo !== undefined
@@ -529,10 +552,13 @@
 												alt={getProfileName(pubkeyReplyTo)}
 												class="Avatar Avatar--sm"
 											/>
+										{/if}
+										{#if eventReplyTo !== undefined}
 											<Content
-												content={getProfileName(pubkeyReplyTo)}
-												tags={profReplyTo?.event.tags ?? []}
-												isAbout={true}
+												content={eventReplyTo.content.split('\n')[0]}
+												tags={eventReplyTo.tags}
+												{profileMap}
+												enableAutoLink={false}
 											/>
 										{/if}
 									</span>

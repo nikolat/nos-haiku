@@ -522,7 +522,7 @@
 						{#if !isPreview && pubkeysMentioningTo.length > 0}
 							<span class="Mention">
 								To:
-								{#each pubkeysMentioningTo as p (p)}
+								{#each pubkeysMentioningTo.slice(0, 10) as p (p)}
 									{@const prof = profileMap.get(p)}
 									<a href="/{nip19.npubEncode(p)}">
 										<img
@@ -532,6 +532,7 @@
 										/>
 									</a>
 								{/each}
+								{#if pubkeysMentioningTo.length > 10}...{/if}
 							</span>
 						{/if}
 						{#if idReplyTo !== undefined || addressReplyTo !== undefined}

@@ -629,27 +629,6 @@
 									{@const pubkeyToSend = event.tags
 										.find((tag) => tag.length >= 2 && tag[0] === 'p')
 										?.at(1)}
-									{#if pubkeyToSend !== undefined}
-										{@const profAwarded = profileMap.get(pubkeyToSend)}
-										<div class="Entry__parentmarker">
-											<a href="/{nip19.npubEncode(pubkeyToSend)}">
-												<i class="fa-fw fas fa-arrow-alt-from-right"></i>
-												<span class="Mention">
-													<img
-														src={profAwarded?.picture ??
-															getRoboHashURL(nip19.npubEncode(pubkeyToSend))}
-														alt={getProfileName(pubkeyToSend)}
-														class="Avatar Avatar--sm"
-													/>
-													<Content
-														content={getProfileName(pubkeyToSend)}
-														tags={profAwarded?.event.tags ?? []}
-														isAbout={true}
-													/>
-												</span>
-											</a>
-										</div>
-									{/if}
 									<DirectMessage
 										content={event.content}
 										currentPubkey={event.pubkey}
@@ -698,26 +677,6 @@
 										event.pubkey === asp?.at(1) && aId !== undefined && ap !== null}
 									{#if isValidAward}
 										{@const content = ap === null ? '' : `nostr:${nip19.naddrEncode(ap)}`}
-										{#each ps as p (p)}
-											{@const profAwarded = profileMap.get(p)}
-											<div class="Entry__parentmarker">
-												<a href="/{nip19.npubEncode(p)}">
-													<i class="fa-fw fas fa-arrow-alt-from-right"></i>
-													<span class="Mention">
-														<img
-															src={profAwarded?.picture ?? getRoboHashURL(nip19.npubEncode(p))}
-															alt={getProfileName(p)}
-															class="Avatar Avatar--sm"
-														/>
-														<Content
-															content={getProfileName(p)}
-															tags={profAwarded?.event.tags ?? []}
-															isAbout={true}
-														/>
-													</span>
-												</a>
-											</div>
-										{/each}
 										{#if loginPubkey !== undefined && ps.has(loginPubkey)}
 											{@const profileBadgesEvent = getEventByAddressPointer({
 												identifier: 'profile_badges',
@@ -936,30 +895,6 @@
 										/>
 									</p>
 								{:else if event.kind === 9734}
-									{@const pubkeyZapped = event.tags
-										.find((tag) => tag.length >= 2 && tag[0] === 'p')
-										?.at(1)}
-									{#if pubkeyZapped !== undefined}
-										{@const profZapped = profileMap.get(pubkeyZapped)}
-										<div class="Entry__parentmarker">
-											<a href="/{nip19.npubEncode(pubkeyZapped)}">
-												<i class="fa-fw fas fa-arrow-alt-from-right"></i>
-												<span class="Mention">
-													<img
-														src={profZapped?.picture ??
-															getRoboHashURL(nip19.npubEncode(pubkeyZapped))}
-														alt={getProfileName(pubkeyZapped)}
-														class="Avatar Avatar--sm"
-													/>
-													<Content
-														content={getProfileName(pubkeyZapped)}
-														tags={profZapped?.event.tags ?? []}
-														isAbout={true}
-													/>
-												</span>
-											</a>
-										</div>
-									{/if}
 									<Content content={event.content} tags={event.tags} />
 									{@const eventIdZapped =
 										event.tags.find((tag) => tag.length >= 2 && tag[0] === 'e')?.at(1) ?? ''}

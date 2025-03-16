@@ -19,7 +19,7 @@
 	import { afterNavigate, beforeNavigate, goto } from '$app/navigation';
 	import { page } from '$app/state';
 	import type { NostrEvent } from 'nostr-tools/pure';
-	import { isParameterizedReplaceableKind, isReplaceableKind } from 'nostr-tools/kinds';
+	import { isAddressableKind, isReplaceableKind } from 'nostr-tools/kinds';
 	import * as nip19 from 'nostr-tools/nip19';
 	import { unixNow } from 'applesauce-core/helpers';
 	import { decode } from 'light-bolt11-decoder';
@@ -473,7 +473,7 @@
 										{@const d =
 											evTo.tags.find((tag) => tag.length >= 2 && tag[0] === 'd')?.at(1) ?? ''}
 										{@const link =
-											isReplaceableKind(evTo.kind) || isParameterizedReplaceableKind(evTo.kind)
+											isReplaceableKind(evTo.kind) || isAddressableKind(evTo.kind)
 												? `/entry/${nip19.naddrEncode({ identifier: d, pubkey: evTo.pubkey, kind: evTo.kind })}`
 												: `/entry/${nip19.neventEncode({ ...evTo, author: evTo.pubkey })}`}
 										<a href={link}>

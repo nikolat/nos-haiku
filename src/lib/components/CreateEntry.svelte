@@ -8,6 +8,7 @@
 	import {
 		readServerConfig,
 		uploadFile,
+		type DelayedProcessingResponse,
 		type FileUploadResponse,
 		type OptionalFormDataFields
 	} from 'nostr-tools/nip96';
@@ -71,9 +72,9 @@
 			return;
 		}
 		isInProcess = true;
-		const f = (e: EventTemplate) => nostr.signEvent(e);
-		const c = await readServerConfig(uploaderSelected);
-		const s = await getToken(c.api_url, 'POST', f, true);
+		const sign = (e: EventTemplate) => nostr.signEvent(e);
+		const config = await readServerConfig(uploaderSelected);
+		const token = await getToken(config.api_url, 'POST', sign, true);
 		let file: File | undefined;
 		for (const f of filesToUpload ?? []) {
 			file = f;
@@ -86,12 +87,55 @@
 			size: String(file.size),
 			content_type: file.type
 		};
-		const fileUploadResponse = await uploadFile(file, c.api_url, s, option);
+		console.info('file uploading...');
+		const fileUploadResponse: FileUploadResponse = await uploadFile(
+			file,
+			config.api_url,
+			token,
+			option
+		);
+		if (fileUploadResponse.status === 'error') {
+			console.warn(fileUploadResponse.message);
+			isInProcess = false;
+			return;
+		}
+		if (fileUploadResponse.status === 'processing') {
+			console.info(fileUploadResponse.message);
+			const processing_url = fileUploadResponse.processing_url;
+			if (processing_url === undefined) {
+				isInProcess = false;
+				return;
+			}
+			const request = new Request(processing_url);
+			const sleep = (timeout: number) => new Promise((handler) => setTimeout(handler, timeout));
+			let retry: number = 5;
+			while (true) {
+				const response = await fetch(request);
+				if (response.status === 201) {
+					break;
+				}
+				const delayedProcessingResponse: DelayedProcessingResponse = await response.json();
+				if (delayedProcessingResponse.status === 'error') {
+					console.warn(delayedProcessingResponse.message);
+					isInProcess = false;
+					return;
+				}
+				console.info(delayedProcessingResponse);
+				retry--;
+				if (retry < 0) {
+					console.warn('timeout');
+					isInProcess = false;
+					return;
+				}
+				await sleep(1000);
+			}
+		}
+		console.info('file uploading complete');
 		isInProcess = false;
 		const uploadedFileUrl = fileUploadResponse.nip94_event?.tags
 			.find((tag) => tag[0] === 'url')
 			?.at(1);
-		if (uploadedFileUrl === undefined) {
+		if (uploadedFileUrl === undefined || !URL.canParse(uploadedFileUrl)) {
 			return;
 		}
 		imetaMap.set(uploadedFileUrl, fileUploadResponse);

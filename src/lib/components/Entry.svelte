@@ -2001,7 +2001,7 @@
 	}
 	.select-repost > li {
 		padding: 3px;
-		min-width: 50px;
+		min-width: 60px;
 		list-style: none;
 	}
 	.select-repost > li:hover {

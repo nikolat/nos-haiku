@@ -1500,6 +1500,7 @@
 											<!-- svelte-ignore a11y_no_static_element_interactions -->
 											<span
 												class="DeleteButton"
+												title={$_('Entry.delete')}
 												onclick={() => {
 													if (confirm($_('Entry.confirm-delete'))) {
 														sendDeletion(event);
@@ -1513,7 +1514,7 @@
 												<button
 													aria-label="Edit Button"
 													class="edit"
-													title="edit"
+													title={$_('Entry.edit')}
 													onclick={() => {
 														channelToPost = undefined;
 														baseEventToEdit = event;
@@ -1591,7 +1592,7 @@
 											<button
 												aria-label="Zap Button"
 												class="zap"
-												title="zap"
+												title="Zap"
 												onclick={() => {
 													const relaysToWrite: string[] = Object.entries(getRelaysToUse())
 														.filter((v) => v[1].write)
@@ -1626,7 +1627,7 @@
 										<button
 											aria-label="Broadcast Button"
 											class="broadcast"
-											title="broadcast"
+											title={$_('Entry.broadcast')}
 											onclick={() => {
 												const relaysToWrite: string[] = Object.entries(getRelaysToUse())
 													.filter((v) => v[1].write)
@@ -1659,7 +1660,7 @@
 									<button
 										aria-label="Show JSON"
 										class="show-json"
-										title="Show JSON"
+										title={$_('Entry.show-json')}
 										onclick={() => {
 											showJson = !showJson;
 										}}

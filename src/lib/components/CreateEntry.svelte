@@ -3,6 +3,7 @@
 	import { getEmoji, getEmojiMap, type ChannelContent } from '$lib/utils';
 	import { getChannelEventMap, getProfileName, makeEvent, sendNote } from '$lib/resource.svelte';
 	import { goto } from '$app/navigation';
+	import { onMount } from 'svelte';
 	import type { EventTemplate, NostrEvent, UnsignedEvent } from 'nostr-tools/pure';
 	import * as nip19 from 'nostr-tools/nip19';
 	import {
@@ -27,7 +28,8 @@
 		eventsEmojiSet,
 		channelToPost = $bindable(),
 		showForm = $bindable(),
-		previewEvent = $bindable()
+		previewEvent = $bindable(),
+		callInsertText = $bindable()
 	}: {
 		loginPubkey: string | undefined;
 		currentChannelId?: string | undefined;
@@ -39,6 +41,7 @@
 		channelToPost: ChannelContent | undefined;
 		showForm: boolean;
 		previewEvent: UnsignedEvent | undefined;
+		callInsertText: (word: string) => void;
 	} = $props();
 
 	let pubkeysExcluded: string[] = $state([]);
@@ -148,6 +151,9 @@
 		const pos = textArea.selectionStart;
 		const before = sentence.slice(0, pos);
 		const after = sentence.slice(pos, pos + len);
+		if (!(before.length === 0 || before.endsWith('\n'))) {
+			word = `\n${word}`;
+		}
 		sentence = before + word + after;
 		textArea.value = sentence;
 		textArea.focus();
@@ -259,6 +265,10 @@
 	const pubkeysMentioningTo = $derived(
 		previewEvent?.tags.filter((tag) => tag.length >= 2 && tag[0] === 'p').map((tag) => tag[1]) ?? []
 	);
+
+	onMount(() => {
+		callInsertText = insertText;
+	});
 </script>
 
 <div class="CreateEntry">

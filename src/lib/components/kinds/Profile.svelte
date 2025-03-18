@@ -285,6 +285,8 @@
 					isEnabledRelativeTime={true}
 					nowRealtime={0}
 					level={0}
+					isPreview={false}
+					callInsertText={() => {}}
 				/>
 			</p>
 		</div>

@@ -381,6 +381,7 @@
 
 	let channelToPost: ChannelContent | undefined = $state();
 	let previewEvent: UnsignedEvent | undefined = $state();
+	let callInsertText: (word: string) => void = $state(() => {});
 	let isEnabledScrollInfinitely: boolean = $state(true);
 	let zapWindowContainer: HTMLElement | undefined = $state();
 	let isEnabledToEditChannel: boolean = $state(false);
@@ -955,6 +956,7 @@
 						bind:channelToPost
 						showForm={true}
 						bind:previewEvent
+						bind:callInsertText
 					/>
 				</div>
 				<div class="FeedList">
@@ -979,6 +981,7 @@
 							{nowRealtime}
 							level={0}
 							isPreview={true}
+							callInsertText={() => {}}
 						/>
 					{/if}
 					{#if pinnedNotesEvent !== undefined && pinnedNotesEvent.tags.filter((tag) => tag.length >= 2 && tag[0] === 'e').length > 0}
@@ -1001,6 +1004,8 @@
 							{isEnabledRelativeTime}
 							{nowRealtime}
 							level={0}
+							isPreview={false}
+							{callInsertText}
 						/>
 					{/if}
 					{#each timelineToShow as event (event.id)}
@@ -1023,6 +1028,8 @@
 							{isEnabledRelativeTime}
 							{nowRealtime}
 							level={0}
+							isPreview={false}
+							{callInsertText}
 						/>
 					{/each}
 				</div>

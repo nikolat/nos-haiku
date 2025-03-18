@@ -101,6 +101,8 @@
 		"reason": "理由",
 		"show-cw": "クリックしてCW付き投稿を表示する",
 		"confirm-delete": "このエントリーを削除しますか？",
+		"repost": "リポスト",
+		"quote": "引用",
 		"confirm-broadcast": "このエントリーを以下のリレーにブロードキャストしますか？",
 		"reply": "返信",
 		"show-replies": "返信を表示",

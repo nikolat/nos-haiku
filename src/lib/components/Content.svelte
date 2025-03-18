@@ -24,6 +24,8 @@
 		channelToPost = $bindable(),
 		currentChannelId,
 		level = 0,
+		isPreview,
+		callInsertText,
 		isAbout = false,
 		enableAutoLink = true,
 		isEnabledRelativeTime = true,
@@ -46,6 +48,8 @@
 		channelToPost?: ChannelContent;
 		currentChannelId?: string;
 		level?: number;
+		isPreview?: boolean;
+		callInsertText?: (word: string) => void;
 		isAbout?: boolean;
 		enableAutoLink?: boolean;
 		isEnabledRelativeTime?: boolean;
@@ -191,6 +195,8 @@
 					{isEnabledRelativeTime}
 					{nowRealtime}
 					level={level + 1}
+					isPreview={isPreview ?? false}
+					callInsertText={callInsertText ?? (() => {})}
 				/>
 			{:else}{matchedText}
 			{/if}
@@ -222,6 +228,8 @@
 					{isEnabledRelativeTime}
 					{nowRealtime}
 					level={level + 1}
+					isPreview={isPreview ?? false}
+					callInsertText={callInsertText ?? (() => {})}
 				/>
 			{:else}{matchedText}
 			{/if}
@@ -252,6 +260,8 @@
 					{isEnabledRelativeTime}
 					{nowRealtime}
 					level={level + 1}
+					isPreview={isPreview ?? false}
+					callInsertText={callInsertText ?? (() => {})}
 				/>
 			{:else}{matchedText}
 			{/if}

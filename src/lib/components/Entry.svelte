@@ -41,6 +41,8 @@
 	import Content from '$lib/components/Content.svelte';
 	import Entry from '$lib/components/Entry.svelte';
 	import CreateEntry from '$lib/components/CreateEntry.svelte';
+	import { onMount } from 'svelte';
+	import { afterNavigate, beforeNavigate } from '$app/navigation';
 	import { getEventHash, type NostrEvent, type UnsignedEvent } from 'nostr-tools/pure';
 	import { isAddressableKind, isReplaceableKind } from 'nostr-tools/kinds';
 	import * as nip19 from 'nostr-tools/nip19';
@@ -66,7 +68,8 @@
 		isEnabledRelativeTime,
 		nowRealtime,
 		level,
-		isPreview = false
+		isPreview,
+		callInsertText
 	}: {
 		event: NostrEvent;
 		channelMap: Map<string, ChannelContent>;
@@ -86,7 +89,8 @@
 		isEnabledRelativeTime: boolean;
 		nowRealtime: number;
 		level: number;
-		isPreview?: boolean;
+		isPreview: boolean;
+		callInsertText: (word: string) => void;
 	} = $props();
 
 	let previewEvent: UnsignedEvent | undefined = $state();
@@ -305,6 +309,7 @@
 
 	let showForm: boolean = $state(false);
 	let showJson: boolean = $state(false);
+	let showRepost: boolean = $state(false);
 
 	const repostedEventId: string | undefined = $derived(
 		event.tags.findLast((tag) => tag.length >= 2 && tag[0] === 'e')?.at(1)
@@ -345,6 +350,23 @@
 	const eventsReplying = $derived(getEventsReplying(event));
 
 	let isEmojiPickerOpened: boolean = $state(false);
+
+	const handlerRepost = (ev: MouseEvent): void => {
+		const target: HTMLElement | null = ev.target as HTMLElement | null;
+		if (!target?.closest('.repost')) {
+			showRepost = false;
+		}
+	};
+
+	onMount(() => {
+		document.addEventListener('click', handlerRepost);
+	});
+	beforeNavigate(() => {
+		document.removeEventListener('click', handlerRepost);
+	});
+	afterNavigate(() => {
+		document.addEventListener('click', handlerRepost);
+	});
 </script>
 
 <article
@@ -590,6 +612,8 @@
 												{isEnabledRelativeTime}
 												{nowRealtime}
 												level={level + 1}
+												isPreview={false}
+												{callInsertText}
 											/>
 										{:else}
 											<p class="warning-message">
@@ -660,6 +684,8 @@
 											{isEnabledRelativeTime}
 											{nowRealtime}
 											level={level + 1}
+											isPreview={false}
+											{callInsertText}
 										/>
 									{:else if reactedEventId !== undefined}
 										{`nostr:${nip19.neventEncode({ id: reactedEventId })}`}
@@ -747,6 +773,8 @@
 												{isEnabledRelativeTime}
 												{nowRealtime}
 												{level}
+												isPreview={false}
+												{callInsertText}
 											/>
 										</p>
 									{:else}
@@ -797,6 +825,8 @@
 											{isEnabledRelativeTime}
 											{nowRealtime}
 											{level}
+											isPreview={false}
+											{callInsertText}
 										/>
 									</p>
 								{:else if event.kind === 40}
@@ -837,6 +867,8 @@
 											{isEnabledRelativeTime}
 											{nowRealtime}
 											level={level + 1}
+											isPreview={false}
+											{callInsertText}
 										/>
 									{/if}
 								{:else if event.kind === 1068}
@@ -860,6 +892,8 @@
 											{isEnabledRelativeTime}
 											{nowRealtime}
 											{level}
+											isPreview={false}
+											{callInsertText}
 										/>
 									</p>
 									<Poll {event} {loginPubkey} {nowRealtime} />
@@ -892,6 +926,8 @@
 											{isEnabledRelativeTime}
 											{nowRealtime}
 											{level}
+											isPreview={false}
+											{callInsertText}
 										/>
 									</p>
 								{:else if event.kind === 9734}
@@ -925,6 +961,8 @@
 											{isEnabledRelativeTime}
 											{nowRealtime}
 											level={level + 1}
+											isPreview={false}
+											{callInsertText}
 										/>
 									{/if}
 								{:else if event.kind === 9735}
@@ -949,6 +987,8 @@
 											{isEnabledRelativeTime}
 											{nowRealtime}
 											level={level + 1}
+											isPreview={false}
+											{callInsertText}
 										/>
 									{:else}
 										invalid kind:9735 event
@@ -992,6 +1032,8 @@
 											{isEnabledRelativeTime}
 											{nowRealtime}
 											{level}
+											isPreview={false}
+											{callInsertText}
 										/>
 									</p>
 								{:else if event.kind === 10002}
@@ -1029,6 +1071,8 @@
 															{isEnabledRelativeTime}
 															{nowRealtime}
 															{level}
+															isPreview={false}
+															{callInsertText}
 														/>
 													</p>
 												{/if}
@@ -1063,6 +1107,8 @@
 															{isEnabledRelativeTime}
 															{nowRealtime}
 															{level}
+															isPreview={false}
+															{callInsertText}
 														/>
 													</p>
 												{/if}
@@ -1121,6 +1167,8 @@
 												{isEnabledRelativeTime}
 												{nowRealtime}
 												level={level + 1}
+												isPreview={false}
+												{callInsertText}
 											/>
 										{/if}
 									{/each}
@@ -1173,6 +1221,8 @@
 											{isEnabledRelativeTime}
 											{nowRealtime}
 											{level}
+											isPreview={false}
+											{callInsertText}
 										/>
 									</p>
 								{:else if event.kind === 30030}
@@ -1283,6 +1333,8 @@
 											{isEnabledRelativeTime}
 											{nowRealtime}
 											{level}
+											isPreview={false}
+											{callInsertText}
 										/>
 									</p>
 								{/if}
@@ -1436,28 +1488,56 @@
 										>
 									{/if}
 									<span class="Separator">·</span>
-									<span class="repost">
-										<button
-											aria-label="Repost Button"
-											class="repost"
-											title="repost"
-											onclick={() => {
-												sendRepost(event);
-											}}
-										>
-											<svg
-												xmlns="http://www.w3.org/2000/svg"
-												width="24"
-												height="24"
-												viewBox="0 0 24 24"
+									<div class="repost-container">
+										<span class="repost">
+											<button
+												aria-label="Repost Button"
+												class="repost"
+												title={$_('Entry.repost')}
+												onclick={() => {
+													showRepost = !showRepost;
+												}}
 											>
-												<path
-													fill-rule="evenodd"
-													d="M17.8069373,7 C16.4464601,5.07869636 14.3936238,4 12,4 C7.581722,4 4,7.581722 4,12 L2,12 C2,6.4771525 6.4771525,2 12,2 C14.8042336,2 17.274893,3.18251178 19,5.27034886 L19,2 L21,2 L21,9 L14,9 L14,7 L17.8069373,7 Z M6.19306266,17 C7.55353989,18.9213036 9.60637619,20 12,20 C16.418278,20 20,16.418278 20,12 L22,12 C22,17.5228475 17.5228475,22 12,22 C9.19576641,22 6.72510698,20.8174882 5,18.7296511 L5,22 L3,22 L3,15 L10,15 L10,17 L6.19306266,17 Z"
-												/>
-											</svg>
-										</button>
-									</span>
+												<svg
+													xmlns="http://www.w3.org/2000/svg"
+													width="24"
+													height="24"
+													viewBox="0 0 24 24"
+												>
+													<path
+														fill-rule="evenodd"
+														d="M17.8069373,7 C16.4464601,5.07869636 14.3936238,4 12,4 C7.581722,4 4,7.581722 4,12 L2,12 C2,6.4771525 6.4771525,2 12,2 C14.8042336,2 17.274893,3.18251178 19,5.27034886 L19,2 L21,2 L21,9 L14,9 L14,7 L17.8069373,7 Z M6.19306266,17 C7.55353989,18.9213036 9.60637619,20 12,20 C16.418278,20 20,16.418278 20,12 L22,12 C22,17.5228475 17.5228475,22 12,22 C9.19576641,22 6.72510698,20.8174882 5,18.7296511 L5,22 L3,22 L3,15 L10,15 L10,17 L6.19306266,17 Z"
+													/>
+												</svg>
+											</button>
+										</span>
+										{#if showRepost}
+											<ul class="select-repost">
+												<li>
+													<span class="repost">
+														<button
+															class="repost"
+															onclick={() => {
+																sendRepost(event);
+																showRepost = false;
+															}}>{$_('Entry.repost')}</button
+														>
+													</span>
+												</li>
+												<li>
+													<span class="quote">
+														<button
+															class="quote"
+															onclick={() => {
+																callInsertText(`nostr:${getEncode(event, getSeenOn(event.id))}`);
+																showRepost = false;
+															}}>{$_('Entry.quote')}</button
+														>
+													</span>
+												</li>
+											</ul>
+										{/if}
+									</div>
 									{#if (profileMap.get(event.pubkey)?.lud16 ?? profileMap.get(event.pubkey)?.lud06) !== undefined}
 										<span class="Separator">·</span>
 										<span class="zap">
@@ -1670,6 +1750,7 @@
 								channelToPost={undefined}
 								bind:showForm
 								bind:previewEvent
+								callInsertText={() => {}}
 							/>
 						{/if}
 					</div>
@@ -1695,6 +1776,7 @@
 								{nowRealtime}
 								level={level + 1}
 								isPreview={true}
+								callInsertText={() => {}}
 							/>
 						{/if}
 						{#if showReplies}
@@ -1718,6 +1800,8 @@
 									{isEnabledRelativeTime}
 									{nowRealtime}
 									level={level + 1}
+									isPreview={false}
+									{callInsertText}
 								/>
 							{/each}
 						{/if}
@@ -1899,6 +1983,33 @@
 	}
 	.Entry.future {
 		display: none;
+	}
+	.repost-container {
+		position: relative;
+	}
+	.select-repost {
+		position: absolute;
+		bottom: 1.5em;
+		left: 0;
+		background-color: var(--settings-button-inactive-bg);
+		border-radius: 10%;
+		box-shadow:
+			0 2px 6px -2px #00000080,
+			0 6px 12px -2px #0003;
+		z-index: 1;
+		padding: 0 3px;
+	}
+	.select-repost > li {
+		padding: 3px;
+		min-width: 50px;
+		list-style: none;
+	}
+	.select-repost > li:hover {
+		background-color: var(--settings-button-active-bg);
+	}
+	.select-repost > li > span.repost {
+		line-height: 1em;
+		white-space: nowrap;
 	}
 	article {
 		animation: show 2s backwards;

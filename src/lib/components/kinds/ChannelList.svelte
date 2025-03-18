@@ -1,17 +1,20 @@
 <script lang="ts">
 	import type { ChannelContent } from '$lib/utils';
+	import type { NostrEvent } from 'nostr-tools/pure';
 	import * as nip19 from 'nostr-tools/nip19';
 
 	let {
 		channelIds,
 		loginPubkey,
 		channelMap,
-		channelToPost = $bindable()
+		channelToPost = $bindable(),
+		baseEventToEdit = $bindable()
 	}: {
 		channelIds: string[];
 		loginPubkey: string | undefined;
 		channelMap: Map<string, ChannelContent>;
 		channelToPost: ChannelContent | undefined;
+		baseEventToEdit: NostrEvent | undefined;
 	} = $props();
 </script>
 
@@ -31,6 +34,7 @@
 						title="Post to this keyword"
 						onclick={() => {
 							channelToPost = channel;
+							baseEventToEdit = undefined;
 							window.scroll({
 								top: 0,
 								behavior: 'smooth'

@@ -2504,7 +2504,8 @@ export const makeEvent = (
 	contentWarningReason?: string | null | undefined,
 	pollItems?: string[],
 	pollEndsAt?: number,
-	pollType?: 'singlechoice' | 'multiplechoice'
+	pollType?: 'singlechoice' | 'multiplechoice',
+	kindForEdit?: number
 ): {
 	eventToSend: UnsignedEvent;
 	eventChannelToSend: UnsignedEvent | undefined;
@@ -2512,7 +2513,7 @@ export const makeEvent = (
 } => {
 	const relaysToAdd: Set<string> = new Set<string>();
 	let eventChannelToSend: UnsignedEvent | undefined;
-	if (pollItems !== undefined && pollItems.length > 0) {
+	if (kindForEdit !== undefined || (pollItems !== undefined && pollItems.length > 0)) {
 		//do nothing
 	} else if (targetEventToReply === undefined && channelNameToCreate.length > 0) {
 		//チャンネル作成
@@ -2549,11 +2550,13 @@ export const makeEvent = (
 	//投稿作成
 	const recommendedRelay: string =
 		targetEventToReply === undefined ? '' : (getSeenOn(targetEventToReply.id).at(0) ?? '');
-	const tags: string[][] = [];
+	let tags: string[][] = [];
 	const mentionPubkeys: Set<string> = new Set();
 	let pubkeyToReply: string | undefined;
 	let kind: number;
-	if (pollItems !== undefined && pollItems.length > 0) {
+	if (kindForEdit !== undefined) {
+		kind = kindForEdit;
+	} else if (pollItems !== undefined && pollItems.length > 0) {
 		kind = 1068;
 		const getRandomString = (n: number): string => {
 			const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
@@ -2764,6 +2767,22 @@ export const makeEvent = (
 	if (isEnabledUseClientTag) {
 		tags.push(clientTag);
 	}
+	if (kindForEdit === 10001) {
+		content = '';
+		tags = tags
+			.filter((tag) => tag.length >= 2 && tag[0] === 'q')
+			.map((tag) => {
+				const r = ['e', tag[1]];
+				if (tag[2] !== undefined) {
+					r.push(tag[2]);
+					if (tag[3] !== undefined) {
+						r.push('');
+						r.push(tag[3]);
+					}
+				}
+				return r;
+			});
+	}
 	const eventToSend: UnsignedEvent = $state.snapshot({
 		content,
 		kind,
@@ -2789,7 +2808,8 @@ export const sendNote = async (
 	contentWarningReason?: string | null | undefined,
 	pollItems?: string[],
 	pollEndsAt?: number,
-	pollType?: 'singlechoice' | 'multiplechoice'
+	pollType?: 'singlechoice' | 'multiplechoice',
+	kindForEdit?: number
 ): Promise<NostrEvent | null> => {
 	if (window.nostr === undefined) {
 		return null;
@@ -2805,7 +2825,8 @@ export const sendNote = async (
 		contentWarningReason,
 		pollItems,
 		pollEndsAt,
-		pollType
+		pollType,
+		kindForEdit
 	);
 	if (eventChannelToSend !== undefined) {
 		const signedEventChannelToSend = await window.nostr.signEvent(eventChannelToSend);

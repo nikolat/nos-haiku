@@ -29,7 +29,8 @@
 		channelToPost = $bindable(),
 		showForm = $bindable(),
 		previewEvent = $bindable(),
-		callInsertText = $bindable()
+		callInsertText = $bindable(),
+		baseEventToEdit = $bindable()
 	}: {
 		loginPubkey: string | undefined;
 		currentChannelId?: string | undefined;
@@ -42,6 +43,7 @@
 		showForm: boolean;
 		previewEvent: UnsignedEvent | undefined;
 		callInsertText: (word: string) => void;
+		baseEventToEdit: NostrEvent | undefined;
 	} = $props();
 
 	let pubkeysExcluded: string[] = $state([]);
@@ -171,6 +173,19 @@
 	let pollType: 'singlechoice' | 'multiplechoice' = $state('singlechoice');
 	let contentToSend: string = $state('');
 	$effect(() => {
+		if (baseEventToEdit !== undefined) {
+			channelNameToCreate = `kind:${baseEventToEdit.kind}`;
+			if (baseEventToEdit.kind === 10001) {
+				const nevents: string[] = baseEventToEdit.tags
+					.filter((tag) => tag.length >= 2 && tag[0] === 'e')
+					.map((tag) => `nostr:${nip19.neventEncode({ id: tag[1] })}`);
+				contentToSend = nevents.join('\n');
+			}
+			channelToPost = undefined;
+			return;
+		} else {
+			channelNameToCreate = '';
+		}
 		if (channelToPost?.name !== undefined) {
 			channelNameToCreate = channelToPost.name;
 		} else {
@@ -199,7 +214,8 @@
 			contentWarningReason,
 			addPoll ? pollItems.filter((item) => item.length > 0) : undefined,
 			addPoll ? unixNow() + pollPeriod : undefined,
-			addPoll ? pollType : undefined
+			addPoll ? pollType : undefined,
+			baseEventToEdit?.kind
 		);
 	});
 	const canSendNote: boolean = $derived(
@@ -241,7 +257,8 @@
 			contentWarningReason,
 			addPoll ? pollItems.filter((item) => item.length > 0) : undefined,
 			addPoll ? unixNow() + pollPeriod : undefined,
-			addPoll ? pollType : undefined
+			addPoll ? pollType : undefined,
+			baseEventToEdit?.kind
 		).then((event: NostrEvent | null) => {
 			const isNeededShowEvent: boolean = isTopPage && addPoll;
 			contentToSend = '';
@@ -320,7 +337,9 @@
 							bind:value={channelNameToCreate}
 						/>
 						{#if channelNameToCreate.length > 0}
-							{#if channelToPost !== undefined}
+							{#if baseEventToEdit !== undefined}
+								<span class="channel-to-post">⚠️{$_('CreateEntry.edit-mode')}</span>
+							{:else if channelToPost !== undefined}
 								{@const channel = channelToPost}
 								<img
 									class="channel-to-post"
@@ -339,6 +358,10 @@
 									onclick={() => {
 										channelToPost = undefined;
 										channelNameToCreate = '';
+										if (baseEventToEdit !== undefined) {
+											baseEventToEdit = undefined;
+											contentToSend = '';
+										}
 									}}
 									aria-label="clear the channel"
 								>

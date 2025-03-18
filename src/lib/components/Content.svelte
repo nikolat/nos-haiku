@@ -26,6 +26,7 @@
 		level = 0,
 		isPreview,
 		callInsertText,
+		baseEventToEdit = $bindable(),
 		isAbout = false,
 		enableAutoLink = true,
 		isEnabledRelativeTime = true,
@@ -50,6 +51,7 @@
 		level?: number;
 		isPreview?: boolean;
 		callInsertText?: (word: string) => void;
+		baseEventToEdit?: NostrEvent | undefined;
 		isAbout?: boolean;
 		enableAutoLink?: boolean;
 		isEnabledRelativeTime?: boolean;
@@ -197,6 +199,7 @@
 					level={level + 1}
 					isPreview={isPreview ?? false}
 					callInsertText={callInsertText ?? (() => {})}
+					bind:baseEventToEdit
 				/>
 			{:else}{matchedText}
 			{/if}
@@ -230,6 +233,7 @@
 					level={level + 1}
 					isPreview={isPreview ?? false}
 					callInsertText={callInsertText ?? (() => {})}
+					bind:baseEventToEdit
 				/>
 			{:else}{matchedText}
 			{/if}
@@ -262,6 +266,7 @@
 					level={level + 1}
 					isPreview={isPreview ?? false}
 					callInsertText={callInsertText ?? (() => {})}
+					bind:baseEventToEdit
 				/>
 			{:else}{matchedText}
 			{/if}

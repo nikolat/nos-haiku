@@ -382,6 +382,7 @@
 	let channelToPost: ChannelContent | undefined = $state();
 	let previewEvent: UnsignedEvent | undefined = $state();
 	let callInsertText: (word: string) => void = $state(() => {});
+	let baseEventToEdit: NostrEvent | undefined = $state();
 	let isEnabledScrollInfinitely: boolean = $state(true);
 	let zapWindowContainer: HTMLElement | undefined = $state();
 	let isEnabledToEditChannel: boolean = $state(false);
@@ -957,6 +958,7 @@
 						showForm={true}
 						bind:previewEvent
 						bind:callInsertText
+						bind:baseEventToEdit
 					/>
 				</div>
 				<div class="FeedList">
@@ -982,6 +984,7 @@
 							level={0}
 							isPreview={true}
 							callInsertText={() => {}}
+							baseEventToEdit={undefined}
 						/>
 					{/if}
 					{#if pinnedNotesEvent !== undefined && pinnedNotesEvent.tags.filter((tag) => tag.length >= 2 && tag[0] === 'e').length > 0}
@@ -1006,6 +1009,7 @@
 							level={0}
 							isPreview={false}
 							{callInsertText}
+							bind:baseEventToEdit
 						/>
 					{/if}
 					{#each timelineToShow as event (event.id)}
@@ -1030,6 +1034,7 @@
 							level={0}
 							isPreview={false}
 							{callInsertText}
+							bind:baseEventToEdit
 						/>
 					{/each}
 				</div>
@@ -1062,6 +1067,7 @@
 									{loginPubkey}
 									{channelMap}
 									bind:channelToPost
+									bind:baseEventToEdit
 								/>
 							{/if}
 						</div>
@@ -1100,7 +1106,13 @@
 					</div>
 					<div class="Card__body">
 						<div class="KeywordList">
-							<ChannelList {channelIds} {loginPubkey} {channelMap} bind:channelToPost />
+							<ChannelList
+								{channelIds}
+								{loginPubkey}
+								{channelMap}
+								bind:channelToPost
+								bind:baseEventToEdit
+							/>
 						</div>
 					</div>
 				</div>

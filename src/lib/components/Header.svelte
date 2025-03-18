@@ -488,10 +488,9 @@
 													<img alt={title} {title} class="badge" src={image} />
 												{/if}
 											{:else}
+												{@const sp = evTo.content.split('\n')}
 												<Content
-													content={evTo.content.length > 20
-														? `${evTo.content.slice(0, 20)}...`
-														: evTo.content}
+													content={sp.length >= 2 ? `${sp[0]}...` : sp[0]}
 													tags={evTo.tags}
 													enableAutoLink={false}
 												/>

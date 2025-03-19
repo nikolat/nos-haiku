@@ -2440,7 +2440,7 @@ export const sendChannelEdit = async (channel: ChannelContent) => {
 	obj.relays = relaysToWrite;
 	const content = JSON.stringify(obj);
 	const recommendedRelay: string = getSeenOn(channel.id).at(0) ?? '';
-	const eTag = ['e', channel.id, recommendedRelay, 'root', channel.pubkey];
+	const eTag = ['e', channel.id, recommendedRelay, '', channel.pubkey];
 	const tags: string[][] = [eTag];
 	for (const tTag of new Set(channel.categories)) {
 		tags.push(['t', tTag]);

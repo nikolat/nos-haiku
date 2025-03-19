@@ -40,7 +40,6 @@ import {
 	initialLocale,
 	profileRelays,
 	searchRelays,
-	subRelaysForChannel,
 	uploaderURLs
 } from '$lib/config';
 import { preferences } from '$lib/store';
@@ -73,12 +72,6 @@ const relaysToUseForProfile: string[] = $derived([
 		.filter((v) => v[1].read)
 		.map((v) => v[0]),
 	...profileRelays
-]);
-const relaysToUseForChannelMeta: string[] = $derived([
-	...Object.entries(relaysToUse)
-		.filter((v) => v[1].read)
-		.map((v) => v[0]),
-	...subRelaysForChannel
 ]);
 const relaysToRead: string[] = $derived(
 	Object.entries(relaysToUse)
@@ -884,53 +877,56 @@ const rxReqB41 = createRxBackwardReq();
 const rxReqBId = createRxBackwardReq();
 const rxReqBRp = createRxBackwardReq();
 const batchedReq0 = rxReqB0.pipe(bufferTime(secBufferTime), batch(mergeFilter0));
-rxNostr
-	.use(batchedReq0, { relays: relaysToUseForProfile })
-	.pipe(
-		tie,
-		latestEach(({ event }) => event.pubkey)
-	)
-	.subscribe({
-		next,
-		complete
-	});
-rxNostr.use(rxReqB1_42_1111).pipe(tie).subscribe({
-	next,
-	complete
-});
-const batchedReq7 = rxReqB7.pipe(bufferTime(secBufferTime), batch(mergeFilter7));
-rxNostr.use(batchedReq7).pipe(tie).subscribe({
-	next,
-	complete
-});
-const batchedReq40 = rxReqB40.pipe(bufferTime(secBufferTime), batch(mergeFilter40));
-rxNostr.use(batchedReq40, { relays: relaysToUseForChannelMeta }).pipe(tie).subscribe({
-	next,
-	complete
-});
-const batchedReq41 = rxReqB41.pipe(bufferTime(secBufferTime), batch(mergeFilter41));
-rxNostr
-	.use(batchedReq41, { relays: relaysToUseForChannelMeta })
-	.pipe(
-		tie,
-		latestEach(
-			({ event }) =>
-				`${event.kind}:${event.pubkey}:${event.tags.find((tag) => tag.length >= 2 && tag[0] === 'e')?.at(1) ?? ''}`
+const subscribeDefine = () => {
+	rxNostr
+		.use(batchedReq0, { relays: relaysToUseForProfile })
+		.pipe(
+			tie,
+			latestEach(({ event }) => event.pubkey)
 		)
-	)
-	.subscribe({
+		.subscribe({
+			next,
+			complete
+		});
+	rxNostr.use(rxReqB1_42_1111).pipe(tie).subscribe({
 		next,
 		complete
 	});
-const batchedReqId = rxReqBId.pipe(bufferTime(secBufferTime), batch(mergeFilterId));
-rxNostr.use(batchedReqId).pipe(tie).subscribe({
-	next,
-	complete
-});
-rxNostr.use(rxReqBRp).pipe(tie).subscribe({
-	next,
-	complete
-});
+	const batchedReq7 = rxReqB7.pipe(bufferTime(secBufferTime), batch(mergeFilter7));
+	rxNostr.use(batchedReq7).pipe(tie).subscribe({
+		next,
+		complete
+	});
+	const batchedReq40 = rxReqB40.pipe(bufferTime(secBufferTime), batch(mergeFilter40));
+	rxNostr.use(batchedReq40).pipe(tie).subscribe({
+		next,
+		complete
+	});
+	const batchedReq41 = rxReqB41.pipe(bufferTime(secBufferTime), batch(mergeFilter41));
+	rxNostr
+		.use(batchedReq41)
+		.pipe(
+			tie,
+			latestEach(
+				({ event }) =>
+					`${event.kind}:${event.pubkey}:${event.tags.find((tag) => tag.length >= 2 && tag[0] === 'e')?.at(1) ?? ''}`
+			)
+		)
+		.subscribe({
+			next,
+			complete
+		});
+	const batchedReqId = rxReqBId.pipe(bufferTime(secBufferTime), batch(mergeFilterId));
+	rxNostr.use(batchedReqId).pipe(tie).subscribe({
+		next,
+		complete
+	});
+	rxNostr.use(rxReqBRp).pipe(tie).subscribe({
+		next,
+		complete
+	});
+};
+subscribeDefine();
 
 const getEventsByIdWithRelayHint = (
 	event: NostrEvent,

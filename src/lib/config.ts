@@ -20,7 +20,6 @@ export const defaultRelays: RelayRecord = {
 
 export const profileRelays = ['wss://directory.yabu.me/'];
 export const searchRelays = ['wss://search.nos.today/', 'wss://nostr.wine/'];
-export const subRelaysForChannel = ['wss://relay-jp.nostr.wirednet.jp/', 'wss://yabu.me/'];
 export const urlToLinkProfileEditor = 'https://nos-profile-arekore.vercel.app/';
 export const expansionThreshold = 5;
 export const defaultReactionToShow = '⭐';
@@ -38,7 +37,7 @@ export const clientTag = [
 const relaysToWrite = Object.entries(defaultRelays)
 	.filter((v) => v[1].write)
 	.map((v) => v[0]);
-export const zapRelays = [...relaysToWrite, ...subRelaysForChannel];
+export const zapRelays = [...relaysToWrite, 'wss://relay-jp.nostr.wirednet.jp/', 'wss://yabu.me/'];
 export const uploaderURLs = [
 	'https://yabu.me',
 	'https://nostpic.com',

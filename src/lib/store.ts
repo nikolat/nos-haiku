@@ -10,6 +10,7 @@ export const preferences = persisted<
 		isEnabledRelativeTime: boolean;
 		isEnabledSkipKind1: boolean;
 		isEnabledUseClientTag: boolean;
+		isEnabledEventProtection: boolean;
 		relaysSelected: string;
 		uploaderSelected: string;
 		relaysToUse: RelayRecord;
@@ -21,6 +22,7 @@ export const preferences = persisted<
 		isEnabledRelativeTime: boolean;
 		isEnabledSkipKind1: boolean;
 		isEnabledUseClientTag: boolean;
+		isEnabledEventProtection: boolean;
 		relaysSelected: string;
 		uploaderSelected: string;
 		relaysToUse: RelayRecord;
@@ -32,6 +34,7 @@ export const preferences = persisted<
 	isEnabledRelativeTime: true,
 	isEnabledSkipKind1: false,
 	isEnabledUseClientTag: false,
+	isEnabledEventProtection: false,
 	relaysSelected: 'default',
 	uploaderSelected: uploaderURLs[0],
 	relaysToUse: defaultRelays

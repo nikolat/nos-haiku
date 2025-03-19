@@ -6,6 +6,7 @@
 		getRelaySets,
 		getRelaysToUse,
 		setIsEnabledDarkMode,
+		setIsEnabledEventProtection,
 		setIsEnabledRelativeTime,
 		setIsEnabledSkipKind1,
 		setIsEnabledUseClientTag,
@@ -32,6 +33,7 @@
 		isEnabledRelativeTime,
 		isEnabledSkipKind1,
 		isEnabledUseClientTag,
+		isEnabledEventProtection,
 		relaysSelected,
 		uploaderSelected,
 		profileMap,
@@ -51,6 +53,7 @@
 		isEnabledRelativeTime: boolean;
 		isEnabledSkipKind1: boolean;
 		isEnabledUseClientTag: boolean;
+		isEnabledEventProtection: boolean;
 		relaysSelected: string;
 		uploaderSelected: string;
 		profileMap: Map<string, ProfileContentEvent>;
@@ -237,6 +240,22 @@
 										bind:checked={isEnabledUseClientTag}
 										onchange={() => {
 											setIsEnabledUseClientTag(isEnabledUseClientTag);
+										}}
+									/><span class="Slider Round"></span></label
+								>
+							</div>
+						</div>
+						<div class="Settings__section">
+							<div class="Label"><span>{$_('Settings.account.event-protection')}</span></div>
+							<div class="Control">
+								<label class="SliderSwitch"
+									><input
+										name="ui_theme"
+										type="checkbox"
+										disabled={loginPubkey === undefined}
+										bind:checked={isEnabledEventProtection}
+										onchange={() => {
+											setIsEnabledEventProtection(isEnabledEventProtection);
 										}}
 									/><span class="Slider Round"></span></label
 								>

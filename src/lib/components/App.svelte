@@ -7,6 +7,7 @@
 		getEventsFirst,
 		getFollowList,
 		getIsEnabledDarkMode,
+		getIsEnabledEventProtection,
 		getIsEnabledRelativeTime,
 		getIsEnabledSkipKind1,
 		getIsEnabledUseClientTag,
@@ -53,6 +54,7 @@
 	const isEnabledRelativeTime: boolean = $derived(getIsEnabledRelativeTime());
 	const isEnabledSkipKind1: boolean = $derived(getIsEnabledSkipKind1());
 	const isEnabledUseClientTag: boolean = $derived(getIsEnabledUseClientTag());
+	const isEnabledEventProtection: boolean = $derived(getIsEnabledEventProtection());
 	const relaysSelected: string = $derived(getRelaysSelected());
 	const uploaderSelected: string = $derived(getUploaderSelected());
 	const profileMap: Map<string, ProfileContentEvent> = $derived(getProfileMap());
@@ -202,6 +204,7 @@
 			{isEnabledRelativeTime}
 			{isEnabledSkipKind1}
 			{isEnabledUseClientTag}
+			{isEnabledEventProtection}
 			{relaysSelected}
 			{uploaderSelected}
 			{profileMap}

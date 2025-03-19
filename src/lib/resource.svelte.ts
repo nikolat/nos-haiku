@@ -64,6 +64,7 @@ let isEnabledDarkMode: boolean = $state(true);
 let isEnabledRelativeTime: boolean = $state(true);
 let isEnabledSkipKind1: boolean = $state(false);
 let isEnabledUseClientTag: boolean = $state(false);
+let isEnabledEventProtection: boolean = $state(false);
 let relaysSelected: string = $state('default');
 let uploaderSelected: string = $state(uploaderURLs[0]);
 let relaysToUse: RelayRecord = $state(defaultRelays);
@@ -92,6 +93,7 @@ preferences.subscribe(
 		isEnabledRelativeTime: boolean;
 		isEnabledSkipKind1: boolean;
 		isEnabledUseClientTag: boolean;
+		isEnabledEventProtection: boolean;
 		relaysSelected: string;
 		uploaderSelected: string;
 		relaysToUse: RelayRecord;
@@ -114,6 +116,9 @@ preferences.subscribe(
 		if (isEnabledUseClientTag !== value.isEnabledUseClientTag) {
 			isEnabledUseClientTag = value.isEnabledUseClientTag;
 		}
+		if (isEnabledEventProtection !== value.isEnabledEventProtection) {
+			isEnabledEventProtection = value.isEnabledEventProtection;
+		}
 		if (relaysSelected !== value.relaysSelected) {
 			relaysSelected = value.relaysSelected;
 		}
@@ -133,6 +138,7 @@ const savelocalStorage = () => {
 		isEnabledRelativeTime,
 		isEnabledSkipKind1,
 		isEnabledUseClientTag,
+		isEnabledEventProtection,
 		relaysSelected,
 		uploaderSelected,
 		relaysToUse
@@ -386,6 +392,15 @@ export const getIsEnabledUseClientTag = (): boolean => {
 
 export const setIsEnabledUseClientTag = (value: boolean): void => {
 	isEnabledUseClientTag = value;
+	savelocalStorage();
+};
+
+export const getIsEnabledEventProtection = (): boolean => {
+	return isEnabledEventProtection;
+};
+
+export const setIsEnabledEventProtection = (value: boolean): void => {
+	isEnabledEventProtection = value;
 	savelocalStorage();
 };
 
@@ -2339,6 +2354,9 @@ export const sendRepost = async (targetEvent: NostrEvent): Promise<void> => {
 		kind = 16;
 		tags.push(['k', String(targetEvent.kind)]);
 	}
+	if (isEnabledEventProtection) {
+		tags.push(['-']);
+	}
 	if (isEnabledUseClientTag) {
 		tags.push(clientTag);
 	}
@@ -2374,6 +2392,9 @@ export const sendReaction = async (
 	);
 	if (emojiurl !== undefined && URL.canParse(emojiurl)) {
 		tags.push(['emoji', content.replaceAll(':', ''), emojiurl]);
+	}
+	if (isEnabledEventProtection) {
+		tags.push(['-']);
 	}
 	if (isEnabledUseClientTag) {
 		tags.push(clientTag);
@@ -2445,6 +2466,9 @@ export const sendChannelEdit = async (channel: ChannelContent) => {
 	for (const tTag of new Set(channel.categories)) {
 		tags.push(['t', tTag]);
 	}
+	if (isEnabledEventProtection) {
+		tags.push(['-']);
+	}
 	if (isEnabledUseClientTag) {
 		tags.push(clientTag);
 	}
@@ -2473,6 +2497,9 @@ export const sendPollResponse = async (
 		['e', targetEventToRespond.id],
 		...responses.map((response) => ['response', response])
 	];
+	if (isEnabledEventProtection) {
+		tags.push(['-']);
+	}
 	if (isEnabledUseClientTag) {
 		tags.push(clientTag);
 	}
@@ -2513,6 +2540,13 @@ export const makeEvent = (
 		//do nothing
 	} else if (targetEventToReply === undefined && channelNameToCreate.length > 0) {
 		//チャンネル作成
+		const tagsChannel: string[][] = [];
+		if (isEnabledEventProtection) {
+			tagsChannel.push(['-']);
+		}
+		if (isEnabledUseClientTag) {
+			tagsChannel.push(clientTag);
+		}
 		const eventTemplateChannel: UnsignedEvent = $state.snapshot({
 			content: JSON.stringify({
 				name: channelNameToCreate,
@@ -2521,7 +2555,7 @@ export const makeEvent = (
 				relays: relaysToWrite
 			}),
 			kind: 40,
-			tags: isEnabledUseClientTag ? [clientTag] : [],
+			tags: tagsChannel,
 			created_at: unixNow(),
 			pubkey: loginPubkey
 		});
@@ -2759,6 +2793,9 @@ export const makeEvent = (
 				? ['content-warning']
 				: ['content-warning', contentWarningReason]
 		);
+	}
+	if (isEnabledEventProtection) {
+		tags.push(['-']);
 	}
 	if (isEnabledUseClientTag) {
 		tags.push(clientTag);

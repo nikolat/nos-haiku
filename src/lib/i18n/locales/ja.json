@@ -155,6 +155,7 @@
 			"relative-time": "相対時刻表示",
 			"skip-kind-1": "kind:1 をスキップ",
 			"client-tag": "clientタグ",
+			"event-protection": "イベント保護(NIP-70)",
 			"relays": "接続リレー",
 			"select-relay-set": "リレーセットを選択",
 			"uploader": "アップローダー",

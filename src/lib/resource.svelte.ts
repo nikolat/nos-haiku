@@ -229,9 +229,15 @@ const channelMap = $derived.by(() => {
 			console.warn(error);
 			continue;
 		}
-		channel.relays = channel.relays
-			?.filter((relay) => URL.canParse(relay))
-			.map((relay) => normalizeURL(relay));
+		if (Array.isArray(channel.relays)) {
+			channel.relays = Array.from(
+				new Set<string>(
+					channel.relays.filter((relay) => URL.canParse(relay)).map((relay) => normalizeURL(relay))
+				)
+			);
+		} else {
+			channel.relays = [];
+		}
 		channel.categories = getCategories(ev);
 		channel.eventkind40 = ev;
 		channel.id = ev.id;
@@ -257,9 +263,17 @@ const channelMap = $derived.by(() => {
 					console.warn(error);
 					continue;
 				}
-				channel.relays = channel.relays
-					?.filter((relay) => URL.canParse(relay))
-					.map((relay) => normalizeURL(relay));
+				if (Array.isArray(channel.relays)) {
+					channel.relays = Array.from(
+						new Set<string>(
+							channel.relays
+								.filter((relay) => URL.canParse(relay))
+								.map((relay) => normalizeURL(relay))
+						)
+					);
+				} else {
+					channel.relays = [];
+				}
 				channel.categories = getCategories(ev);
 				channel.eventkind40 = c.eventkind40;
 				channel.eventkind41 = ev;

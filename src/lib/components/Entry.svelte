@@ -210,7 +210,11 @@
 		return cwTag[1];
 	});
 	const pubkeysMentioningTo: string[] = $derived(
-		event.tags.filter((tag) => tag.length >= 2 && tag[0] === 'p').map((tag) => tag[1])
+		Array.from(
+			new Set<string>(
+				event.tags.filter((tag) => tag.length >= 2 && tag[0] === 'p').map((tag) => tag[1])
+			)
+		)
 	);
 	const classNames: string[] = $derived.by(() => {
 		const classNames: string[] = ['Entry'];
@@ -1291,12 +1295,12 @@
 											</div>
 										{/if}
 										<p>{dTagName}</p>
-										{#each emojiTags as emojiTag (emojiTag[1])}
+										{#each new Map<string, string>(emojiTags.map( (tag) => [tag[1], tag[2]] )) as [shortcode, url] (shortcode)}
 											<img
 												class="emoji"
-												src={emojiTag[2]}
-												alt={`:${emojiTag[1]}:`}
-												title={`:${emojiTag[1]}:`}
+												src={url}
+												alt={`:${shortcode}:`}
+												title={`:${shortcode}:`}
 											/>
 										{/each}
 									</div>

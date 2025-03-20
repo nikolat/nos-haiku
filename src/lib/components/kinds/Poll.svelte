@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { getEventsByFilter, sendPollResponse } from '$lib/resource.svelte';
 	import { getTimeRemaining } from '$lib/utils';
+	import Content from '$lib/components/Content.svelte';
 	import type { NostrEvent } from 'nostr-tools/pure';
 	import { normalizeURL } from 'nostr-tools/utils';
 	import { _ } from 'svelte-i18n';
@@ -122,7 +123,7 @@
 					bind:group={responseRadio}
 				/>
 			{/if}
-			<span>{v}</span>
+			<span><Content content={v} tags={event.tags} /></span>
 			<br />
 			<meter min="0" max={nMax} value={n}>{n}</meter>
 			<span>{n}</span>

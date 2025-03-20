@@ -42,7 +42,7 @@
 		channelToPost: ChannelContent | undefined;
 		showForm: boolean;
 		previewEvent: UnsignedEvent | undefined;
-		callInsertText: (word: string) => void;
+		callInsertText: (word: string, enableNewline?: boolean) => void;
 		baseEventToEdit: NostrEvent | undefined;
 	} = $props();
 
@@ -63,7 +63,7 @@
 		if (r === null) {
 			return;
 		}
-		insertText(r.emojiStr);
+		insertText(r.emojiStr, false);
 	};
 
 	let isInProcess: boolean = $state(false);
@@ -147,13 +147,13 @@
 		insertText(uploadedFileUrl);
 	};
 
-	const insertText = (word: string): void => {
+	const insertText = (word: string, enableNewline: boolean = true): void => {
 		let sentence = textArea.value;
 		const len = sentence.length;
 		const pos = textArea.selectionStart;
 		const before = sentence.slice(0, pos);
 		const after = sentence.slice(pos, pos + len);
-		if (!(before.length === 0 || before.endsWith('\n'))) {
+		if (enableNewline && !(before.length === 0 || before.endsWith('\n'))) {
 			word = `\n${word}`;
 		}
 		sentence = before + word + after;

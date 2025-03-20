@@ -381,7 +381,7 @@
 
 	let channelToPost: ChannelContent | undefined = $state();
 	let previewEvent: UnsignedEvent | undefined = $state();
-	let callInsertText: (word: string) => void = $state(() => {});
+	let callInsertText: (word: string, enableNewline?: boolean) => void = $state(() => {});
 	let baseEventToEdit: NostrEvent | undefined = $state();
 	let isEnabledScrollInfinitely: boolean = $state(true);
 	let zapWindowContainer: HTMLElement | undefined = $state();

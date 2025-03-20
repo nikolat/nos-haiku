@@ -91,7 +91,7 @@
 		nowRealtime: number;
 		level: number;
 		isPreview: boolean;
-		callInsertText: (word: string) => void;
+		callInsertText: (word: string, enableNewline?: boolean) => void;
 		baseEventToEdit: NostrEvent | undefined;
 	} = $props();
 

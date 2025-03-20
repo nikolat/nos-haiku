@@ -245,29 +245,33 @@
 		{#if d?.type === 'naddr'}
 			{@const event = getEventByAddressPointer(d.data)}
 			{#if event !== undefined}
-				<Entry
-					{event}
-					{channelMap}
-					{profileMap}
-					{loginPubkey}
-					{mutedPubkeys}
-					{mutedChannelIds}
-					{mutedWords}
-					{mutedHashTags}
-					{followingPubkeys}
-					{eventsTimeline}
-					{eventsReaction}
-					{eventsEmojiSet}
-					{uploaderSelected}
-					bind:channelToPost
-					{currentChannelId}
-					{isEnabledRelativeTime}
-					{nowRealtime}
-					level={level + 1}
-					isPreview={isPreview ?? false}
-					callInsertText={callInsertText ?? (() => {})}
-					bind:baseEventToEdit
-				/>
+				{#if level >= 10}
+					{matchedText}
+				{:else}
+					<Entry
+						{event}
+						{channelMap}
+						{profileMap}
+						{loginPubkey}
+						{mutedPubkeys}
+						{mutedChannelIds}
+						{mutedWords}
+						{mutedHashTags}
+						{followingPubkeys}
+						{eventsTimeline}
+						{eventsReaction}
+						{eventsEmojiSet}
+						{uploaderSelected}
+						bind:channelToPost
+						{currentChannelId}
+						{isEnabledRelativeTime}
+						{nowRealtime}
+						level={level + 1}
+						isPreview={isPreview ?? false}
+						callInsertText={callInsertText ?? (() => {})}
+						bind:baseEventToEdit
+					/>
+				{/if}
 			{:else}{matchedText}
 			{/if}
 		{:else}{matchedText}

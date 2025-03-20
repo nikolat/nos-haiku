@@ -576,13 +576,13 @@ export const getEmoji = async (
 	});
 };
 
-const indexOfFirstUnmatchingCloseParen = (url: string): number => {
+const indexOfFirstUnmatchingCloseParen = (url: string, left: string, right: string): number => {
 	let nest = 0;
 	for (let i = 0; i < url.length; i++) {
 		const c = url.charAt(i);
-		if (c === '(') {
+		if (c === left) {
 			nest++;
-		} else if (c === ')') {
+		} else if (c === right) {
 			if (nest <= 0) {
 				return i;
 			}
@@ -594,10 +594,16 @@ const indexOfFirstUnmatchingCloseParen = (url: string): number => {
 
 //https://github.com/jiftechnify/motherfucking-nostr-client
 export const urlLinkString = (url: string): [string, string] => {
-	const splitIdx: number = indexOfFirstUnmatchingCloseParen(url);
-	const finalUrl: string = splitIdx === -1 ? url : url.substring(0, splitIdx);
-	const rest = splitIdx === -1 ? '' : url.substring(splitIdx);
-	return [finalUrl, rest];
+	for (const [left, right] of [
+		['(', ')'],
+		['[', ']']
+	]) {
+		const splitIdx: number = indexOfFirstUnmatchingCloseParen(url, left, right);
+		if (splitIdx >= 0) {
+			return [url.substring(0, splitIdx), url.substring(splitIdx)];
+		}
+	}
+	return [url, ''];
 };
 
 export const loginWithNpub = (npub: string) => {

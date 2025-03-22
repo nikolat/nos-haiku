@@ -1778,16 +1778,6 @@ export const getEventsFirst = (
 	} else if (isTopPage) {
 		filters.push({ kinds: [7], '#k': ['42'] });
 	}
-	//kind:16はkind:42が対象のものだけを受信する
-	for (const f of [...filters]) {
-		if (f.kinds?.includes(16) && !f['#k']?.includes('42')) {
-			const fcopy: LazyFilter = { ...f };
-			f.kinds = f.kinds.filter((kind) => kind !== 16);
-			fcopy.kinds = [16];
-			fcopy['#k'] = ['42'];
-			filters.push(fcopy);
-		}
-	}
 	for (const f of filters) {
 		delete f.until;
 		f.since = unixNow() + 1;

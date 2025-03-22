@@ -3,7 +3,7 @@
 		getRoboHashURL,
 		serviceLogoImageUri,
 		zapImageUri,
-		zapNoteId,
+		zapNaddrId,
 		zapNpub,
 		zapRelays
 	} from '$lib/config';
@@ -1089,7 +1089,7 @@
 						class="Button"
 						disabled={loginPubkey === undefined}
 						onclick={() => {
-							zap(zapNpub, zapNoteId, zapRelays, zapWindowContainer);
+							zap(zapNpub, undefined, zapNaddrId, zapRelays, zapWindowContainer);
 						}}
 					>
 						<img alt="Zap" src={zapImageUri} />

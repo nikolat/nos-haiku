@@ -1603,7 +1603,12 @@
 														.map((v) => v[0]);
 													zap(
 														nip19.npubEncode(event.pubkey),
-														nip19.noteEncode(event.id),
+														isAddressableKind(event.kind) || isReplaceableKind(event.kind)
+															? undefined
+															: nip19.noteEncode(event.id),
+														isAddressableKind(event.kind) || isReplaceableKind(event.kind)
+															? getEncode(event)
+															: undefined,
 														relaysToWrite,
 														zapWindowContainer
 													);

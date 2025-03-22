@@ -468,7 +468,8 @@ export const isValidEmoji = (event: NostrEvent): boolean => {
 
 export const zap = async (
 	npub: string,
-	id: string,
+	noteId: string | undefined,
+	naddrId: string | undefined,
 	relays: string[],
 	zapWindowContainer: HTMLElement | undefined
 ): Promise<void> => {
@@ -484,7 +485,8 @@ export const zap = async (
 	const elm: HTMLButtonElement = document.createElement('button');
 	elm.style.display = 'none';
 	elm.dataset.npub = npub;
-	elm.dataset.noteId = id;
+	elm.dataset.noteId = noteId;
+	elm.dataset.naddr = naddrId;
 	elm.dataset.relays = relays.join(',');
 	zapWindowContainer.append(elm);
 	initTarget(elm);

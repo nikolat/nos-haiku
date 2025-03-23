@@ -1002,7 +1002,11 @@ const getEventsByIdWithRelayHint = (
 			const relayHint = aTag[2];
 			if (
 				ap === null ||
-				eventStore.hasReplaceable(ap.kind, ap.pubkey, ap.identifier) ||
+				eventStore.hasReplaceable(
+					ap.kind,
+					ap.pubkey,
+					isAddressableKind(ap.kind) ? ap.identifier : undefined
+				) ||
 				relayHint === undefined ||
 				!URL.canParse(relayHint)
 			) {
@@ -1025,7 +1029,7 @@ const getEventsByIdWithRelayHint = (
 				authors: [ap.pubkey],
 				until: unixNow()
 			};
-			if (ap.identifier.length > 0) {
+			if (isAddressableKind(ap.kind)) {
 				filter['#d'] = [ap.identifier];
 			}
 			rxReqBRpCustom.emit(filter);
@@ -1039,7 +1043,12 @@ const getEventsQuoted = (event: NostrEvent) => {
 	const { ids, aps } = getIdsForFilter([event]);
 	const idsFiltered = ids.filter((id) => !eventStore.hasEvent(id));
 	const apsFiltered = aps.filter(
-		(ap) => !eventStore.hasReplaceable(ap.kind, ap.pubkey, ap.identifier)
+		(ap) =>
+			!eventStore.hasReplaceable(
+				ap.kind,
+				ap.pubkey,
+				isAddressableKind(ap.kind) ? ap.identifier : undefined
+			)
 	);
 	const pubkeys = getPubkeysForFilter([event]);
 	const pubkeysFilterd = pubkeys.filter((pubkey) => !profileMap.has(pubkey));
@@ -1053,7 +1062,7 @@ const getEventsQuoted = (event: NostrEvent) => {
 				authors: [ap.pubkey],
 				until: unixNow()
 			};
-			if (ap.identifier.length > 0) {
+			if (isAddressableKind(ap.kind)) {
 				f['#d'] = [ap.identifier];
 			}
 			rxReqBRp.emit(f);
@@ -1088,13 +1097,20 @@ const fetchEventsByATags = (event: NostrEvent) => {
 	if (aIds.length > 0) {
 		for (const aId of aIds) {
 			const ap: nip19.AddressPointer | null = getAddressPointerFromAId(aId);
-			if (ap !== null && !eventStore.hasReplaceable(ap.kind, ap.pubkey, ap.identifier)) {
+			if (
+				ap !== null &&
+				!eventStore.hasReplaceable(
+					ap.kind,
+					ap.pubkey,
+					isAddressableKind(ap.kind) ? ap.identifier : undefined
+				)
+			) {
 				const filter: LazyFilter = {
 					kinds: [ap.kind],
 					authors: [ap.pubkey],
 					until: unixNow()
 				};
-				if (ap.identifier.length > 0) {
+				if (isAddressableKind(ap.kind)) {
 					filter['#d'] = [ap.identifier];
 				}
 				filters.push(filter);
@@ -1246,7 +1262,11 @@ const _subTimeline = eventStore
 					}
 					if (
 						ap !== null &&
-						!eventStore.hasReplaceable(ap.kind, ap.pubkey, ap.identifier) &&
+						!eventStore.hasReplaceable(
+							ap.kind,
+							ap.pubkey,
+							isAddressableKind(ap.kind) ? ap.identifier : undefined
+						) &&
 						AId !== undefined &&
 						(countThread.get(AId) ?? 0) < countThreadLimit
 					) {
@@ -1256,7 +1276,7 @@ const _subTimeline = eventStore
 							authors: [ap.pubkey],
 							until: unixNow()
 						};
-						if (ap.identifier.length > 0) {
+						if (isAddressableKind(ap.kind)) {
 							filter['#d'] = [ap.identifier];
 						}
 						rxReqBRp.emit(filter);

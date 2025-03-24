@@ -465,11 +465,11 @@
 											>⚡{#if sats > 0}{sats}{/if} zapped</a
 										>
 									{/if}
-									{#if ev.kind !== 8}
-										to
-									{/if}
-									<br />
 									{#if evTo !== undefined}
+										{#if ![6, 8, 16].includes(ev.kind)}
+											to
+										{/if}
+										<br />
 										{@const d =
 											evTo.tags.find((tag) => tag.length >= 2 && tag[0] === 'd')?.at(1) ?? ''}
 										{@const link =

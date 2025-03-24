@@ -1226,17 +1226,12 @@ const _subTimeline = eventStore
 						.find((tag) => tag.length >= 4 && tag[0] === 'e' && tag[3] === marker)
 						?.at(1);
 				};
-				const rootId = getIdOfMarkerd('root');
-				const repliedId = getIdOfMarkerd('reply');
 				//自分が参照しているrootイベントまたはreply先イベントを取得する
 				if (event.kind === 42) {
-					if (rootId !== undefined && !channelMap.has(rootId)) {
-						rxReqB40.emit({ kinds: [40], ids: [rootId], until: unixNow() });
-					}
-					if (repliedId !== undefined && !eventStore.hasEvent(repliedId)) {
-						rxReqBId.emit({ kinds: [42], ids: [repliedId], until: unixNow() });
-					}
+					fetchEventsByETags(event);
 				} else if (event.kind === 1) {
+					const rootId = getIdOfMarkerd('root');
+					const repliedId = getIdOfMarkerd('reply');
 					const idToGet = repliedId ?? rootId;
 					if (
 						idToGet !== undefined &&

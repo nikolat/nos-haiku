@@ -1221,15 +1221,15 @@ const _subTimeline = eventStore
 			case 1111: {
 				//多数のリアクションが付くと重くなる
 				rxReqB7.emit({ kinds: [7], '#e': [event.id], limit: 10, until: unixNow() });
-				const getIdOfMarkerd = (marker: string): string | undefined => {
-					return event.tags
-						.find((tag) => tag.length >= 4 && tag[0] === 'e' && tag[3] === marker)
-						?.at(1);
-				};
 				//自分が参照しているrootイベントまたはreply先イベントを取得する
 				if (event.kind === 42) {
 					fetchEventsByETags(event);
 				} else if (event.kind === 1) {
+					const getIdOfMarkerd = (marker: string): string | undefined => {
+						return event.tags
+							.find((tag) => tag.length >= 4 && tag[0] === 'e' && tag[3] === marker)
+							?.at(1);
+					};
 					const rootId = getIdOfMarkerd('root');
 					const repliedId = getIdOfMarkerd('reply');
 					const idToGet = repliedId ?? rootId;

@@ -1981,6 +1981,7 @@
 	.Post span {
 		font-size: 12px;
 		margin-right: 3px;
+		word-break: break-all;
 	}
 	.Post .FavoriteButton > span {
 		font-size: 16px;

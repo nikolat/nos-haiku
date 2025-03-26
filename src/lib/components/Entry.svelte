@@ -820,7 +820,7 @@
 										.map((s) => s.split(' ').at(1))
 										.filter((s) => s !== undefined)
 										.filter((s) => URL.canParse(s))}
-									{#if title !== undefined}<p>{title}</p>{/if}
+									{#if title !== undefined}<h2 class="title">{title}</h2>{/if}
 									<p>
 										<Content
 											content={event.content.length > 0
@@ -1212,20 +1212,22 @@
 									{@const tagMap = new Map<string, string>(
 										event.tags.map((tag) => [tag[0], tag[1]])
 									)}
-									{#if tagMap.get('name') !== undefined}<p class="name">
-											{tagMap.get('name')}
-										</p>{/if}
-									{#if tagMap.get('description') !== undefined}<p class="description">
-											{tagMap.get('description')}
-										</p>{/if}
-									{#if URL.canParse(tagMap.get('image') ?? '')}<p class="image">
+									{#if tagMap.get('name') !== undefined}
+										<h2 class="name title">{tagMap.get('name')}</h2>
+									{/if}
+									{#if tagMap.get('description') !== undefined}
+										<p class="description">{tagMap.get('description')}</p>
+									{/if}
+									{#if URL.canParse(tagMap.get('image') ?? '')}
+										<p class="image">
 											<img
 												alt={tagMap.get('name') ?? ''}
 												title={tagMap.get('name') ?? ''}
 												src={tagMap.get('image')}
 												class="badge"
 											/>
-										</p>{/if}
+										</p>
+									{/if}
 								{:else if event.kind === 30023}
 									{@const title =
 										event.tags.find((tag) => tag.length >= 2 && tag[0] === 'title')?.at(1) ?? ''}

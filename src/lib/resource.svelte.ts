@@ -989,7 +989,7 @@ const getEventsByIdWithRelayHint = (
 					next,
 					complete
 				});
-			rxReqBIdCustom.emit({ ids: [id], until: unixNow() });
+			rxReqBIdCustom.emit({ ids: [id], until: event.created_at + 1 });
 			rxReqBIdCustom.over();
 		}
 	} else if (tagNameToGet === 'a') {
@@ -1027,7 +1027,7 @@ const getEventsByIdWithRelayHint = (
 			const filter: LazyFilter = {
 				kinds: [ap.kind],
 				authors: [ap.pubkey],
-				until: unixNow()
+				until: event.created_at + 1
 			};
 			if (isAddressableKind(ap.kind)) {
 				filter['#d'] = [ap.identifier];
@@ -1053,14 +1053,14 @@ const getEventsQuoted = (event: NostrEvent) => {
 	const pubkeys = getPubkeysForFilter([event]);
 	const pubkeysFilterd = pubkeys.filter((pubkey) => !profileMap.has(pubkey));
 	if (idsFiltered.length > 0) {
-		rxReqBId.emit({ ids: idsFiltered, until: unixNow() });
+		rxReqBId.emit({ ids: idsFiltered, until: event.created_at + 1 });
 	}
 	if (apsFiltered.length > 0) {
 		for (const ap of apsFiltered) {
 			const f: LazyFilter = {
 				kinds: [ap.kind],
 				authors: [ap.pubkey],
-				until: unixNow()
+				until: event.created_at + 1
 			};
 			if (isAddressableKind(ap.kind)) {
 				f['#d'] = [ap.identifier];
@@ -1069,7 +1069,7 @@ const getEventsQuoted = (event: NostrEvent) => {
 		}
 	}
 	if (pubkeysFilterd.length > 0) {
-		rxReqB0.emit({ kinds: [0], authors: pubkeysFilterd, until: unixNow() });
+		rxReqB0.emit({ kinds: [0], authors: pubkeysFilterd, until: event.created_at + 1 });
 	}
 	//リレーヒント付き引用による取得
 	getEventsByIdWithRelayHint(event, 'q');

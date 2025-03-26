@@ -584,8 +584,9 @@
 											/>
 										{/if}
 										{#if eventReplyTo !== undefined}
+											{@const content = eventReplyTo.content.split('\n')[0]}
 											<Content
-												content={eventReplyTo.content.split('\n')[0]}
+												content={content.length > 100 ? `${content.slice(0, 100)}...` : content}
 												tags={eventReplyTo.tags}
 												{profileMap}
 												enableAutoLink={false}

@@ -668,10 +668,15 @@
 										{pubkeyToSend}
 									/>
 								{:else if event.kind === 7}
-									{@const reactedEventId = event.tags
+									{@const eId = event.tags
 										.findLast((tag) => tag.length >= 2 && tag[0] === 'e')
 										?.at(1)}
-									{@const reactedEvent = getEventById(reactedEventId ?? '')}
+									{@const aId = event.tags
+										.findLast((tag) => tag.length >= 2 && tag[0] === 'a')
+										?.at(1)}
+									{@const ap = getAddressPointerFromAId(aId ?? '')}
+									{@const reactedEvent =
+										ap !== null ? getEventByAddressPointer(ap) : getEventById(eId ?? '')}
 									{#if reactedEvent !== undefined}
 										<Entry
 											event={reactedEvent}
@@ -696,8 +701,10 @@
 											{callInsertText}
 											bind:baseEventToEdit
 										/>
-									{:else if reactedEventId !== undefined}
-										{`nostr:${nip19.neventEncode({ id: reactedEventId })}`}
+									{:else if ap !== null}
+										{`nostr:${nip19.naddrEncode(ap)}`}
+									{:else if eId !== undefined}
+										{`nostr:${nip19.neventEncode({ id: eId })}`}
 									{/if}
 								{:else if event.kind === 8}
 									{@const ps = new Set<string>(

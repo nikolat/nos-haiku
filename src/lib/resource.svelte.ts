@@ -670,8 +670,6 @@ const nextOnSubscribeEventStore = (event: NostrEvent | null, kindToDelete?: numb
 						(loginPubkey !== undefined &&
 							event?.tags.find((tag) => tag.length >= 2 && tag[0] === 'p')?.at(1) !==
 								loginPubkey))) ||
-				(kind === 16 &&
-					event?.tags.find((tag) => tag.length >= 2 && tag[0] === 'k')?.at(1) !== '42') ||
 				(kind === 9735 &&
 					(loginPubkey === undefined ||
 						(loginPubkey !== undefined &&
@@ -1233,6 +1231,7 @@ const _subTimeline = eventStore
 				//自分が参照しているrootイベントまたはreply先イベントを取得する
 				if (event.kind === 42) {
 					fetchEventsByETags(event);
+					fetchEventsByATags(event);
 				} else if (event.kind === 1) {
 					const getIdOfMarkerd = (marker: string): string | undefined => {
 						return event.tags

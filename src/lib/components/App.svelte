@@ -21,7 +21,8 @@
 		getRelaysSelected,
 		getUploaderSelected,
 		resetRelaysDefault,
-		setLoginPubkey
+		setLoginPubkey,
+		setRxNostr
 	} from '$lib/resource.svelte';
 	import Header from '$lib/components/Header.svelte';
 	import Settings from '$lib/components/Settings.svelte';
@@ -76,6 +77,7 @@
 	let intervalID: number;
 	const getEventsFirstWithLoading = () => {
 		isLoading = true;
+		setRxNostr(loginPubkey !== undefined);
 		getEventsFirst(
 			{ ...urlParams, urlSearchParams },
 			undefined,

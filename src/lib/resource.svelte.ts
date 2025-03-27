@@ -11,6 +11,7 @@ import {
 	type EventPacket,
 	type LazyFilter,
 	type MergeFilter,
+	type RxNostr,
 	type RxNostrSendOptions,
 	type RxNostrUseOptions
 } from 'rx-nostr';
@@ -159,7 +160,7 @@ let countThread: Map<string, number> = new Map<string, number>();
 const countThreadLimit = 5;
 
 const eventStore = new EventStore();
-const rxNostr = createRxNostr({ verifier, authenticator: 'auto' });
+let rxNostr: RxNostr;
 const [tie, seenOn] = createTie();
 let subF: Subscription;
 
@@ -310,6 +311,15 @@ const channelBookmarkMap = $derived.by(() => {
 });
 
 //====================[変数にアクセスする手段を提供]====================
+
+export const setRxNostr = (isLoggedIn: boolean): void => {
+	if (isLoggedIn) {
+		rxNostr = createRxNostr({ verifier, authenticator: 'auto' });
+	} else {
+		rxNostr = createRxNostr({ verifier });
+	}
+	subscribeDefine();
+};
 
 export const getProfileId = (prof: ProfileContent | undefined) => {
 	let name = prof?.name !== undefined ? `id:${prof.name}` : 'anonymouse';
@@ -955,7 +965,6 @@ const subscribeDefine = () => {
 		complete
 	});
 };
-subscribeDefine();
 
 const getEventsByIdWithRelayHint = (
 	event: NostrEvent,

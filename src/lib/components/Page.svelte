@@ -117,6 +117,15 @@
 		}
 		return kindSet;
 	});
+	const pSet: Set<string> = $derived.by(() => {
+		const pSet: Set<string> = new Set<string>();
+		for (const [k, v] of urlSearchParams) {
+			if (k === 'p' && /^\w{64}$/.test(v)) {
+				pSet.add(v);
+			}
+		}
+		return pSet;
+	});
 	const authorSet: Set<string> = $derived.by(() => {
 		const authorSet: Set<string> = new Set<string>();
 		for (const [k, v] of urlSearchParams) {
@@ -261,6 +270,12 @@
 		}
 		if (kindSet.size > 0) {
 			tl = tl.filter((ev) => kindSet.has(ev.kind));
+		}
+		if (pSet.size > 0) {
+			tl = tl.filter((ev) => {
+				const ps = ev.tags.filter((tag) => tag.length >= 2 && tag[0] === 'p').map((tag) => tag[1]);
+				return ps.some((p) => pSet.has(p));
+			});
 		}
 		return tl;
 	});

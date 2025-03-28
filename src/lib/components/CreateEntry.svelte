@@ -55,15 +55,18 @@
 	const emojiMap: Map<string, string> = $derived(getEmojiMap(eventsEmojiSet));
 
 	let emojiPickerContainer: HTMLElement | undefined = $state();
-	const callGetEmoji = async () => {
+	const callGetEmoji = () => {
 		if (emojiPickerContainer === undefined) {
 			return;
 		}
-		const r = await getEmoji(emojiPickerContainer, $state.snapshot(emojiMap));
-		if (r === null) {
-			return;
-		}
-		insertText(r.emojiStr, false);
+		getEmoji(
+			emojiPickerContainer,
+			$state.snapshot(emojiMap),
+			false,
+			({ emojiStr }: { emojiStr: string }) => {
+				insertText(emojiStr, false);
+			}
+		);
 	};
 
 	let isInProcess: boolean = $state(false);

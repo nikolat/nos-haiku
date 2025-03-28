@@ -528,27 +528,35 @@ export const getEmojiMap = (eventsEmojiSet: NostrEvent[]): Map<string, string> =
 export const getEmoji = async (
 	emojiPickerContainer: HTMLElement,
 	emojiMap: Map<string, string>,
-	onClose: () => void = () => {}
-): Promise<{ emojiStr: string; emojiUrl: string | undefined } | null> => {
+	autoClose: boolean,
+	onCallbackEmojiSelect: ({
+		emojiStr,
+		emojiUrl
+	}: {
+		emojiStr: string;
+		emojiUrl: string | undefined;
+	}) => void
+): Promise<void> => {
 	const { Picker } = await import('emoji-mart');
 	return new Promise((resolve) => {
 		if (emojiPickerContainer.children.length > 0) {
-			resolve(null);
+			resolve();
 			return;
 		}
 		const close = () => {
 			emojiPickerContainer.firstChild?.remove();
-			onClose();
+			resolve();
 		};
 		const onEmojiSelect = (emoji: MyBaseEmoji) => {
-			close();
 			const emojiStr = emoji.native ?? emoji.shortcodes;
 			const emojiUrl = emoji.src;
-			resolve({ emojiStr, emojiUrl });
+			onCallbackEmojiSelect({ emojiStr, emojiUrl });
+			if (autoClose) {
+				close();
+			}
 		};
 		const onClickOutside = () => {
 			close();
-			resolve(null);
 		};
 		const picker = new Picker({
 			data,

@@ -40,18 +40,20 @@
 	const emojiMap: Map<string, string> = $derived(getEmojiMap(eventsEmojiSet));
 
 	let emojiPickerContainer: HTMLElement | undefined = $state();
-	const callSendEmoji = async (event: NostrEvent) => {
+	const callSendEmoji = (event: NostrEvent) => {
 		if (emojiPickerContainer === undefined) {
 			return;
 		}
 		isEmojiPickerOpened = true;
-		const r = await getEmoji(emojiPickerContainer, $state.snapshot(emojiMap), () => {
-			isEmojiPickerOpened = false;
-		});
-		if (r === null) {
-			return;
-		}
-		sendReaction(event, r.emojiStr, r.emojiUrl);
+		getEmoji(
+			emojiPickerContainer,
+			$state.snapshot(emojiMap),
+			true,
+			({ emojiStr, emojiUrl }: { emojiStr: string; emojiUrl: string | undefined }) => {
+				isEmojiPickerOpened = false;
+				sendReaction(event, emojiStr, emojiUrl);
+			}
+		);
 	};
 </script>
 

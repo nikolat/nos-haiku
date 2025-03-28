@@ -11,7 +11,7 @@
 		badgeEvent: NostrEvent | undefined;
 	} = $props();
 
-	const validBadges: NostrEvent[] = $derived.by(() => {
+	const validBadgeAwards: [NostrEvent, NostrEvent][] = $derived.by(() => {
 		if (badgeEvent === undefined) {
 			return [];
 		}
@@ -25,9 +25,9 @@
 			.map((id) => getEventById(id))
 			.filter((ev) => ev !== undefined)
 			.filter((ev) => ev.kind === 8);
-		const validKind30009Events: NostrEvent[] = [];
+		const validEventSets: [NostrEvent, NostrEvent][] = [];
 		for (const aId30008 of new Set<string>(aIds)) {
-			let isValid = false;
+			let kind8Event: NostrEvent | undefined;
 			const sp = aId30008.split(':');
 			const ap: nip19.AddressPointer = { identifier: sp[2], pubkey: sp[1], kind: parseInt(sp[0]) };
 			const kind30009Event = getEventByAddressPointer(ap);
@@ -46,27 +46,27 @@
 					ev8.pubkey === kind30009Event.pubkey &&
 					pTags8.includes(currentPubkey)
 				) {
-					isValid = true;
+					kind8Event = ev8;
 					break;
 				}
 			}
-			if (isValid) {
-				validKind30009Events.push(kind30009Event);
+			if (kind8Event !== undefined) {
+				validEventSets.push([kind30009Event, kind8Event]);
 			}
 		}
-		return validKind30009Events;
+		return validEventSets;
 	});
 </script>
 
 <div class="badges">
-	{#each validBadges as ev (ev.id)}
-		{@const tagMap = new Map<string, string>(ev.tags.map((tag) => [tag[0], tag[1]]))}
-		{@const title = tagMap.get('name') ?? ''}
-		{#if URL.canParse(tagMap.get('image') ?? '')}
-			<a
-				href={`/entry/${nip19.naddrEncode({ identifier: tagMap.get('d') ?? '', pubkey: ev.pubkey, kind: ev.kind })}`}
-			>
-				<img alt={title} {title} src={tagMap.get('image')} class="badge" />
+	{#each validBadgeAwards as [ev30009, ev8] (ev30009.id)}
+		{@const tagMap = (ev: NostrEvent) =>
+			new Map<string, string>(ev.tags.map((tag) => [tag[0], tag[1]]))}
+		{@const title = tagMap(ev30009).get('name') ?? ''}
+		{@const image = tagMap(ev30009).get('image') ?? ''}
+		{#if URL.canParse(image)}
+			<a href={`/entry/${nip19.neventEncode({ ...ev8, author: ev8.pubkey })}`}>
+				<img alt={title} {title} src={image} class="badge" />
 			</a>
 		{/if}
 	{/each}

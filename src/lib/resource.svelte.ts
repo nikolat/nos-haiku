@@ -340,6 +340,11 @@ export const getProfileName = (pubkey: string) => {
 			name = `📛${petname}`;
 		}
 	}
+	const birthday = prof?.birthday;
+	const today = new Date();
+	if (birthday?.month === today.getMonth() + 1 && birthday.day === today.getDate()) {
+		name = `🎂${name}`;
+	}
 	if (name.length > 30) {
 		name = `${name.slice(0, 25)}...`;
 	}

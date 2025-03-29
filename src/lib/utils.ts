@@ -12,6 +12,11 @@ import { _ } from 'svelte-i18n';
 import { get } from 'svelte/store';
 
 export interface ProfileContentEvent extends ProfileContent {
+	birthday?: {
+		year?: number;
+		month?: number;
+		day?: number;
+	};
 	event: NostrEvent;
 }
 

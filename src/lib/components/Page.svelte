@@ -98,6 +98,9 @@
 		isLoading: boolean;
 	} = $props();
 
+	const isFullDisplayMode: boolean = $derived(
+		currentEventPointer !== undefined || currentAddressPointer !== undefined
+	);
 	const isTopPage: boolean = $derived(
 		[
 			currentEventPointer,
@@ -334,6 +337,9 @@
 	});
 
 	const handlerScroll = () => {
+		if (isFullDisplayMode) {
+			return;
+		}
 		const scrollHeight = Math.max(
 			document.body.scrollHeight,
 			document.documentElement.scrollHeight,
@@ -997,6 +1003,7 @@
 							{isEnabledRelativeTime}
 							{nowRealtime}
 							level={0}
+							{isFullDisplayMode}
 							isPreview={true}
 							callInsertText={() => {}}
 							baseEventToEdit={undefined}
@@ -1022,6 +1029,7 @@
 							{isEnabledRelativeTime}
 							{nowRealtime}
 							level={0}
+							{isFullDisplayMode}
 							isPreview={false}
 							{callInsertText}
 							bind:baseEventToEdit
@@ -1047,6 +1055,7 @@
 							{isEnabledRelativeTime}
 							{nowRealtime}
 							level={0}
+							{isFullDisplayMode}
 							isPreview={false}
 							{callInsertText}
 							bind:baseEventToEdit

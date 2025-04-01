@@ -197,6 +197,7 @@
 					{isEnabledRelativeTime}
 					{nowRealtime}
 					level={level + 1}
+					isFullDisplayMode={false}
 					isPreview={isPreview ?? false}
 					callInsertText={callInsertText ?? (() => {})}
 					bind:baseEventToEdit
@@ -231,6 +232,7 @@
 					{isEnabledRelativeTime}
 					{nowRealtime}
 					level={level + 1}
+					isFullDisplayMode={false}
 					isPreview={isPreview ?? false}
 					callInsertText={callInsertText ?? (() => {})}
 					bind:baseEventToEdit
@@ -267,6 +269,7 @@
 						{isEnabledRelativeTime}
 						{nowRealtime}
 						level={level + 1}
+						isFullDisplayMode={false}
 						isPreview={isPreview ?? false}
 						callInsertText={callInsertText ?? (() => {})}
 						bind:baseEventToEdit

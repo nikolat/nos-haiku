@@ -68,6 +68,7 @@
 		isEnabledRelativeTime,
 		nowRealtime,
 		level,
+		isFullDisplayMode,
 		isPreview,
 		callInsertText,
 		baseEventToEdit = $bindable()
@@ -90,6 +91,7 @@
 		isEnabledRelativeTime: boolean;
 		nowRealtime: number;
 		level: number;
+		isFullDisplayMode: boolean;
 		isPreview: boolean;
 		callInsertText: (word: string, enableNewline?: boolean) => void;
 		baseEventToEdit: NostrEvent | undefined;
@@ -246,6 +248,9 @@
 		}
 		if (nowRealtime < event.created_at - 5) {
 			classNames.push('future');
+		}
+		if (isFullDisplayMode) {
+			classNames.push('full-display-mode');
 		}
 		return classNames;
 	});
@@ -620,6 +625,7 @@
 												{isEnabledRelativeTime}
 												{nowRealtime}
 												level={level + 1}
+												isFullDisplayMode={false}
 												isPreview={false}
 												{callInsertText}
 												bind:baseEventToEdit
@@ -698,6 +704,7 @@
 											{isEnabledRelativeTime}
 											{nowRealtime}
 											level={level + 1}
+											isFullDisplayMode={false}
 											isPreview={false}
 											{callInsertText}
 											bind:baseEventToEdit
@@ -886,6 +893,7 @@
 											{isEnabledRelativeTime}
 											{nowRealtime}
 											level={level + 1}
+											isFullDisplayMode={false}
 											isPreview={false}
 											{callInsertText}
 											bind:baseEventToEdit
@@ -983,6 +991,7 @@
 											{isEnabledRelativeTime}
 											{nowRealtime}
 											level={level + 1}
+											isFullDisplayMode={false}
 											isPreview={false}
 											{callInsertText}
 											bind:baseEventToEdit
@@ -1010,6 +1019,7 @@
 											{isEnabledRelativeTime}
 											{nowRealtime}
 											level={level + 1}
+											isFullDisplayMode={false}
 											isPreview={false}
 											{callInsertText}
 											bind:baseEventToEdit
@@ -1195,6 +1205,7 @@
 												{isEnabledRelativeTime}
 												{nowRealtime}
 												level={level + 1}
+												isFullDisplayMode={false}
 												isPreview={false}
 												{callInsertText}
 												bind:baseEventToEdit
@@ -1843,6 +1854,7 @@
 								{isEnabledRelativeTime}
 								{nowRealtime}
 								level={level + 1}
+								isFullDisplayMode={false}
 								isPreview={true}
 								callInsertText={() => {}}
 								baseEventToEdit={undefined}
@@ -1869,6 +1881,7 @@
 									{isEnabledRelativeTime}
 									{nowRealtime}
 									level={level + 1}
+									isFullDisplayMode={false}
 									isPreview={false}
 									{callInsertText}
 									bind:baseEventToEdit
@@ -1941,7 +1954,9 @@
 		min-height: 435px;
 	}
 	/* スクロールは外側だけ */
-	.Quote .Entry__content {
+	.Quote .Entry__content,
+	/* 1エントリのみ表示はスクロール不要 */
+	.full-display-mode .Entry__content {
 		max-height: unset;
 	}
 	.Entry__content > p,

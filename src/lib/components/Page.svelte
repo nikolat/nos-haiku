@@ -276,7 +276,7 @@
 					(ev) =>
 						ev.kind === 42 ||
 						(ev.kind === 16 &&
-							ev.tags.some((tag) => tag.length >= 2 && tag[0] === 'k' && tag[1].includes('42')))
+							ev.tags.some((tag) => tag.length >= 2 && tag[0] === 'k' && tag[1] === '42'))
 				);
 			} else {
 				tl = eventsTimeline;

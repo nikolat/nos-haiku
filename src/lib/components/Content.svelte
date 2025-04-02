@@ -64,6 +64,7 @@
 	): [IterableIterator<RegExpMatchArray>, string[], { [key: string]: string }] => {
 		const regMatchArray = [
 			'https?://[\\w!?/=+\\-_~:;.,*&@#$%()[\\]]+',
+			'wss?://[\\w!?/=+\\-_~:;.,*&@#$%()[\\]]+',
 			'nostr:npub1\\w{58}',
 			'nostr:nprofile1\\w+',
 			'nostr:note1\\w{58}',
@@ -98,11 +99,27 @@
 			return null;
 		}
 	};
+
+	const appendRelay = (baseUrl: string, relayUrl: string): string => {
+		const url = new URL(baseUrl);
+		if (!url.searchParams.getAll('relay').includes(relayUrl)) {
+			url.searchParams.append('relay', relayUrl);
+		}
+		return url.href;
+	};
 </script>
 
 {plainTexts[0]}{#each Array.from(matchesIterator) as match, i (i)}
-	{#if /^https?:\/\/\S+/.test(match[1]) && URL.canParse(match[1])}
-		{@const [url, rest] = urlLinkString(match[1])}
+	{@const urlHttp = match[1]}
+	{@const urlWs = match[2]}
+	{@const nostr_npub1 = match[3]}
+	{@const nostr_nprofile1 = match[4]}
+	{@const nostr_note1 = match[5]}
+	{@const nostr_nevent1 = match[6]}
+	{@const nostr_naddr1 = match[7]}
+	{@const sharp = match[8]}
+	{#if /^https?:\/\/\S+/.test(urlHttp) && URL.canParse(urlHttp)}
+		{@const [url, rest] = urlLinkString(urlHttp)}
 		{@const ytb1 = url.match(/^https?:\/\/(www|m)\.youtube\.com\/watch\?v=([\w-]+)/i)}
 		{@const ytb2 = url.match(/^https?:\/\/youtu\.be\/([\w-]+)(\?\w+)?/i)}
 		{@const ytb3 = url.match(/^https?:\/\/(www\.)?youtube\.com\/(shorts|live)\/([\w-]+)(\?\w+)?/i)}
@@ -139,8 +156,14 @@
 		{:else}
 			<a href={url} target="_blank" rel="noopener noreferrer">{url}</a>
 		{/if}{rest}
-	{:else if /nostr:npub1\w{58}/.test(match[2])}
-		{@const matchedText = match[2]}
+	{:else if /^wss?:\/\/\S+/.test(urlWs)}
+		{#if URL.canParse(urlWs)}
+			<a href={appendRelay(location.href, urlWs)}>{urlWs}</a>
+		{:else}
+			{urlWs}
+		{/if}
+	{:else if /nostr:npub1\w{58}/.test(nostr_npub1)}
+		{@const matchedText = nostr_npub1}
 		{@const npubText = matchedText.replace(/nostr:/, '')}
 		{@const d = nip19decode(npubText)}
 		{#if d?.type === 'npub'}
@@ -155,8 +178,8 @@
 			>
 		{:else}{matchedText}
 		{/if}
-	{:else if /nostr:nprofile1\w+/.test(match[3])}
-		{@const matchedText = match[3]}
+	{:else if /nostr:nprofile1\w+/.test(nostr_nprofile1)}
+		{@const matchedText = nostr_nprofile1}
 		{@const nprofileText = matchedText.replace(/nostr:/, '')}
 		{@const d = nip19decode(nprofileText)}
 		{#if d?.type === 'nprofile'}
@@ -171,8 +194,8 @@
 			>
 		{:else}{matchedText}
 		{/if}
-	{:else if /nostr:note1\w{58}/.test(match[4])}
-		{@const matchedText = match[4]}
+	{:else if /nostr:note1\w{58}/.test(nostr_note1)}
+		{@const matchedText = nostr_note1}
 		{@const d = nip19decode(matchedText.replace(/nostr:/, ''))}
 		{#if d?.type === 'note'}
 			{@const eventId = d.data}
@@ -206,8 +229,8 @@
 			{/if}
 		{:else}{matchedText}
 		{/if}
-	{:else if /nostr:nevent1\w+/.test(match[5])}
-		{@const matchedText = match[5]}
+	{:else if /nostr:nevent1\w+/.test(nostr_nevent1)}
+		{@const matchedText = nostr_nevent1}
 		{@const d = nip19decode(matchedText.replace(/nostr:/, ''))}
 		{#if d?.type === 'nevent'}
 			{@const eventId = d.data.id}
@@ -241,8 +264,8 @@
 			{/if}
 		{:else}{matchedText}
 		{/if}
-	{:else if /nostr:naddr1\w+/.test(match[6])}
-		{@const matchedText = match[6]}
+	{:else if /nostr:naddr1\w+/.test(nostr_naddr1)}
+		{@const matchedText = nostr_naddr1}
 		{@const d = nip19decode(matchedText.replace(/nostr:/, ''))}
 		{#if d?.type === 'naddr'}
 			{@const event = getEventByAddressPointer(d.data)}
@@ -279,8 +302,8 @@
 			{/if}
 		{:else}{matchedText}
 		{/if}
-	{:else if /#\S+/.test(match[7])}
-		{@const matchedText = match[7]}
+	{:else if /#\S+/.test(sharp)}
+		{@const matchedText = sharp}
 		{@const hashTagText = matchedText.replace('#', '').toLowerCase()}
 		{@const tTags = tags
 			.filter((tag) => tag.length >= 2 && tag[0] === 't')

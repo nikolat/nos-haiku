@@ -28,6 +28,7 @@
 		getEventsTimelineTop,
 		getProfileId,
 		getProfileName,
+		getSeenOn,
 		muteChannel,
 		muteHashTag,
 		muteUser,
@@ -48,6 +49,7 @@
 	import Entry from '$lib/components/Entry.svelte';
 	import { afterNavigate, beforeNavigate } from '$app/navigation';
 	import { getEventHash, type NostrEvent, type UnsignedEvent } from 'nostr-tools/pure';
+	import { normalizeURL } from 'nostr-tools/utils';
 	import * as nip19 from 'nostr-tools/nip19';
 	import { unixNow } from 'applesauce-core/helpers';
 	import { _ } from 'svelte-i18n';
@@ -137,6 +139,15 @@
 			}
 		}
 		return authorSet;
+	});
+	const relaySet: Set<string> = $derived.by(() => {
+		const relaySet: Set<string> = new Set<string>();
+		for (const [k, v] of urlSearchParams) {
+			if (k === 'relay' && URL.canParse(v)) {
+				relaySet.add(normalizeURL(v));
+			}
+		}
+		return relaySet;
 	});
 	const eventsTimeline: NostrEvent[] = $derived(
 		category === undefined
@@ -279,6 +290,9 @@
 				const ps = ev.tags.filter((tag) => tag.length >= 2 && tag[0] === 'p').map((tag) => tag[1]);
 				return ps.some((p) => pSet.has(p));
 			});
+		}
+		if (relaySet.size > 0) {
+			tl = tl.filter((ev) => getSeenOn(ev.id).some((r) => relaySet.has(r)));
 		}
 		return tl;
 	});

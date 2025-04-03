@@ -118,6 +118,7 @@
 	{@const nostr_nevent1 = match[6]}
 	{@const nostr_naddr1 = match[7]}
 	{@const sharp = match[8]}
+	{@const shortcode = match[9]}
 	{#if /^https?:\/\/\S+/.test(urlHttp) && URL.canParse(urlHttp)}
 		{@const [url, rest] = urlLinkString(urlHttp)}
 		{@const ytb1 = url.match(/^https?:\/\/(www|m)\.youtube\.com\/watch\?v=([\w-]+)/i)}
@@ -313,8 +314,8 @@
 		{:else}
 			{matchedText}
 		{/if}
-	{:else if match[8]}
-		{@const matchedText = match[8]}
+	{:else if shortcode}
+		{@const matchedText = shortcode}
 		<img
 			src={emojiUrls[matchedText]}
 			alt={matchedText}

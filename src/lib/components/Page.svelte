@@ -206,6 +206,7 @@
 							return !mutedChannelIds.includes(rootId);
 						}
 					})
+					.filter((ev) => relaySet.size === 0 || getSeenOn(ev.id).some((r) => relaySet.has(r)))
 					.map((ev) => ev.pubkey)
 			)
 		).filter((pubkey) => !mutedPubkeys.includes(pubkey))

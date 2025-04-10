@@ -15,7 +15,7 @@ import {
 	type RxNostrSendOptions,
 	type RxNostrUseOptions
 } from 'rx-nostr';
-import { verifier } from 'rx-nostr-crypto';
+import { verifier } from '@rx-nostr/crypto';
 import { EventStore } from 'applesauce-core';
 import { unixNow, getProfileContent, type ProfileContent } from 'applesauce-core/helpers';
 import {

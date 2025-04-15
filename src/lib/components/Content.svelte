@@ -158,11 +158,12 @@
 			<a href={url} target="_blank" rel="noopener noreferrer">{url}</a>
 		{/if}{rest}
 	{:else if /^wss?:\/\/\S+/.test(urlWs)}
-		{#if URL.canParse(urlWs)}
-			<a href={appendRelay(location.href, urlWs)}>{urlWs}</a>
+		{@const [url, rest] = urlLinkString(urlWs)}
+		{#if URL.canParse(url)}
+			<a href={appendRelay(location.href, url)}>{url}</a>
 		{:else}
-			{urlWs}
-		{/if}
+			{url}
+		{/if}{rest}
 	{:else if /nostr:npub1\w{58}/.test(nostr_npub1)}
 		{@const matchedText = nostr_npub1}
 		{@const npubText = matchedText.replace(/nostr:/, '')}

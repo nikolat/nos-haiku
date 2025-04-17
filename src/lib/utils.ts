@@ -403,10 +403,19 @@ export const getRelaysToUseFromKind10002Event = (event?: NostrEvent): RelayRecor
 	for (const tag of event?.tags.filter(
 		(tag) => tag.length >= 2 && tag[0] === 'r' && URL.canParse(tag[1])
 	) ?? []) {
-		newRelays[normalizeURL(tag[1])] = {
-			read: tag.length === 2 || tag[2] === 'read',
-			write: tag.length === 2 || tag[2] === 'write'
-		};
+		if (newRelays[normalizeURL(tag[1])] === undefined) {
+			newRelays[normalizeURL(tag[1])] = {
+				read: tag.length === 2 || tag[2] === 'read',
+				write: tag.length === 2 || tag[2] === 'write'
+			};
+		} else {
+			if (tag.length === 2 || tag[2] === 'read') {
+				newRelays[normalizeURL(tag[1])].read = true;
+			}
+			if (tag.length === 2 || tag[2] === 'write') {
+				newRelays[normalizeURL(tag[1])].write = true;
+			}
+		}
 	}
 	return newRelays;
 };

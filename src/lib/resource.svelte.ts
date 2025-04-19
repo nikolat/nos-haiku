@@ -2898,6 +2898,14 @@ export const makeEvent = (
 	for (const relay of relaysToWrite) {
 		relaysToAdd.add(relay);
 	}
+	for (const pubkey of tags.filter((tag) => tag[0] === 'p').map((tag) => tag[1])) {
+		const relayRecord: RelayRecord = getRelaysToUseFromKind10002Event(
+			eventStore.getReplaceable(10002, pubkey)
+		);
+		for (const [relayUrl, _] of Object.entries(relayRecord).filter(([_, obj]) => obj.read)) {
+			relaysToAdd.add(relayUrl);
+		}
+	}
 	const options: Partial<RxNostrSendOptions> = { on: { relays: Array.from(relaysToAdd) } };
 	return { eventToSend, eventChannelToSend, options };
 };

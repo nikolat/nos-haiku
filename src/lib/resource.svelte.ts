@@ -50,6 +50,7 @@ import {
 	getIdsForFilter,
 	getPubkeysForFilter,
 	getRelaysToUseByRelaysSelected,
+	getRelaysToUseFromKind10002Event,
 	isValidEmoji,
 	splitNip51List,
 	splitNip51ListPublic,
@@ -841,11 +842,11 @@ const next = (packet: EventPacket) => {
 };
 const complete = () => {};
 
-const mergeFilter0: MergeFilter = (a: LazyFilter[], b: LazyFilter[]) => {
+const mergeFilter0_10002: MergeFilter = (a: LazyFilter[], b: LazyFilter[]) => {
 	const margedFilters = [...a, ...b];
 	const authors = Array.from(new Set<string>(margedFilters.map((f) => f.authors ?? []).flat()));
 	const f = margedFilters.at(0);
-	return [{ kinds: [0], authors: authors, limit: f?.limit, until: f?.until, since: f?.since }];
+	return [{ kinds: f?.kinds, authors: authors, limit: f?.limit, until: f?.until, since: f?.since }];
 };
 
 const mergeFilter7: MergeFilter = (a: LazyFilter[], b: LazyFilter[]) => {
@@ -912,16 +913,28 @@ const mergeFilterId: MergeFilter = (a: LazyFilter[], b: LazyFilter[]) => {
 
 const rxReqF = createRxForwardReq();
 const rxReqB0 = createRxBackwardReq();
+const rxReqB10002 = createRxBackwardReq();
 const rxReqB1_42_1111 = createRxBackwardReq();
 const rxReqB7 = createRxBackwardReq();
 const rxReqB40 = createRxBackwardReq();
 const rxReqB41 = createRxBackwardReq();
 const rxReqBId = createRxBackwardReq();
 const rxReqBRp = createRxBackwardReq();
-const batchedReq0 = rxReqB0.pipe(bufferTime(secBufferTime), batch(mergeFilter0));
+const batchedReq0 = rxReqB0.pipe(bufferTime(secBufferTime), batch(mergeFilter0_10002));
+const batchedReq10002 = rxReqB10002.pipe(bufferTime(secBufferTime), batch(mergeFilter0_10002));
 const subscribeDefine = () => {
 	rxNostr
 		.use(batchedReq0, { relays: relaysToUseForProfile })
+		.pipe(
+			tie,
+			latestEach(({ event }) => event.pubkey)
+		)
+		.subscribe({
+			next,
+			complete
+		});
+	rxNostr
+		.use(batchedReq10002, { relays: relaysToUseForProfile })
 		.pipe(
 			tie,
 			latestEach(({ event }) => event.pubkey)
@@ -1163,8 +1176,11 @@ const _subTimeline = eventStore
 		}
 	])
 	.subscribe(async (event) => {
-		if (![0].includes(event.kind) && !profileMap.has(event.pubkey)) {
+		if (event.kind !== 0 && !profileMap.has(event.pubkey)) {
 			rxReqB0.emit({ kinds: [0], authors: [event.pubkey], until: unixNow() });
+		}
+		if (event.kind !== 10002 && !eventStore.hasReplaceable(10002, event.pubkey)) {
+			rxReqB10002.emit({ kinds: [10002], authors: [event.pubkey], until: unixNow() });
 		}
 		switch (event.kind) {
 			case 0: {
@@ -1634,16 +1650,34 @@ export const getEventsFirst = (
 		for (const relay of currentProfilePointer.relays ?? []) {
 			relaySet.add(normalizeURL(relay));
 		}
+		const relayRecord: RelayRecord = getRelaysToUseFromKind10002Event(
+			eventStore.getReplaceable(10002, currentProfilePointer.pubkey)
+		);
+		for (const [relayUrl, _] of Object.entries(relayRecord).filter(([_, obj]) => obj.write)) {
+			relaySet.add(relayUrl);
+		}
 	} else if (currentChannelPointer !== undefined) {
 		filters.push({ kinds: [42], '#e': [currentChannelPointer.id] });
 		filters.push({ kinds: [16], '#k': ['42'] });
 		for (const relay of currentChannelPointer.relays ?? []) {
 			relaySet.add(normalizeURL(relay));
 		}
+		for (const relay of channelMap.get(currentChannelPointer.id)?.relays ?? []) {
+			relaySet.add(normalizeURL(relay));
+		}
 	} else if (currentEventPointer !== undefined) {
 		filters.push({ ids: [currentEventPointer.id] });
 		for (const relay of currentEventPointer.relays ?? []) {
 			relaySet.add(normalizeURL(relay));
+		}
+		const author = currentEventPointer.author;
+		if (author !== undefined) {
+			const relayRecord: RelayRecord = getRelaysToUseFromKind10002Event(
+				eventStore.getReplaceable(10002, author)
+			);
+			for (const [relayUrl, _] of Object.entries(relayRecord).filter(([_, obj]) => obj.write)) {
+				relaySet.add(relayUrl);
+			}
 		}
 	} else if (currentAddressPointer !== undefined) {
 		if (currentAddressPointer.identifier.length > 0) {
@@ -1660,6 +1694,12 @@ export const getEventsFirst = (
 		}
 		for (const relay of currentAddressPointer.relays ?? []) {
 			relaySet.add(normalizeURL(relay));
+		}
+		const relayRecord: RelayRecord = getRelaysToUseFromKind10002Event(
+			eventStore.getReplaceable(10002, currentAddressPointer.pubkey)
+		);
+		for (const [relayUrl, _] of Object.entries(relayRecord).filter(([_, obj]) => obj.write)) {
+			relaySet.add(relayUrl);
 		}
 	} else if (hashtag !== undefined) {
 		const kinds: number[] = kindSet.size === 0 ? [1, 42, 1111] : Array.from(kindSet);

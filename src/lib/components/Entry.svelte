@@ -45,6 +45,7 @@
 	import { afterNavigate, beforeNavigate } from '$app/navigation';
 	import { getEventHash, type NostrEvent, type UnsignedEvent } from 'nostr-tools/pure';
 	import { isAddressableKind, isReplaceableKind } from 'nostr-tools/kinds';
+	import { normalizeURL } from 'nostr-tools/utils';
 	import * as nip19 from 'nostr-tools/nip19';
 	import { decode } from 'light-bolt11-decoder';
 	import { _ } from 'svelte-i18n';
@@ -262,29 +263,41 @@
 	let showReplies: boolean = $state(false);
 
 	const prof: ProfileContentEvent | undefined = $derived(profileMap.get(event.pubkey));
-	const idReplyTo: string | undefined = $derived.by(() => {
-		const getId = (marker: string) =>
-			event.tags.find((tag) => tag.length >= 4 && tag[0] === 'e' && tag[3] === marker)?.at(1);
+	const idReplyTo: [string | undefined, string | undefined] = $derived.by(() => {
+		const getElement = (marker: string, i: number) =>
+			event.tags.find((tag) => tag.length >= 4 && tag[0] === 'e' && tag[3] === marker)?.at(i);
+		let id;
+		let relayHint;
 		if (event.kind === 1) {
-			return getId('reply') ?? getId('root') ?? undefined;
+			id = getElement('reply', 1) ?? getElement('root', 1) ?? undefined;
+			relayHint = getElement('reply', 2) ?? getElement('root', 2) ?? undefined;
 		} else if (event.kind === 42) {
-			return getId('reply');
+			id = getElement('reply', 1);
+			relayHint = getElement('reply', 2);
 		} else if (event.kind === 1111) {
-			return event.tags.find((tag) => tag.length >= 4 && tag[0] === 'e')?.at(1);
+			id = event.tags.find((tag) => tag.length >= 2 && tag[0] === 'e')?.at(1);
+			relayHint = event.tags.find((tag) => tag.length >= 3 && tag[0] === 'e')?.at(2);
 		}
-		return undefined;
+		relayHint =
+			relayHint !== undefined && URL.canParse(relayHint) ? normalizeURL(relayHint) : undefined;
+		return [id, relayHint];
 	});
 	const addressReplyTo: nip19.AddressPointer | undefined = $derived.by(() => {
 		if (event.kind !== 1111) {
 			return undefined;
 		}
-		const aId = event.tags.find((tag) => tag.length >= 2 && tag[0] === 'a')?.at(1);
+		const aTag = event.tags.find((tag) => tag.length >= 2 && tag[0] === 'a');
+		const aId = aTag?.at(1);
 		if (aId === undefined) {
 			return undefined;
 		}
 		const ap: nip19.AddressPointer | null = getAddressPointerFromAId(aId);
 		if (ap === null) {
 			return undefined;
+		}
+		const relayHint = aTag?.at(2);
+		if (relayHint !== undefined && URL.canParse(relayHint)) {
+			ap.relays = [normalizeURL(relayHint)];
 		}
 		return ap;
 	});
@@ -304,14 +317,14 @@
 		}
 	});
 	const pubkeyReplyTo: string | undefined = $derived(
-		getEventById(idReplyTo ?? '')?.pubkey ?? addressReplyTo?.pubkey
+		getEventById(idReplyTo[0] ?? '')?.pubkey ?? addressReplyTo?.pubkey
 	);
 	const profReplyTo: ProfileContentEvent | undefined = $derived(
 		pubkeyReplyTo === undefined ? undefined : profileMap.get(pubkeyReplyTo)
 	);
 	const eventReplyTo: NostrEvent | undefined = $derived.by(() => {
-		if (idReplyTo !== undefined) {
-			return getEventById(idReplyTo);
+		if (idReplyTo[0] !== undefined) {
+			return getEventById(idReplyTo[0]);
 		} else if (addressReplyTo !== undefined) {
 			return getEventByAddressPointer(addressReplyTo);
 		}
@@ -569,10 +582,14 @@
 								{#if pubkeysMentioningTo.length > 10}...{/if}
 							</span>
 						{/if}
-						{#if idReplyTo !== undefined || addressReplyTo !== undefined}
+						{#if idReplyTo[0] !== undefined || addressReplyTo !== undefined}
 							{@const link =
-								idReplyTo !== undefined
-									? nip19.neventEncode({ id: idReplyTo, author: pubkeyReplyTo })
+								idReplyTo[0] !== undefined
+									? nip19.neventEncode({
+											id: idReplyTo[0],
+											author: pubkeyReplyTo,
+											relays: idReplyTo[1] === undefined ? undefined : [idReplyTo[1]]
+										})
 									: addressReplyTo !== undefined
 										? nip19.naddrEncode(addressReplyTo)
 										: undefined}

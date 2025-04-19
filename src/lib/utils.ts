@@ -403,17 +403,20 @@ export const getRelaysToUseFromKind10002Event = (event?: NostrEvent): RelayRecor
 	for (const tag of event?.tags.filter(
 		(tag) => tag.length >= 2 && tag[0] === 'r' && URL.canParse(tag[1])
 	) ?? []) {
-		if (newRelays[normalizeURL(tag[1])] === undefined) {
-			newRelays[normalizeURL(tag[1])] = {
-				read: tag.length === 2 || tag[2] === 'read',
-				write: tag.length === 2 || tag[2] === 'write'
+		const url: string = normalizeURL(tag[1]);
+		const isRead: boolean = tag.length === 2 || tag[2] === 'read';
+		const isWrite: boolean = tag.length === 2 || tag[2] === 'write';
+		if (newRelays[url] === undefined) {
+			newRelays[url] = {
+				read: isRead,
+				write: isWrite
 			};
 		} else {
-			if (tag.length === 2 || tag[2] === 'read') {
-				newRelays[normalizeURL(tag[1])].read = true;
+			if (isRead) {
+				newRelays[url].read = true;
 			}
-			if (tag.length === 2 || tag[2] === 'write') {
-				newRelays[normalizeURL(tag[1])].write = true;
+			if (isWrite) {
+				newRelays[url].write = true;
 			}
 		}
 	}

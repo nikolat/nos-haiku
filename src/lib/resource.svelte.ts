@@ -617,10 +617,15 @@ export const getReadTimeOfNotification = (): number => {
 	return eventRead?.created_at ?? 0;
 };
 
-export const getSeenOn = (id: string): string[] => {
+export const getSeenOn = (id: string, excludeWs: boolean): string[] => {
 	const s = seenOn.get(id);
 	if (s === undefined) {
 		return [];
+	}
+	if (excludeWs) {
+		return Array.from(s)
+			.filter((relay) => relay.startsWith('wss://'))
+			.map((url) => normalizeURL(url));
 	}
 	return Array.from(s).map((url) => normalizeURL(url));
 };
@@ -995,7 +1000,12 @@ const getEventsByIdWithRelayHint = (
 		for (const eTag of eTags) {
 			const id = eTag[1];
 			const relayHint = eTag[2];
-			if (eventStore.hasEvent(id) || relayHint === undefined || !URL.canParse(relayHint)) {
+			if (
+				eventStore.hasEvent(id) ||
+				relayHint === undefined ||
+				!URL.canParse(relayHint) ||
+				relayHint.startsWith('ws://')
+			) {
 				continue;
 			}
 			const relay = normalizeURL(relayHint);
@@ -1033,7 +1043,8 @@ const getEventsByIdWithRelayHint = (
 					isAddressableKind(ap.kind) ? ap.identifier : undefined
 				) ||
 				relayHint === undefined ||
-				!URL.canParse(relayHint)
+				!URL.canParse(relayHint) ||
+				relayHint.startsWith('ws://')
 			) {
 				continue;
 			}
@@ -1158,7 +1169,13 @@ const fetchEventsByATags = (event: NostrEvent) => {
 		const relayHints: string[] = Array.from(
 			new Set<string>(
 				event.tags
-					.filter((tag) => tag.length >= 3 && tag[0] === 'a' && URL.canParse(tag[2]))
+					.filter(
+						(tag) =>
+							tag.length >= 3 &&
+							tag[0] === 'a' &&
+							URL.canParse(tag[2]) &&
+							tag[2].startsWith('wss://')
+					)
 					.map((tag) => normalizeURL(tag[2]))
 			)
 		);
@@ -1627,7 +1644,7 @@ export const getEventsFirst = (
 				continue;
 			}
 			pSet.add(v);
-		} else if (k === 'relay' && URL.canParse(v)) {
+		} else if (k === 'relay' && URL.canParse(v) && v.startsWith('wss://')) {
 			relaySet.add(normalizeURL(v));
 		}
 	}
@@ -2416,7 +2433,7 @@ export const sendRepost = async (targetEvent: NostrEvent): Promise<void> => {
 	let kind: number = 6;
 	const content: string = ''; //魚拓リポストはしない
 	const tags: string[][] = [];
-	const recommendedRelay: string = getSeenOn(targetEvent.id).at(0) ?? '';
+	const recommendedRelay: string = getSeenOn(targetEvent.id, true).at(0) ?? '';
 	if (isReplaceableKind(targetEvent.kind) || isAddressableKind(targetEvent.kind)) {
 		const d = targetEvent.tags.find((tag) => tag.length >= 2 && tag[0] === 'd')?.at(1) ?? '';
 		tags.push(['a', `${targetEvent.kind}:${targetEvent.pubkey}:${d}`, recommendedRelay]);
@@ -2452,7 +2469,7 @@ export const sendReaction = async (
 		return;
 	}
 	const tags: string[][] = [];
-	const recommendedRelay: string = getSeenOn(targetEvent.id).at(0) ?? '';
+	const recommendedRelay: string = getSeenOn(targetEvent.id, true).at(0) ?? '';
 	if (isReplaceableKind(targetEvent.kind) || isAddressableKind(targetEvent.kind)) {
 		const d = targetEvent.tags.find((tag) => tag.length >= 2 && tag[0] === 'd')?.at(1) ?? '';
 		tags.push(['a', `${targetEvent.kind}:${targetEvent.pubkey}:${d}`, recommendedRelay]);
@@ -2532,7 +2549,7 @@ export const sendChannelEdit = async (channel: ChannelContent) => {
 	obj.picture = channel.picture ?? '';
 	obj.relays = relaysToWrite;
 	const content = JSON.stringify(obj);
-	const recommendedRelay: string = getSeenOn(channel.id).at(0) ?? '';
+	const recommendedRelay: string = getSeenOn(channel.id, true).at(0) ?? '';
 	const eTag = ['e', channel.id, recommendedRelay, '', channel.pubkey];
 	const tags: string[][] = [eTag];
 	for (const tTag of new Set(channel.categories)) {
@@ -2651,7 +2668,7 @@ export const makeEvent = (
 	}
 	//投稿作成
 	const recommendedRelay: string =
-		targetEventToReply === undefined ? '' : (getSeenOn(targetEventToReply.id).at(0) ?? '');
+		targetEventToReply === undefined ? '' : (getSeenOn(targetEventToReply.id, true).at(0) ?? '');
 	let tags: string[][] = [];
 	const mentionPubkeys: Set<string> = new Set();
 	let pubkeyToReply: string | undefined;
@@ -2817,7 +2834,7 @@ export const makeEvent = (
 	}
 	for (const id of quoteIds) {
 		const qTag: string[] = ['q', id];
-		const recommendedRelayForQuote: string | undefined = getSeenOn(id).at(0);
+		const recommendedRelayForQuote: string | undefined = getSeenOn(id, true).at(0);
 		if (recommendedRelayForQuote !== undefined) {
 			qTag.push(recommendedRelayForQuote);
 			const pubkeyForQuote: string | undefined = getEventById(id)?.pubkey;
@@ -2835,7 +2852,8 @@ export const makeEvent = (
 		const aTag: string[] = ['a', a];
 		const ev: NostrEvent | undefined = eventStore.getReplaceable(ap.kind, ap.pubkey, ap.identifier);
 		const recommendedRelayForQuote: string | undefined =
-			getSeenOn(ev?.id ?? '').at(0) ?? ap.relays?.at(0);
+			getSeenOn(ev?.id ?? '', true).at(0) ??
+			ap.relays?.filter((relay) => relay.startsWith('wss://')).at(0);
 		if (recommendedRelayForQuote !== undefined) {
 			aTag.push(recommendedRelayForQuote);
 		}

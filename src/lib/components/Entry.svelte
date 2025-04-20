@@ -279,7 +279,9 @@
 			relayHint = event.tags.find((tag) => tag.length >= 3 && tag[0] === 'e')?.at(2);
 		}
 		relayHint =
-			relayHint !== undefined && URL.canParse(relayHint) ? normalizeURL(relayHint) : undefined;
+			relayHint !== undefined && URL.canParse(relayHint) && relayHint.startsWith('wss://')
+				? normalizeURL(relayHint)
+				: undefined;
 		return [id, relayHint];
 	});
 	const addressReplyTo: nip19.AddressPointer | undefined = $derived.by(() => {
@@ -296,7 +298,7 @@
 			return undefined;
 		}
 		const relayHint = aTag?.at(2);
-		if (relayHint !== undefined && URL.canParse(relayHint)) {
+		if (relayHint !== undefined && URL.canParse(relayHint) && relayHint.startsWith('wss://')) {
 			ap.relays = [normalizeURL(relayHint)];
 		}
 		return ap;
@@ -777,9 +779,10 @@
 														<span
 															class="fa-fw fas fa-heart"
 															onclick={() => {
-																const recommendedRelayETag = getSeenOn(event.id).at(0);
+																const recommendedRelayETag = getSeenOn(event.id, true).at(0);
 																const recommendedRelayATag = getSeenOn(
-																	badgeDefinitionEvent?.id ?? ''
+																	badgeDefinitionEvent?.id ?? '',
+																	true
 																).at(0);
 																bookmarkBadge(
 																	profileBadgesEvent,
@@ -1324,7 +1327,7 @@
 														<span
 															class="fa-fw fas fa-heart"
 															onclick={() => {
-																const recommendedRelay = getSeenOn(event.id).at(0);
+																const recommendedRelay = getSeenOn(event.id, true).at(0);
 																bookmarkEmojiSets(aTagStr, recommendedRelay);
 															}}
 														></span>
@@ -1619,7 +1622,9 @@
 														<button
 															class="quote"
 															onclick={() => {
-																callInsertText(`nostr:${getEncode(event, getSeenOn(event.id))}`);
+																callInsertText(
+																	`nostr:${getEncode(event, getSeenOn(event.id, true))}`
+																);
 																showRepost = false;
 															}}>{$_('Entry.quote')}</button
 														>
@@ -1821,13 +1826,13 @@
 									<dt>Relays seen on</dt>
 									<dd>
 										<ul>
-											{#each getSeenOn(event.id) as relay (relay)}
+											{#each getSeenOn(event.id, false) as relay (relay)}
 												<li>{relay}</li>
 											{/each}
 										</ul>
 									</dd>
 									<dt>Event ID with relay hints</dt>
-									<dd><code>{getEncode(event, getSeenOn(event.id))}</code></dd>
+									<dd><code>{getEncode(event, getSeenOn(event.id, false))}</code></dd>
 								</dl>
 							{/each}
 						</aside>

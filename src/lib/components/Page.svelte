@@ -206,7 +206,9 @@
 							return !mutedChannelIds.includes(rootId);
 						}
 					})
-					.filter((ev) => relaySet.size === 0 || getSeenOn(ev.id).some((r) => relaySet.has(r)))
+					.filter(
+						(ev) => relaySet.size === 0 || getSeenOn(ev.id, false).some((r) => relaySet.has(r))
+					)
 					.map((ev) => ev.pubkey)
 			)
 		).filter((pubkey) => !mutedPubkeys.includes(pubkey))
@@ -293,7 +295,7 @@
 			});
 		}
 		if (relaySet.size > 0) {
-			tl = tl.filter((ev) => getSeenOn(ev.id).some((r) => relaySet.has(r)));
+			tl = tl.filter((ev) => getSeenOn(ev.id, false).some((r) => relaySet.has(r)));
 		}
 		return tl;
 	});

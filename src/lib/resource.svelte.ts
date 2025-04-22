@@ -1004,7 +1004,7 @@ const getEventsByIdWithRelayHint = (
 				eventStore.hasEvent(id) ||
 				relayHint === undefined ||
 				!URL.canParse(relayHint) ||
-				relayHint.startsWith('ws://')
+				!relayHint.startsWith('wss://')
 			) {
 				continue;
 			}
@@ -1044,7 +1044,7 @@ const getEventsByIdWithRelayHint = (
 				) ||
 				relayHint === undefined ||
 				!URL.canParse(relayHint) ||
-				relayHint.startsWith('ws://')
+				!relayHint.startsWith('wss://')
 			) {
 				continue;
 			}

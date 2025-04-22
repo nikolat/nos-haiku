@@ -2438,7 +2438,10 @@ export const sendRepost = async (targetEvent: NostrEvent): Promise<void> => {
 		const d = targetEvent.tags.find((tag) => tag.length >= 2 && tag[0] === 'd')?.at(1) ?? '';
 		tags.push(['a', `${targetEvent.kind}:${targetEvent.pubkey}:${d}`, recommendedRelay]);
 	}
-	tags.push(['e', targetEvent.id, recommendedRelay], ['p', targetEvent.pubkey]);
+	tags.push(
+		['e', targetEvent.id, recommendedRelay, '', targetEvent.pubkey],
+		['p', targetEvent.pubkey]
+	);
 	if (targetEvent.kind !== 1) {
 		kind = 16;
 		tags.push(['k', String(targetEvent.kind)]);
@@ -2456,7 +2459,17 @@ export const sendRepost = async (targetEvent: NostrEvent): Promise<void> => {
 		created_at: unixNow()
 	});
 	const eventToSend = await window.nostr.signEvent(eventTemplate);
-	const options: Partial<RxNostrSendOptions> = { on: { relays: relaysToWrite } };
+	const relaysToAdd: Set<string> = new Set<string>();
+	const relayRecord: RelayRecord = getRelaysToUseFromKind10002Event(
+		eventStore.getReplaceable(10002, targetEvent.pubkey)
+	);
+	for (const relayUrl of relaysToWrite) {
+		relaysToAdd.add(relayUrl);
+	}
+	for (const [relayUrl, _] of Object.entries(relayRecord).filter(([_, obj]) => obj.read)) {
+		relaysToAdd.add(relayUrl);
+	}
+	const options: Partial<RxNostrSendOptions> = { on: { relays: Array.from(relaysToAdd) } };
 	sendEvent(eventToSend, options);
 };
 
@@ -2475,7 +2488,7 @@ export const sendReaction = async (
 		tags.push(['a', `${targetEvent.kind}:${targetEvent.pubkey}:${d}`, recommendedRelay]);
 	}
 	tags.push(
-		['e', targetEvent.id, recommendedRelay],
+		['e', targetEvent.id, recommendedRelay, '', targetEvent.pubkey],
 		['p', targetEvent.pubkey],
 		['k', String(targetEvent.kind)]
 	);
@@ -2499,7 +2512,17 @@ export const sendReaction = async (
 		console.warn('emoji is invalid');
 		return;
 	}
-	const options: Partial<RxNostrSendOptions> = { on: { relays: relaysToWrite } };
+	const relaysToAdd: Set<string> = new Set<string>();
+	const relayRecord: RelayRecord = getRelaysToUseFromKind10002Event(
+		eventStore.getReplaceable(10002, targetEvent.pubkey)
+	);
+	for (const relayUrl of relaysToWrite) {
+		relaysToAdd.add(relayUrl);
+	}
+	for (const [relayUrl, _] of Object.entries(relayRecord).filter(([_, obj]) => obj.read)) {
+		relaysToAdd.add(relayUrl);
+	}
+	const options: Partial<RxNostrSendOptions> = { on: { relays: Array.from(relaysToAdd) } };
 	sendEvent(eventToSend, options);
 };
 
@@ -2662,8 +2685,8 @@ export const makeEvent = (
 						.find((tag) => tag.length >= 4 && tag[0] === 'e' && tag[3] === 'root')
 						?.at(1);
 		const channel: ChannelContent | undefined = channelMap.get(channelId ?? '');
-		for (const relay of channel?.relays ?? []) {
-			relaysToAdd.add(relay);
+		for (const relayUrl of channel?.relays ?? []) {
+			relaysToAdd.add(relayUrl);
 		}
 	}
 	//投稿作成
@@ -2913,8 +2936,8 @@ export const makeEvent = (
 		created_at: unixNow(),
 		pubkey: loginPubkey
 	});
-	for (const relay of relaysToWrite) {
-		relaysToAdd.add(relay);
+	for (const relayUrl of relaysToWrite) {
+		relaysToAdd.add(relayUrl);
 	}
 	for (const pubkey of tags.filter((tag) => tag[0] === 'p').map((tag) => tag[1])) {
 		const relayRecord: RelayRecord = getRelaysToUseFromKind10002Event(

@@ -1778,7 +1778,7 @@ export const getEventsFirst = (
 				}
 			}
 			const requiredRelays: string[] = getRequiredRelays(relayUserMap, relaysToRead);
-			for (const relayUrl of requiredRelays) {
+			for (const relayUrl of [...relaysToRead, ...requiredRelays]) {
 				relaySet.add(relayUrl);
 			}
 			//ブックマークしているチャンネルの投稿も取得したいが、limitで混ぜるのは難しいので考え中

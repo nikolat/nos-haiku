@@ -49,9 +49,9 @@ import {
 	getEvent9734,
 	getIdsForFilter,
 	getPubkeysForFilter,
+	getReadRelaysWithOutboxModel,
 	getRelaysToUseByRelaysSelected,
 	getRelaysToUseFromKind10002Event,
-	getRequiredRelays,
 	isValidEmoji,
 	splitNip51List,
 	splitNip51ListPublic,
@@ -67,6 +67,7 @@ let isEnabledDarkMode: boolean = $state(true);
 let isEnabledRelativeTime: boolean = $state(true);
 let isEnabledSkipKind1: boolean = $state(false);
 let isEnabledUseClientTag: boolean = $state(false);
+let isEnabledOutboxModel: boolean = $state(false);
 let isEnabledEventProtection: boolean = $state(false);
 let relaysSelected: string = $state('default');
 let uploaderSelected: string = $state(uploaderURLs[0]);
@@ -96,6 +97,7 @@ preferences.subscribe(
 		isEnabledRelativeTime: boolean;
 		isEnabledSkipKind1: boolean;
 		isEnabledUseClientTag: boolean;
+		isEnabledOutboxModel: boolean;
 		isEnabledEventProtection: boolean;
 		relaysSelected: string;
 		uploaderSelected: string;
@@ -119,6 +121,9 @@ preferences.subscribe(
 		if (isEnabledUseClientTag !== value.isEnabledUseClientTag) {
 			isEnabledUseClientTag = value.isEnabledUseClientTag;
 		}
+		if (isEnabledOutboxModel !== value.isEnabledOutboxModel) {
+			isEnabledOutboxModel = value.isEnabledOutboxModel;
+		}
 		if (isEnabledEventProtection !== value.isEnabledEventProtection) {
 			isEnabledEventProtection = value.isEnabledEventProtection;
 		}
@@ -141,6 +146,7 @@ const savelocalStorage = () => {
 		isEnabledRelativeTime,
 		isEnabledSkipKind1,
 		isEnabledUseClientTag,
+		isEnabledOutboxModel,
 		isEnabledEventProtection,
 		relaysSelected,
 		uploaderSelected,
@@ -426,6 +432,15 @@ export const setIsEnabledUseClientTag = (value: boolean): void => {
 	savelocalStorage();
 };
 
+export const getIsEnabledOutboxModel = (): boolean => {
+	return isEnabledOutboxModel;
+};
+
+export const setIsEnabledOutboxModel = (value: boolean): void => {
+	isEnabledOutboxModel = value;
+	savelocalStorage();
+};
+
 export const getIsEnabledEventProtection = (): boolean => {
 	return isEnabledEventProtection;
 };
@@ -455,7 +470,13 @@ export const setRelaysToUseSelected = async (relaysSelected: string): Promise<vo
 };
 
 export const clearCache = (
-	filters: Filter[] = [{ kinds: [1, 3, 6, 7, 16, 42, 10000, 10001, 10030, 30002, 30008, 30078] }]
+	filters: Filter[] = [
+		{
+			kinds: [
+				1, 3, 4, 6, 7, 8, 16, 42, 1018, 1068, 1111, 10000, 10001, 10002, 10030, 30002, 30008, 30078
+			]
+		}
+	]
 ) => {
 	for (const ev of eventStore.getAll(filters)) {
 		eventStore.database.removeEvent(ev);
@@ -1197,7 +1218,11 @@ const _subTimeline = eventStore
 		if (event.kind !== 0 && !profileMap.has(event.pubkey)) {
 			rxReqB0.emit({ kinds: [0], authors: [event.pubkey], until: unixNow() });
 		}
-		if (event.kind !== 10002 && !eventStore.hasReplaceable(10002, event.pubkey)) {
+		if (
+			isEnabledOutboxModel &&
+			event.kind !== 10002 &&
+			!eventStore.hasReplaceable(10002, event.pubkey)
+		) {
 			rxReqB10002.emit({ kinds: [10002], authors: [event.pubkey], until: unixNow() });
 		}
 		switch (event.kind) {
@@ -1213,7 +1238,7 @@ const _subTimeline = eventStore
 				break;
 			}
 			case 3: {
-				if (loginPubkey !== undefined && event.pubkey === loginPubkey) {
+				if (isEnabledOutboxModel && loginPubkey !== undefined && event.pubkey === loginPubkey) {
 					const pubkeys: string[] = event.tags
 						.filter((tag) => tag.length >= 2 && tag[0] === 'p')
 						.map((tag) => tag[1])
@@ -1680,11 +1705,14 @@ export const getEventsFirst = (
 		for (const relay of currentProfilePointer.relays ?? []) {
 			relaySet.add(normalizeURL(relay));
 		}
-		const relayRecord: RelayRecord = getRelaysToUseFromKind10002Event(
-			eventStore.getReplaceable(10002, currentProfilePointer.pubkey)
-		);
-		for (const [relayUrl, _] of Object.entries(relayRecord).filter(([_, obj]) => obj.write)) {
-			relaySet.add(relayUrl);
+		if (isEnabledOutboxModel) {
+			for (const relayUrl of getReadRelaysWithOutboxModel(
+				[currentProfilePointer.pubkey],
+				eventStore,
+				relaysToRead
+			)) {
+				relaySet.add(relayUrl);
+			}
 		}
 	} else if (currentChannelPointer !== undefined) {
 		filters.push({ kinds: [42], '#e': [currentChannelPointer.id] });
@@ -1701,11 +1729,8 @@ export const getEventsFirst = (
 			relaySet.add(normalizeURL(relay));
 		}
 		const author = currentEventPointer.author;
-		if (author !== undefined) {
-			const relayRecord: RelayRecord = getRelaysToUseFromKind10002Event(
-				eventStore.getReplaceable(10002, author)
-			);
-			for (const [relayUrl, _] of Object.entries(relayRecord).filter(([_, obj]) => obj.write)) {
+		if (author !== undefined && isEnabledOutboxModel) {
+			for (const relayUrl of getReadRelaysWithOutboxModel([author], eventStore, relaysToRead)) {
 				relaySet.add(relayUrl);
 			}
 		}
@@ -1725,11 +1750,14 @@ export const getEventsFirst = (
 		for (const relay of currentAddressPointer.relays ?? []) {
 			relaySet.add(normalizeURL(relay));
 		}
-		const relayRecord: RelayRecord = getRelaysToUseFromKind10002Event(
-			eventStore.getReplaceable(10002, currentAddressPointer.pubkey)
-		);
-		for (const [relayUrl, _] of Object.entries(relayRecord).filter(([_, obj]) => obj.write)) {
-			relaySet.add(relayUrl);
+		if (isEnabledOutboxModel) {
+			for (const relayUrl of getReadRelaysWithOutboxModel(
+				[currentAddressPointer.pubkey],
+				eventStore,
+				relaysToRead
+			)) {
+				relaySet.add(relayUrl);
+			}
 		}
 	} else if (hashtag !== undefined) {
 		const kinds: number[] = kindSet.size === 0 ? [1, 42, 1111] : Array.from(kindSet);
@@ -1763,23 +1791,14 @@ export const getEventsFirst = (
 				}
 				filters.push(f);
 			}
-			//アウトボックスモデル用のリレーリストを作成
-			const relayUserMap: Map<string, Set<string>> = new Map<string, Set<string>>();
-			for (const pubkey of pubkeysFollowing) {
-				const relayRecord: RelayRecord = getRelaysToUseFromKind10002Event(
-					eventStore.getReplaceable(10002, pubkey)
-				);
-				for (const [relayUrl, _] of Object.entries(relayRecord).filter(
-					([relayUrl, obj]) => relayUrl.startsWith('wss://') && obj.write
+			if (isEnabledOutboxModel) {
+				for (const relayUrl of getReadRelaysWithOutboxModel(
+					pubkeysFollowing,
+					eventStore,
+					relaysToRead
 				)) {
-					const users: Set<string> = relayUserMap.get(relayUrl) ?? new Set<string>();
-					users.add(pubkey);
-					relayUserMap.set(relayUrl, users);
+					relaySet.add(relayUrl);
 				}
-			}
-			const requiredRelays: string[] = getRequiredRelays(relayUserMap, relaysToRead);
-			for (const relayUrl of [...relaysToRead, ...requiredRelays]) {
-				relaySet.add(relayUrl);
 			}
 			//ブックマークしているチャンネルの投稿も取得したいが、limitで混ぜるのは難しいので考え中
 		}
@@ -2491,14 +2510,16 @@ export const sendRepost = async (targetEvent: NostrEvent): Promise<void> => {
 	});
 	const eventToSend = await window.nostr.signEvent(eventTemplate);
 	const relaysToAdd: Set<string> = new Set<string>();
-	const relayRecord: RelayRecord = getRelaysToUseFromKind10002Event(
-		eventStore.getReplaceable(10002, targetEvent.pubkey)
-	);
 	for (const relayUrl of relaysToWrite) {
 		relaysToAdd.add(relayUrl);
 	}
-	for (const [relayUrl, _] of Object.entries(relayRecord).filter(([_, obj]) => obj.read)) {
-		relaysToAdd.add(relayUrl);
+	if (isEnabledOutboxModel) {
+		const relayRecord: RelayRecord = getRelaysToUseFromKind10002Event(
+			eventStore.getReplaceable(10002, targetEvent.pubkey)
+		);
+		for (const [relayUrl, _] of Object.entries(relayRecord).filter(([_, obj]) => obj.read)) {
+			relaysToAdd.add(relayUrl);
+		}
 	}
 	const options: Partial<RxNostrSendOptions> = { on: { relays: Array.from(relaysToAdd) } };
 	sendEvent(eventToSend, options);
@@ -2544,14 +2565,16 @@ export const sendReaction = async (
 		return;
 	}
 	const relaysToAdd: Set<string> = new Set<string>();
-	const relayRecord: RelayRecord = getRelaysToUseFromKind10002Event(
-		eventStore.getReplaceable(10002, targetEvent.pubkey)
-	);
 	for (const relayUrl of relaysToWrite) {
 		relaysToAdd.add(relayUrl);
 	}
-	for (const [relayUrl, _] of Object.entries(relayRecord).filter(([_, obj]) => obj.read)) {
-		relaysToAdd.add(relayUrl);
+	if (isEnabledOutboxModel) {
+		const relayRecord: RelayRecord = getRelaysToUseFromKind10002Event(
+			eventStore.getReplaceable(10002, targetEvent.pubkey)
+		);
+		for (const [relayUrl, _] of Object.entries(relayRecord).filter(([_, obj]) => obj.read)) {
+			relaysToAdd.add(relayUrl);
+		}
 	}
 	const options: Partial<RxNostrSendOptions> = { on: { relays: Array.from(relaysToAdd) } };
 	sendEvent(eventToSend, options);
@@ -2970,12 +2993,14 @@ export const makeEvent = (
 	for (const relayUrl of relaysToWrite) {
 		relaysToAdd.add(relayUrl);
 	}
-	for (const pubkey of tags.filter((tag) => tag[0] === 'p').map((tag) => tag[1])) {
-		const relayRecord: RelayRecord = getRelaysToUseFromKind10002Event(
-			eventStore.getReplaceable(10002, pubkey)
-		);
-		for (const [relayUrl, _] of Object.entries(relayRecord).filter(([_, obj]) => obj.read)) {
-			relaysToAdd.add(relayUrl);
+	if (isEnabledOutboxModel) {
+		for (const pubkey of tags.filter((tag) => tag[0] === 'p').map((tag) => tag[1])) {
+			const relayRecord: RelayRecord = getRelaysToUseFromKind10002Event(
+				eventStore.getReplaceable(10002, pubkey)
+			);
+			for (const [relayUrl, _] of Object.entries(relayRecord).filter(([_, obj]) => obj.read)) {
+				relaysToAdd.add(relayUrl);
+			}
 		}
 	}
 	const options: Partial<RxNostrSendOptions> = { on: { relays: Array.from(relaysToAdd) } };

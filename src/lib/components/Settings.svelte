@@ -7,6 +7,7 @@
 		getRelaysToUse,
 		setIsEnabledDarkMode,
 		setIsEnabledEventProtection,
+		setIsEnabledOutboxModel,
 		setIsEnabledRelativeTime,
 		setIsEnabledSkipKind1,
 		setIsEnabledUseClientTag,
@@ -33,6 +34,7 @@
 		isEnabledRelativeTime,
 		isEnabledSkipKind1,
 		isEnabledUseClientTag,
+		isEnabledOutboxModel,
 		isEnabledEventProtection,
 		relaysSelected,
 		uploaderSelected,
@@ -53,6 +55,7 @@
 		isEnabledRelativeTime: boolean;
 		isEnabledSkipKind1: boolean;
 		isEnabledUseClientTag: boolean;
+		isEnabledOutboxModel: boolean;
 		isEnabledEventProtection: boolean;
 		relaysSelected: string;
 		uploaderSelected: string;
@@ -240,6 +243,24 @@
 										bind:checked={isEnabledUseClientTag}
 										onchange={() => {
 											setIsEnabledUseClientTag(isEnabledUseClientTag);
+										}}
+									/><span class="Slider Round"></span></label
+								>
+							</div>
+						</div>
+						<div class="Settings__section">
+							<div class="Label"><span>{$_('Settings.account.outbox-model')}</span></div>
+							<div class="Control">
+								<label class="SliderSwitch"
+									><input
+										name="ui_theme"
+										type="checkbox"
+										disabled={loginPubkey === undefined}
+										bind:checked={isEnabledOutboxModel}
+										onchange={() => {
+											setIsEnabledOutboxModel(isEnabledOutboxModel);
+											clearCache();
+											goto(location.href);
 										}}
 									/><span class="Slider Round"></span></label
 								>

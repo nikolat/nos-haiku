@@ -10,6 +10,7 @@ export const preferences = persisted<
 		isEnabledRelativeTime: boolean;
 		isEnabledSkipKind1: boolean;
 		isEnabledUseClientTag: boolean;
+		isEnabledOutboxModel: boolean;
 		isEnabledEventProtection: boolean;
 		relaysSelected: string;
 		uploaderSelected: string;
@@ -22,6 +23,7 @@ export const preferences = persisted<
 		isEnabledRelativeTime: boolean;
 		isEnabledSkipKind1: boolean;
 		isEnabledUseClientTag: boolean;
+		isEnabledOutboxModel: boolean;
 		isEnabledEventProtection: boolean;
 		relaysSelected: string;
 		uploaderSelected: string;
@@ -34,6 +36,7 @@ export const preferences = persisted<
 	isEnabledRelativeTime: true,
 	isEnabledSkipKind1: false,
 	isEnabledUseClientTag: false,
+	isEnabledOutboxModel: false,
 	isEnabledEventProtection: false,
 	relaysSelected: 'default',
 	uploaderSelected: uploaderURLs[0],

@@ -4,6 +4,7 @@ import { normalizeURL } from 'nostr-tools/utils';
 import * as nip19 from 'nostr-tools/nip19';
 import { defaultRelays } from '$lib/config';
 import { getEventByAddressPointer, getEventById } from '$lib/resource.svelte';
+import type { EventStore } from 'applesauce-core';
 import type { ProfileContent } from 'applesauce-core/helpers';
 import data from '@emoji-mart/data';
 // @ts-expect-error なんもわからんかも
@@ -461,7 +462,33 @@ export const getRelaysToUseByRelaysSelected = (
 	}
 };
 
-export const getRequiredRelays = (
+export const getReadRelaysWithOutboxModel = (
+	pubkeys: string[],
+	eventStore: EventStore,
+	relaysToRead: string[]
+): string[] => {
+	const relayUserMap: Map<string, Set<string>> = new Map<string, Set<string>>();
+	for (const pubkey of pubkeys) {
+		const relayRecord: RelayRecord = getRelaysToUseFromKind10002Event(
+			eventStore.getReplaceable(10002, pubkey)
+		);
+		for (const [relayUrl, _] of Object.entries(relayRecord).filter(
+			([relayUrl, obj]) => relayUrl.startsWith('wss://') && obj.write
+		)) {
+			const users: Set<string> = relayUserMap.get(relayUrl) ?? new Set<string>();
+			users.add(pubkey);
+			relayUserMap.set(relayUrl, users);
+		}
+	}
+	const requiredRelays: string[] = getRequiredRelays(relayUserMap, relaysToRead);
+	const relaySet = new Set<string>();
+	for (const relayUrl of [...relaysToRead, ...requiredRelays]) {
+		relaySet.add(relayUrl);
+	}
+	return Array.from(relaySet);
+};
+
+const getRequiredRelays = (
 	relayUserMap: Map<string, Set<string>>,
 	relaysUsed: string[]
 ): string[] => {

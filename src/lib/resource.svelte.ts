@@ -51,6 +51,7 @@ import {
 	getPubkeysForFilter,
 	getRelaysToUseByRelaysSelected,
 	getRelaysToUseFromKind10002Event,
+	getRequiredRelays,
 	isValidEmoji,
 	splitNip51List,
 	splitNip51ListPublic,
@@ -1211,6 +1212,18 @@ const _subTimeline = eventStore
 				}
 				break;
 			}
+			case 3: {
+				if (loginPubkey !== undefined && event.pubkey === loginPubkey) {
+					const pubkeys: string[] = event.tags
+						.filter((tag) => tag.length >= 2 && tag[0] === 'p')
+						.map((tag) => tag[1])
+						.filter((pubkey) => !eventStore.hasReplaceable(10002, pubkey));
+					if (pubkeys.length > 0) {
+						rxReqB10002.emit({ kinds: [10002], authors: pubkeys, until: unixNow() });
+					}
+				}
+				break;
+			}
 			case 4: {
 				const pubkeys = Array.from(
 					new Set<string>(
@@ -1749,6 +1762,24 @@ export const getEventsFirst = (
 					f['#p'] = Array.from(pSet);
 				}
 				filters.push(f);
+			}
+			//アウトボックスモデル用のリレーリストを作成
+			const relayUserMap: Map<string, Set<string>> = new Map<string, Set<string>>();
+			for (const pubkey of pubkeysFollowing) {
+				const relayRecord: RelayRecord = getRelaysToUseFromKind10002Event(
+					eventStore.getReplaceable(10002, pubkey)
+				);
+				for (const [relayUrl, _] of Object.entries(relayRecord).filter(
+					([relayUrl, obj]) => relayUrl.startsWith('wss://') && obj.write
+				)) {
+					const users: Set<string> = relayUserMap.get(relayUrl) ?? new Set<string>();
+					users.add(pubkey);
+					relayUserMap.set(relayUrl, users);
+				}
+			}
+			const requiredRelays: string[] = getRequiredRelays(relayUserMap, relaysToRead);
+			for (const relayUrl of requiredRelays) {
+				relaySet.add(relayUrl);
 			}
 			//ブックマークしているチャンネルの投稿も取得したいが、limitで混ぜるのは難しいので考え中
 		}

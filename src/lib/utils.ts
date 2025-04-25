@@ -461,6 +461,50 @@ export const getRelaysToUseByRelaysSelected = (
 	}
 };
 
+export const getRequiredRelays = (
+	relayUserMap: Map<string, Set<string>>,
+	relaysUsed: string[]
+): string[] => {
+	const relayUserMapArray: [string, string[]][] = [];
+	for (const [relayUrl, users] of relayUserMap) {
+		relayUserMapArray.push([relayUrl, Array.from(users)]);
+	}
+	const compareFn = (a: [string, string[]], b: [string, string[]]) => {
+		return b[1].length - a[1].length;
+	};
+	relayUserMapArray.sort(compareFn);
+	const relaysAll: string[] = relayUserMapArray.map((a) => a[0]);
+	const relaySet: Set<string> = new Set<string>();
+	const allPubkeySet: Set<string> = new Set<string>(relayUserMapArray.map((e) => e[1]).flat());
+	const relayUserMapCloned: Map<string, Set<string>> = new Map<string, Set<string>>();
+	for (const up of relayUserMapArray) {
+		relayUserMapCloned.set(up[0], new Set<string>(up[1]));
+	}
+	for (const relay of relaysUsed) {
+		const users: Set<string> = relayUserMapCloned.get(relay) ?? new Set<string>();
+		for (const p of users) {
+			allPubkeySet.delete(p);
+		}
+	}
+	for (const relay of relaysAll.filter((r) => !relaysUsed.includes(r))) {
+		if (allPubkeySet.size === 0) {
+			break;
+		}
+		const users: Set<string> = relayUserMapCloned.get(relay) ?? new Set<string>();
+		if (Array.from(users).some((p) => allPubkeySet.has(p))) {
+			relaySet.add(relay);
+			relayUserMapCloned.set(
+				relay,
+				new Set<string>(Array.from(users).filter((p) => allPubkeySet.has(p)))
+			);
+			for (const p of users) {
+				allPubkeySet.delete(p);
+			}
+		}
+	}
+	return Array.from(relaySet);
+};
+
 const inputCount = (input: string): number => {
 	// simple check, not perfect
 	const segmeter = new Intl.Segmenter('ja-JP', { granularity: 'word' });

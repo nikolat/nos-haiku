@@ -2595,7 +2595,24 @@ export const sendDeletion = async (targetEvent: NostrEvent): Promise<void> => {
 		created_at: unixNow()
 	});
 	const eventToSend = await window.nostr.signEvent(eventTemplate);
-	const options: Partial<RxNostrSendOptions> = { on: { relays: relaysToWrite } };
+	const relaysToAdd: Set<string> = new Set<string>();
+	for (const relayUrl of relaysToWrite) {
+		relaysToAdd.add(relayUrl);
+	}
+	if (isEnabledOutboxModel) {
+		const mentionedPubkeys: string[] = targetEvent.tags
+			.filter((tag) => tag.length >= 2 && tag[0] === 'p')
+			.map((tag) => tag[1]);
+		for (const pubkey of mentionedPubkeys) {
+			const relayRecord: RelayRecord = getRelaysToUseFromKind10002Event(
+				eventStore.getReplaceable(10002, targetEvent.pubkey)
+			);
+			for (const [relayUrl, _] of Object.entries(relayRecord).filter(([_, obj]) => obj.read)) {
+				relaysToAdd.add(relayUrl);
+			}
+		}
+	}
+	const options: Partial<RxNostrSendOptions> = { on: { relays: Array.from(relaysToAdd) } };
 	sendEvent(eventToSend, options);
 };
 

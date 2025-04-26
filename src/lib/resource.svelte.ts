@@ -2605,7 +2605,7 @@ export const sendDeletion = async (targetEvent: NostrEvent): Promise<void> => {
 			.map((tag) => tag[1]);
 		for (const pubkey of mentionedPubkeys) {
 			const relayRecord: RelayRecord = getRelaysToUseFromKind10002Event(
-				eventStore.getReplaceable(10002, targetEvent.pubkey)
+				eventStore.getReplaceable(10002, pubkey)
 			);
 			for (const [relayUrl, _] of Object.entries(relayRecord).filter(([_, obj]) => obj.read)) {
 				relaysToAdd.add(relayUrl);

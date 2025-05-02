@@ -1,4 +1,4 @@
-import { bufferTime, Subscription, merge, debounceTime } from 'rxjs';
+import { bufferTime, debounceTime, merge, type Subscription } from 'rxjs';
 import {
 	batch,
 	completeOnTimeout,

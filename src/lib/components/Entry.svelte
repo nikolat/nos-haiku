@@ -18,6 +18,7 @@
 		getEventByAddressPointer,
 		getEventById,
 		getEventsReplying,
+		getIsEnabledOutboxModel,
 		getProfileId,
 		getProfileName,
 		getRelaysToUse,
@@ -44,6 +45,7 @@
 	import { onMount } from 'svelte';
 	import { afterNavigate, beforeNavigate } from '$app/navigation';
 	import { getEventHash, type NostrEvent, type UnsignedEvent } from 'nostr-tools/pure';
+	import type { RelayRecord } from 'nostr-tools/relay';
 	import { isAddressableKind, isReplaceableKind } from 'nostr-tools/kinds';
 	import { normalizeURL } from 'nostr-tools/utils';
 	import * as nip19 from 'nostr-tools/nip19';
@@ -1641,9 +1643,27 @@
 												class="zap"
 												title="Zap"
 												onclick={() => {
+													const relaysToAdd: Set<string> = new Set<string>();
 													const relaysToWrite: string[] = Object.entries(getRelaysToUse())
 														.filter((v) => v[1].write)
 														.map((v) => v[0]);
+													for (const relayUrl of relaysToWrite) {
+														relaysToAdd.add(relayUrl);
+													}
+													if (getIsEnabledOutboxModel()) {
+														const relayRecord: RelayRecord = getRelaysToUseFromKind10002Event(
+															getEventByAddressPointer({
+																kind: 10002,
+																pubkey: event.pubkey,
+																identifier: ''
+															})
+														);
+														for (const [relayUrl, _] of Object.entries(relayRecord).filter(
+															([_, obj]) => obj.read
+														)) {
+															relaysToAdd.add(relayUrl);
+														}
+													}
 													zap(
 														nip19.npubEncode(event.pubkey),
 														isAddressableKind(event.kind) || isReplaceableKind(event.kind)
@@ -1652,7 +1672,7 @@
 														isAddressableKind(event.kind) || isReplaceableKind(event.kind)
 															? getEncode(event)
 															: undefined,
-														relaysToWrite,
+														Array.from(relaysToAdd),
 														zapWindowContainer
 													);
 												}}

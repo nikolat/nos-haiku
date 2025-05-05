@@ -550,6 +550,8 @@
 								Emoji set
 							{:else if event.kind === 31990}
 								Handler information
+							{:else if event.kind === 39701}
+								Web Bookmarking
 							{:else}
 								{`unsupported kind:${event.kind} event`}
 							{/if}
@@ -1377,6 +1379,50 @@
 											<p>{obj.about}</p>
 										</div>
 									{/if}
+								{:else if event.kind === 39701}
+									{@const hashtags = new Set<string>(
+										event.tags
+											.filter((tag) => tag.length >= 2 && tag[0] === 't')
+											.map((tag) => tag[1].toLowerCase())
+									)}
+									{@const d = event.tags.find((tag) => tag.length >= 2 && tag[0])?.at(1) ?? ''}
+									{@const url = `https://${d}`}
+									<p>
+										{#each hashtags as hashtag (hashtag)}
+											{` #${hashtag}`}
+										{/each}
+										{#if hashtags.size > 0}<br />{/if}
+										{#if URL.canParse(url) && !d.startsWith('http')}
+											<a href={url} target="_blank" rel="noopener noreferrer">{url}</a>
+										{:else}
+											{d}
+										{/if}
+									</p>
+									<p>
+										<Content
+											content={event.content}
+											tags={event.tags}
+											{channelMap}
+											{profileMap}
+											{loginPubkey}
+											{mutedPubkeys}
+											{mutedChannelIds}
+											{mutedWords}
+											{followingPubkeys}
+											{eventsTimeline}
+											{eventsReaction}
+											{eventsEmojiSet}
+											{uploaderSelected}
+											bind:channelToPost
+											{currentChannelId}
+											{isEnabledRelativeTime}
+											{nowRealtime}
+											{level}
+											isPreview={false}
+											{callInsertText}
+											bind:baseEventToEdit
+										/>
+									</p>
 								{:else}
 									<p>
 										<Content

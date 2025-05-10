@@ -6,6 +6,7 @@ import {
 	createRxForwardReq,
 	createRxNostr,
 	createTie,
+	createUniq,
 	filterByKind,
 	latestEach,
 	type EventPacket,
@@ -170,6 +171,7 @@ const countThreadLimit = 5;
 const eventStore = new EventStore();
 let rxNostr: RxNostr;
 const [tie, seenOn] = createTie();
+const [uniq, eventIds] = createUniq((packet: EventPacket): string => packet.event.id);
 let subF: Subscription;
 
 let eventsMention: NostrEvent[] = $state([]);
@@ -502,6 +504,7 @@ export const clearCache = (
 	myBookmarkedChannelIds = [];
 	subF?.unsubscribe();
 	seenOn.clear();
+	eventIds.clear();
 };
 
 export const getEventsMention = (): NostrEvent[] => {
@@ -970,17 +973,17 @@ const subscribeDefine = () => {
 			next,
 			complete
 		});
-	rxNostr.use(rxReqB1_42_1111).pipe(tie).subscribe({
+	rxNostr.use(rxReqB1_42_1111).pipe(tie, uniq).subscribe({
 		next,
 		complete
 	});
 	const batchedReq7 = rxReqB7.pipe(bufferTime(secBufferTime), batch(mergeFilter7));
-	rxNostr.use(batchedReq7).pipe(tie).subscribe({
+	rxNostr.use(batchedReq7).pipe(tie, uniq).subscribe({
 		next,
 		complete
 	});
 	const batchedReq40 = rxReqB40.pipe(bufferTime(secBufferTime), batch(mergeFilter40));
-	rxNostr.use(batchedReq40).pipe(tie).subscribe({
+	rxNostr.use(batchedReq40).pipe(tie, uniq).subscribe({
 		next,
 		complete
 	});
@@ -999,11 +1002,11 @@ const subscribeDefine = () => {
 			complete
 		});
 	const batchedReqId = rxReqBId.pipe(bufferTime(secBufferTime), batch(mergeFilterId));
-	rxNostr.use(batchedReqId).pipe(tie).subscribe({
+	rxNostr.use(batchedReqId).pipe(tie, uniq).subscribe({
 		next,
 		complete
 	});
-	rxNostr.use(rxReqBRp).pipe(tie).subscribe({
+	rxNostr.use(rxReqBRp).pipe(tie, uniq).subscribe({
 		next,
 		complete
 	});
@@ -1041,7 +1044,7 @@ const getEventsByIdWithRelayHint = (
 			);
 			rxNostr
 				.use(batchedReqIdCustom, { relays: [relay] })
-				.pipe(tie, completeOnTimeout(secOnCompleteTimeout))
+				.pipe(tie, uniq, completeOnTimeout(secOnCompleteTimeout))
 				.subscribe({
 					next,
 					complete
@@ -1077,7 +1080,7 @@ const getEventsByIdWithRelayHint = (
 			const rxReqBRpCustom = createRxBackwardReq();
 			rxNostr
 				.use(rxReqBRpCustom, { relays: [relay] })
-				.pipe(tie, completeOnTimeout(secOnCompleteTimeout))
+				.pipe(tie, uniq, completeOnTimeout(secOnCompleteTimeout))
 				.subscribe({
 					next,
 					complete
@@ -1579,7 +1582,7 @@ export const fetchEventsMention = (until: number, completeCustom: () => void): v
 		filters = [{ kinds: [1, 4, 6, 7, 16, 42, 1111, 9735], '#p': [loginPubkey], limit: 10, until }];
 	}
 	const rxReqBFirst = createRxBackwardReq();
-	rxNostr.use(rxReqBFirst).pipe(tie, completeOnTimeout(secOnCompleteTimeout)).subscribe({
+	rxNostr.use(rxReqBFirst).pipe(tie, uniq, completeOnTimeout(secOnCompleteTimeout)).subscribe({
 		next,
 		complete: completeCustom
 	});
@@ -1608,7 +1611,7 @@ const prepareFirstEvents = (completeOnNextFetch: () => void = complete) => {
 		)
 	);
 	merge(...obs$)
-		.pipe(tie, completeOnTimeout(secOnCompleteTimeout))
+		.pipe(tie, uniq, completeOnTimeout(secOnCompleteTimeout))
 		.subscribe({
 			next,
 			complete: completeOnNextFetch
@@ -1839,7 +1842,7 @@ export const getEventsFirst = (
 	const rxReqBFirst = createRxBackwardReq();
 	rxNostr
 		.use(rxReqBFirst, { on: options })
-		.pipe(tie, completeOnTimeout(secOnCompleteTimeout))
+		.pipe(tie, uniq, completeOnTimeout(secOnCompleteTimeout))
 		.subscribe({
 			next,
 			complete: completeCustom
@@ -1940,7 +1943,7 @@ export const getEventsFirst = (
 		});
 	}
 	subF?.unsubscribe();
-	subF = rxNostr.use(rxReqF, { on: options }).pipe(tie).subscribe({
+	subF = rxNostr.use(rxReqF, { on: options }).pipe(tie, uniq).subscribe({
 		next,
 		complete
 	});

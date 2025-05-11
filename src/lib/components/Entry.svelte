@@ -375,7 +375,9 @@
 			: nip19.neventEncode({ ...event, author: event.pubkey, relays });
 	};
 
-	const eventsReplying = $derived(getEventsReplying(event));
+	const eventsReplying = $derived(
+		getEventsReplying(event).filter((ev) => !mutedPubkeys.includes(ev.pubkey))
+	);
 
 	let isEmojiPickerOpened: boolean = $state(false);
 
@@ -1856,7 +1858,7 @@
 									}}
 								>
 									<i class="far fa-comment-alt-lines"></i>
-									{#each eventsReplying.filter((ev) => !mutedPubkeys.includes(ev.pubkey)) as ev (ev.id)}
+									{#each eventsReplying as ev (ev.id)}
 										{@const prof = profileMap.get(ev.pubkey)}
 										{@const picture = URL.canParse(prof?.picture ?? '') ? prof?.picture : undefined}
 										{#if picture !== undefined}

@@ -33,7 +33,7 @@ import type { Filter } from 'nostr-tools/filter';
 import type { RelayRecord } from 'nostr-tools/relay';
 import type { WindowNostr } from 'nostr-tools/nip07';
 import * as nip19 from 'nostr-tools/nip19';
-import type { FileUploadResponse } from 'nostr-tools/nip96';
+import type { FileUploadResponse } from '$lib/nip96';
 import { locale } from 'svelte-i18n';
 import {
 	clientTag,

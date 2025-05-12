@@ -92,7 +92,7 @@
 
 	const [matchesIterator, plainTexts, emojiUrls] = $derived(getExpandTagsList(content, tags));
 
-	const nip19decode = (text: string): nip19.DecodeResult | null => {
+	const nip19decode = (text: string) => {
 		try {
 			return nip19.decode(text);
 		} catch (_error) {

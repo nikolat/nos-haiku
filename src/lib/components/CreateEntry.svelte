@@ -12,7 +12,7 @@
 		type DelayedProcessingResponse,
 		type FileUploadResponse,
 		type OptionalFormDataFields
-	} from 'nostr-tools/nip96';
+	} from '$lib/nip96';
 	import { getToken } from 'nostr-tools/nip98';
 	import { unixNow, type ProfileContent } from 'applesauce-core/helpers';
 	import { _ } from 'svelte-i18n';

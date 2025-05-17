@@ -487,6 +487,8 @@
 												{#if URL.canParse(image)}
 													<img alt={title} {title} class="badge" src={image} />
 												{/if}
+											{:else if evTo.kind === 7}
+												<Reaction reactionEvent={evTo} profile={undefined} isAuthor={false} />
 											{:else}
 												{@const sp = evTo.content.split('\n')}
 												<Content

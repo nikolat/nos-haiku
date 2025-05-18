@@ -2644,7 +2644,7 @@ export const sendChannelEdit = async (channel: ChannelContent) => {
 	obj.name = channel.name;
 	obj.about = channel.about ?? '';
 	obj.picture = channel.picture ?? '';
-	obj.relays = relaysToWrite;
+	obj.relays = relaysToWrite.filter((relay) => relay.startsWith('wss://')).slice(0, 10);
 	const content = JSON.stringify(obj);
 	const recommendedRelay: string = getSeenOn(channel.id, true).at(0) ?? '';
 	const eTag = ['e', channel.id, recommendedRelay, '', channel.pubkey];
@@ -2738,7 +2738,7 @@ export const makeEvent = (
 				name: channelNameToCreate,
 				about: '',
 				picture: '',
-				relays: relaysToWrite
+				relays: relaysToWrite.filter((relay) => relay.startsWith('wss://')).slice(0, 10)
 			}),
 			kind: 40,
 			tags: tagsChannel,
@@ -2782,7 +2782,10 @@ export const makeEvent = (
 		};
 		const tagsToAdd: string[][] = [
 			...pollItems.map((item) => ['option', getRandomString(9), item]),
-			...relaysToWrite.map((relay) => ['relay', relay]),
+			...relaysToWrite
+				.filter((relay) => relay.startsWith('wss://'))
+				.slice(0, 10)
+				.map((relay) => ['relay', relay]),
 			['polltype', pollType ?? 'singlechoice'],
 			['endsAt', String(pollEndsAt ?? 0)]
 		];

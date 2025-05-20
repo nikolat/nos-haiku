@@ -1915,6 +1915,7 @@
 								{profileMap}
 								{uploaderSelected}
 								{eventsEmojiSet}
+								preInput={null}
 								channelToPost={undefined}
 								bind:showForm
 								bind:previewEvent

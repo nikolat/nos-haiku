@@ -26,6 +26,7 @@
 		profileMap,
 		uploaderSelected,
 		eventsEmojiSet,
+		preInput,
 		channelToPost = $bindable(),
 		showForm = $bindable(),
 		previewEvent = $bindable(),
@@ -39,6 +40,7 @@
 		profileMap: Map<string, ProfileContent>;
 		uploaderSelected: string;
 		eventsEmojiSet: NostrEvent[];
+		preInput: string | null;
 		channelToPost: ChannelContent | undefined;
 		showForm: boolean;
 		previewEvent: UnsignedEvent | undefined;
@@ -174,7 +176,7 @@
 	let pollItems: string[] = $state([]);
 	let pollPeriod: number = $state(1 * 24 * 60 * 60);
 	let pollType: 'singlechoice' | 'multiplechoice' = $state('singlechoice');
-	let contentToSend: string = $state('');
+	let contentToSend: string = $state(preInput ?? '');
 	$effect(() => {
 		if (baseEventToEdit !== undefined) {
 			channelNameToCreate = `kind:${baseEventToEdit.kind}`;

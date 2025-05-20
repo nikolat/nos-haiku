@@ -992,6 +992,7 @@
 						{profileMap}
 						{uploaderSelected}
 						{eventsEmojiSet}
+						preInput={urlSearchParams.get('content')}
 						bind:channelToPost
 						showForm={true}
 						bind:previewEvent

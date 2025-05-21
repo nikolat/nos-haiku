@@ -1390,8 +1390,12 @@
 											.filter((tag) => tag.length >= 2 && tag[0] === 't')
 											.map((tag) => tag[1].toLowerCase())
 									)}
-									{@const d = event.tags.find((tag) => tag.length >= 2 && tag[0])?.at(1) ?? ''}
+									{@const d =
+										event.tags.find((tag) => tag.length >= 2 && tag[0] === 'd')?.at(1) ?? ''}
 									{@const url = `https://${d}`}
+									{@const title =
+										event.tags.find((tag) => tag.length >= 2 && tag[0] === 'title')?.at(1) ?? ''}
+									<h2 class="title">{title}</h2>
 									<p>
 										{#each hashtags as hashtag (hashtag)}
 											{` #${hashtag}`}

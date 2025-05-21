@@ -1268,7 +1268,10 @@
 								{:else if event.kind === 30023}
 									{@const title =
 										event.tags.find((tag) => tag.length >= 2 && tag[0] === 'title')?.at(1) ?? ''}
+									{@const summary =
+										event.tags.find((tag) => tag.length >= 2 && tag[0] === 'summary')?.at(1) ?? ''}
 									<h2 class="title">{title}</h2>
+									<h3 class="summary">{summary}</h3>
 									<p>
 										<Content
 											content={event.content}
@@ -2135,6 +2138,9 @@
 	}
 	.title {
 		font-size: 1.5em;
+	}
+	h3.summary {
+		font-style: italic;
 	}
 	.handler-information img.banner {
 		max-height: 100px;

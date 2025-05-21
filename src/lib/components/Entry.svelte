@@ -528,6 +528,8 @@
 										invoice.sections.find((section) => section.name === 'amount')?.value ?? '-1'
 									) / 1000}
 								Zap {#if sats > 0}{`⚡${sats}`}{/if}
+							{:else if event.kind === 9802}
+								Highlights
 							{:else if event.kind === 10000}
 								Mute list
 							{:else if event.kind === 10001}
@@ -1052,6 +1054,104 @@
 										/>
 									{:else}
 										invalid kind:9735 event
+									{/if}
+								{:else if event.kind === 9802}
+									{@const comment = event.tags
+										.find((tag) => tag.length >= 2 && tag[0] === 'comment')
+										?.at(1)}
+									{@const e = event.tags.find((tag) => tag.length >= 2 && tag[0] === 'e')?.at(1)}
+									{@const a = event.tags.find((tag) => tag.length >= 2 && tag[0] === 'a')?.at(1)}
+									{@const r = event.tags.find((tag) => tag.length >= 2 && tag[0] === 'r')?.at(1)}
+									{@const ap = getAddressPointerFromAId(a ?? '')}
+									{@const eventQuoted =
+										e !== undefined
+											? getEventById(e)
+											: ap !== null
+												? getEventByAddressPointer(ap)
+												: undefined}
+									{#if comment !== undefined}
+										<p>
+											<Content
+												content={comment}
+												tags={event.tags}
+												{channelMap}
+												{profileMap}
+												{loginPubkey}
+												{mutedPubkeys}
+												{mutedChannelIds}
+												{mutedWords}
+												{followingPubkeys}
+												{eventsTimeline}
+												{eventsReaction}
+												{eventsEmojiSet}
+												{uploaderSelected}
+												bind:channelToPost
+												{currentChannelId}
+												{isEnabledRelativeTime}
+												{nowRealtime}
+												{level}
+												isPreview={false}
+												{callInsertText}
+												bind:baseEventToEdit
+											/>
+										</p>
+									{/if}
+									{#if eventQuoted !== undefined}
+										<blockquote>
+											<Entry
+												event={eventQuoted}
+												{channelMap}
+												{profileMap}
+												{loginPubkey}
+												{mutedPubkeys}
+												{mutedChannelIds}
+												{mutedWords}
+												{mutedHashTags}
+												{followingPubkeys}
+												{eventsTimeline}
+												{eventsReaction}
+												{eventsEmojiSet}
+												{uploaderSelected}
+												{channelToPost}
+												{currentChannelId}
+												{isEnabledRelativeTime}
+												{nowRealtime}
+												level={level + 1}
+												isFullDisplayMode={false}
+												isPreview={false}
+												{callInsertText}
+												bind:baseEventToEdit
+											/>
+										</blockquote>
+									{:else if URL.canParse(r ?? '')}
+										<blockquote cite={r}>
+											<p>
+												<Content
+													content={event.content}
+													tags={event.tags}
+													{channelMap}
+													{profileMap}
+													{loginPubkey}
+													{mutedPubkeys}
+													{mutedChannelIds}
+													{mutedWords}
+													{followingPubkeys}
+													{eventsTimeline}
+													{eventsReaction}
+													{eventsEmojiSet}
+													{uploaderSelected}
+													bind:channelToPost
+													{currentChannelId}
+													{isEnabledRelativeTime}
+													{nowRealtime}
+													{level}
+													isPreview={false}
+													{callInsertText}
+													bind:baseEventToEdit
+												/>
+											</p>
+											<cite><a href={r} target="_blank" rel="noopener noreferrer">{r}</a></cite>
+										</blockquote>
 									{/if}
 								{:else if event.kind === 10000}
 									{@const { pPub, ePub, wPub, tPub } = splitNip51ListPublic(event)}
@@ -2086,6 +2186,14 @@
 	}
 	.Entry__body {
 		position: relative;
+	}
+	blockquote {
+		background-color: rgba(127, 127, 127, 0.1);
+		padding: 10px;
+		border-radius: 10px;
+	}
+	cite {
+		font-style: italic;
 	}
 	.via {
 		position: absolute;

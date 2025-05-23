@@ -2542,14 +2542,20 @@ export const sendReaction = async (
 		return;
 	}
 	const tags: string[][] = [];
-	const recommendedRelay: string = getSeenOn(targetEvent.id, true).at(0) ?? '';
+	const recommendedRelayForTargetEvent: string = getSeenOn(targetEvent.id, true).at(0) ?? '';
+	const recommendedRelayForAuthor: string =
+		getSeenOn(profileMap.get(targetEvent.pubkey)?.event.id ?? '', true).at(0) ?? '';
 	if (isReplaceableKind(targetEvent.kind) || isAddressableKind(targetEvent.kind)) {
 		const d = targetEvent.tags.find((tag) => tag.length >= 2 && tag[0] === 'd')?.at(1) ?? '';
-		tags.push(['a', `${targetEvent.kind}:${targetEvent.pubkey}:${d}`, recommendedRelay]);
+		tags.push([
+			'a',
+			`${targetEvent.kind}:${targetEvent.pubkey}:${d}`,
+			recommendedRelayForTargetEvent
+		]);
 	}
 	tags.push(
-		['e', targetEvent.id, recommendedRelay, '', targetEvent.pubkey],
-		['p', targetEvent.pubkey],
+		['e', targetEvent.id, recommendedRelayForTargetEvent, targetEvent.pubkey],
+		['p', targetEvent.pubkey, recommendedRelayForAuthor],
 		['k', String(targetEvent.kind)]
 	);
 	if (emojiurl !== undefined && URL.canParse(emojiurl)) {

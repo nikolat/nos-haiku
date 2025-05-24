@@ -49,7 +49,7 @@
 	import { isAddressableKind, isReplaceableKind } from 'nostr-tools/kinds';
 	import { normalizeURL } from 'nostr-tools/utils';
 	import * as nip19 from 'nostr-tools/nip19';
-	import { decode } from 'light-bolt11-decoder';
+	import { parseBolt11 } from 'applesauce-core/helpers';
 	import { _ } from 'svelte-i18n';
 
 	let {
@@ -520,13 +520,10 @@
 									) / 1000}
 								Zap Request {#if sats > 0}{`⚡${sats}`}{/if}
 							{:else if event.kind === 9735}
-								{@const invoice = decode(
+								{@const invoice = parseBolt11(
 									event.tags.find((tag) => tag.length >= 2 && tag[0] === 'bolt11')?.at(1) ?? ''
 								)}
-								{@const sats =
-									parseInt(
-										invoice.sections.find((section) => section.name === 'amount')?.value ?? '-1'
-									) / 1000}
+								{@const sats = (invoice.amount ?? 0) / 1000}
 								Zap {#if sats > 0}{`⚡${sats}`}{/if}
 							{:else if event.kind === 9802}
 								Highlights

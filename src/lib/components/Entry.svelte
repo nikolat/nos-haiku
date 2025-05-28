@@ -1683,7 +1683,7 @@
 									<a href={`/entry/${getEncode(event)}`}>
 										<time
 											datetime={new Date(1000 * event.created_at).toISOString()}
-											title={new Date(1000 * event.created_at).toLocaleString()}
+											title={getAbsoluteTime(event.created_at)}
 											class="NoticeItem__time"
 											>{isEnabledRelativeTime
 												? getRelativeTime(nowRealtime, event.created_at)

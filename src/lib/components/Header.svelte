@@ -507,7 +507,7 @@
 										>{/if}
 									<time
 										datetime={new Date(1000 * ev.created_at).toISOString()}
-										title={new Date(1000 * ev.created_at).toLocaleString()}
+										title={getAbsoluteTime(ev.created_at)}
 										class="NoticeItem__time"
 										>{isEnabledRelativeTime
 											? getRelativeTime(nowRealtime, ev.created_at)

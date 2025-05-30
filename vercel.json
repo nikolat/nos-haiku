@@ -2,6 +2,11 @@
 	"$schema": "https://openapi.vercel.sh/vercel.json",
 	"redirects": [
 		{
+			"source": "/",
+			"destination": "https://nos-haiku.pages.dev/",
+			"permanent": false
+		},
+		{
 			"source": "/:path*",
 			"destination": "https://nos-haiku.pages.dev/:path*",
 			"permanent": false

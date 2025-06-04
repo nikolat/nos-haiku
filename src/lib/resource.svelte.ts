@@ -1728,7 +1728,7 @@ export const getEventsFirst = (
 				[currentProfilePointer.pubkey],
 				eventStore,
 				relaysToRead
-			)) {
+			).filter((relay) => !blockedRelays.includes(relay))) {
 				relaySet.add(relayUrl);
 			}
 		}
@@ -1748,7 +1748,11 @@ export const getEventsFirst = (
 		}
 		const author = currentEventPointer.author;
 		if (author !== undefined && isEnabledOutboxModel) {
-			for (const relayUrl of getReadRelaysWithOutboxModel([author], eventStore, relaysToRead)) {
+			for (const relayUrl of getReadRelaysWithOutboxModel(
+				[author],
+				eventStore,
+				relaysToRead
+			).filter((relay) => !blockedRelays.includes(relay))) {
 				relaySet.add(relayUrl);
 			}
 		}
@@ -1773,7 +1777,7 @@ export const getEventsFirst = (
 				[currentAddressPointer.pubkey],
 				eventStore,
 				relaysToRead
-			)) {
+			).filter((relay) => !blockedRelays.includes(relay))) {
 				relaySet.add(relayUrl);
 			}
 		}
@@ -1814,7 +1818,7 @@ export const getEventsFirst = (
 					pubkeysFollowing,
 					eventStore,
 					relaysToRead
-				)) {
+				).filter((relay) => !blockedRelays.includes(relay))) {
 					relaySet.add(relayUrl);
 				}
 			}
@@ -1852,7 +1856,7 @@ export const getEventsFirst = (
 		return;
 	}
 	if (relaySet.size > 0) {
-		options = { relays: Array.from(relaySet) };
+		options = { relays: Array.from(relaySet).filter((relay) => !blockedRelays.includes(relay)) };
 	}
 	const rxReqBFirst = createRxBackwardReq();
 	rxNostr

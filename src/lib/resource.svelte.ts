@@ -2375,6 +2375,28 @@ export const bookmarkEmojiSets = async (
 		tags = [...eventEmojiSetList.tags, aTag];
 		content = eventEmojiSetList.content;
 	}
+	for (const tag of tags.filter((tag) => tag.length >= 2 && tag[0] === 'a')) {
+		const ap: nip19.AddressPointer | null = getAddressPointerFromAId(tag[1]);
+		if (ap !== null) {
+			const event30030: NostrEvent | undefined = eventStore.getReplaceable(
+				ap.kind,
+				ap.pubkey,
+				ap.identifier
+			);
+			if (event30030 !== undefined) {
+				const relayHint = getSeenOn(event30030.id, true).at(0);
+				if (relayHint !== undefined) {
+					tag[2] = relayHint;
+				} else {
+					delete tag[2];
+				}
+			} else {
+				delete tag[2];
+			}
+		} else {
+			delete tag[2];
+		}
+	}
 	const eventTemplate: EventTemplate = $state.snapshot({
 		kind,
 		tags,
@@ -2403,6 +2425,28 @@ export const unbookmarkEmojiSets = async (aTagStr: string): Promise<void> => {
 	const tags: string[][] = eventEmojiSetList.tags.filter(
 		(tag) => !(tag.length >= 2 && tag[0] === 'a' && tag[1] === aTagStr)
 	);
+	for (const tag of tags.filter((tag) => tag.length >= 2 && tag[0] === 'a')) {
+		const ap: nip19.AddressPointer | null = getAddressPointerFromAId(tag[1]);
+		if (ap !== null) {
+			const event30030: NostrEvent | undefined = eventStore.getReplaceable(
+				ap.kind,
+				ap.pubkey,
+				ap.identifier
+			);
+			if (event30030 !== undefined) {
+				const relayHint = getSeenOn(event30030.id, true).at(0);
+				if (relayHint !== undefined) {
+					tag[2] = relayHint;
+				} else {
+					delete tag[2];
+				}
+			} else {
+				delete tag[2];
+			}
+		} else {
+			delete tag[2];
+		}
+	}
 	const content: string = eventEmojiSetList.content;
 	const eventTemplate: EventTemplate = $state.snapshot({
 		kind: eventEmojiSetList.kind,

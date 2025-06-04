@@ -108,14 +108,18 @@
 	};
 	onMount(async () => {
 		locale.set(lang ?? initialLocale);
-		const { init } = await import('nostr-login');
-		init({
-			title: $_('App.nostr-login.title'),
-			description: $_('App.nostr-login.description')
-		});
-		// @ts-expect-error 型なんて定義されてないよ
-		const { injectCSS } = await import('nostr-zap/src/view');
-		injectCSS();
+		if (document.querySelector('body > nl-banner') === null) {
+			const { init } = await import('nostr-login');
+			init({
+				title: $_('App.nostr-login.title'),
+				description: $_('App.nostr-login.description')
+			});
+		}
+		if (!document.querySelector('body > div:last-child')?.shadowRoot?.querySelector('style')) {
+			// @ts-expect-error 型なんて定義されてないよ
+			const { injectCSS } = await import('nostr-zap/src/view');
+			injectCSS();
+		}
 	});
 	beforeNavigate(() => {
 		clearInterval(intervalID);

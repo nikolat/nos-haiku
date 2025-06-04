@@ -196,6 +196,7 @@ let mutedChannelIds: string[] = $state([]);
 let mutedWords: string[] = $state([]);
 let mutedHashTags: string[] = $state([]);
 let myBookmarkedChannelIds: string[] = $state([]);
+let blockedRelays: string[] = $state([]);
 
 const profileMap: Map<string, ProfileContentEvent> = $derived.by(() => {
 	const eventMap = new Map<string, NostrEvent>();
@@ -502,6 +503,7 @@ export const clearCache = (
 	mutedWords = [];
 	mutedHashTags = [];
 	myBookmarkedChannelIds = [];
+	blockedRelays = [];
 	subF?.unsubscribe();
 	seenOn.clear();
 	eventIds.clear();
@@ -1034,7 +1036,7 @@ const getEventsByIdWithRelayHint = (
 				continue;
 			}
 			const relay = normalizeURL(relayHint);
-			if (relaysToRead.includes(relay)) {
+			if (relaysToRead.includes(relay) || blockedRelays.includes(relay)) {
 				continue;
 			}
 			const rxReqBIdCustom = createRxBackwardReq();
@@ -1074,7 +1076,7 @@ const getEventsByIdWithRelayHint = (
 				continue;
 			}
 			const relay = normalizeURL(relayHint);
-			if (relaysToRead.includes(relay)) {
+			if (relaysToRead.includes(relay) || blockedRelays.includes(relay)) {
 				continue;
 			}
 			const rxReqBRpCustom = createRxBackwardReq();
@@ -1203,7 +1205,7 @@ const fetchEventsByATags = (event: NostrEvent) => {
 					)
 					.map((tag) => normalizeURL(tag[2]))
 			)
-		);
+		).filter((relay) => !blockedRelays.includes(relay));
 		const relays: string[] = Array.from(new Set<string>([...relaysToRead, ...relayHints]));
 		for (const filters of sliceByNumber(margedFilters, 10)) {
 			rxReqBRp.emit(filters, { relays });
@@ -1517,6 +1519,14 @@ const _subTimeline = eventStore
 				}
 				break;
 			}
+			case 10006: {
+				if (loginPubkey !== undefined && event.pubkey === loginPubkey) {
+					blockedRelays = event.tags
+						.filter((tag) => tag.length >= 2 && tag[0] === 'relay' && URL.canParse(tag[1]))
+						.map((tag) => normalizeURL(tag[1]));
+				}
+				break;
+			}
 			case 10030: {
 				fetchEventsByATags(event);
 				const ap: nip19.AddressPointer = {
@@ -1602,7 +1612,7 @@ const prepareFirstEvents = (completeOnNextFetch: () => void = complete) => {
 	}
 	rxNostr.setDefaultRelays(relaysToUse);
 	const rxReqB = createRxBackwardReq();
-	const filterKinds = [3, 10000, 10001, 10002, 10005, 10030];
+	const filterKinds = [3, 10000, 10001, 10002, 10005, 10006, 10030];
 	if (!profileMap.has(loginPubkey)) {
 		filterKinds.push(0);
 	}

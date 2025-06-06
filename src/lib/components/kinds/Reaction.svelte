@@ -127,6 +127,7 @@
 		width: 16px;
 		height: 16px;
 		border-radius: 10%;
+		object-fit: cover;
 	}
 	.warning-message {
 		text-decoration-line: underline;

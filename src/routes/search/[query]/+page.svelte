@@ -1,14 +1,13 @@
 <script lang="ts">
-	import type { PageData } from './$types';
 	import { afterNavigate } from '$app/navigation';
+	import { page } from '$app/state';
 	import App from '$lib/components/App.svelte';
 
-	let { data }: { data: PageData } = $props();
 	let query: string | undefined = $state();
 
 	afterNavigate(() => {
-		query = data.params.query;
+		query = page.params.query;
 	});
 </script>
 
-<App {query} />
+<App up={{ query }} />

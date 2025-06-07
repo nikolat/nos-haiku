@@ -1,14 +1,13 @@
 <script lang="ts">
-	import type { PageData } from './$types';
 	import { afterNavigate } from '$app/navigation';
+	import { page } from '$app/state';
 	import App from '$lib/components/App.svelte';
 
-	let { data }: { data: PageData } = $props();
 	let hashtag: string | undefined = $state();
 
 	afterNavigate(() => {
-		hashtag = data.params.tag.toLowerCase();
+		hashtag = page.params.tag.toLowerCase();
 	});
 </script>
 
-<App {hashtag} />
+<App up={{ hashtag }} />

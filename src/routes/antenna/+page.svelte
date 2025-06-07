@@ -3,4 +3,4 @@
 	const isAntenna: boolean = true;
 </script>
 
-<App {isAntenna} />
+<App up={{ isAntenna }} />

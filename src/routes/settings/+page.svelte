@@ -3,4 +3,4 @@
 	const isSettings: boolean = true;
 </script>
 
-<App {isSettings} />
+<App up={{ isSettings }} />

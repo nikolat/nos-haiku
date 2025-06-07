@@ -37,7 +37,11 @@
 	import '$lib/haiku.css';
 	import { _, locale } from 'svelte-i18n';
 
-	const urlParams: UrlParams = $props();
+	const {
+		up
+	}: {
+		up: UrlParams;
+	} = $props();
 	const {
 		currentProfilePointer,
 		currentChannelPointer,
@@ -48,8 +52,8 @@
 		query,
 		isSettings,
 		isAntenna,
-		is404
-	}: UrlParams = $derived(urlParams);
+		isError
+	}: UrlParams = $derived(up);
 	const loginPubkey: string | undefined = $derived(getLoginPubkey());
 	const lang: string = $derived(getLang());
 	const isEnabledDarkMode: boolean = $derived(getIsEnabledDarkMode());
@@ -81,7 +85,7 @@
 		isLoading = true;
 		setRxNostr(loginPubkey !== undefined);
 		getEventsFirst(
-			{ ...urlParams, urlSearchParams },
+			{ ...up, urlSearchParams },
 			undefined,
 			() => {
 				isLoading = false;
@@ -154,8 +158,8 @@
 			title = `#${hashtag}`;
 		} else if (category !== undefined) {
 			title = `#${category}`;
-		} else if (is404) {
-			title = '404 Not Found';
+		} else if (isError) {
+			title = $_('App.title.home');
 		} else if (page.url.pathname === '/') {
 			title = $_('App.title.home');
 		}
@@ -175,7 +179,7 @@
 </svelte:head>
 
 <div id="app" class={loginPubkey !== undefined && isEnabledDarkMode ? 'dark' : 'light'}>
-	{#if is404}
+	{#if isError}
 		<Header
 			{loginPubkey}
 			{currentProfilePointer}
@@ -195,7 +199,7 @@
 					<div class="Feed">
 						<div class="Feed__head">
 							<div class="Feed__info">
-								<h1 class="Feed__title">404 Not Found</h1>
+								<h1 class="Feed__title">{page.status} {page.error?.message ?? ''}</h1>
 							</div>
 						</div>
 					</div>

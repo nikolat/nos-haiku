@@ -1,14 +1,13 @@
 <script lang="ts">
-	import type { PageData } from './$types';
 	import { afterNavigate } from '$app/navigation';
+	import { page } from '$app/state';
 	import App from '$lib/components/App.svelte';
 
-	let { data }: { data: PageData } = $props();
 	let category: string | undefined = $state();
 
 	afterNavigate(() => {
-		category = data.params.tag.toLowerCase();
+		category = page.params.tag.toLowerCase();
 	});
 </script>
 
-<App {category} />
+<App up={{ category }} />

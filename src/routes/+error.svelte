@@ -1,5 +1,6 @@
 <script lang="ts">
 	import App from '$lib/components/App.svelte';
+	const isError = true;
 </script>
 
-<App is404={true} />
+<App up={{ isError }} />

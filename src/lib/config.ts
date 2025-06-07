@@ -14,6 +14,7 @@ export const initialLocale: string =
 export const defaultRelays: RelayRecord = {
 	'wss://nrelay-jp.c-stellar.net/': { read: true, write: true },
 	'wss://nrelay.c-stellar.net/': { read: true, write: false },
+	'wss://nostream.ocha.one/': { read: true, write: true },
 	'wss://nostr.compile-error.net/': { read: true, write: true }
 };
 

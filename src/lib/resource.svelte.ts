@@ -3018,7 +3018,7 @@ export const makeEvent = (
 		}
 	}
 	for (const [a, ap] of apsMap) {
-		const aTag: string[] = ['a', a];
+		const aTag: string[] = ['q', a];
 		const ev: NostrEvent | undefined = eventStore.getReplaceable(ap.kind, ap.pubkey, ap.identifier);
 		const recommendedRelayForQuote: string | undefined =
 			getSeenOn(ev?.id ?? '', true).at(0) ??

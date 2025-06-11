@@ -203,8 +203,8 @@ const profileMap: Map<string, ProfileContentEvent> = $derived.by(() => {
 	const profileMap = new Map<string, ProfileContentEvent>();
 	const eventsProfileSorted = eventsProfile.toSorted((a, b) => {
 		const fn = (ev: NostrEvent): number =>
-			Array.from(eventStore.getAll([{ authors: [ev.pubkey], kinds: [1, 42] }])).at(0)?.created_at ??
-			-1 * Infinity;
+			Array.from(eventStore.getByFilters([{ authors: [ev.pubkey], kinds: [1, 42] }])).at(0)
+				?.created_at ?? -1 * Infinity;
 		return fn(b) - fn(a);
 	});
 	for (const ev of eventsProfileSorted) {
@@ -481,13 +481,13 @@ export const clearCache = (
 		}
 	]
 ) => {
-	for (const ev of eventStore.getAll(filters)) {
-		eventStore.database.removeEvent(ev);
+	for (const ev of eventStore.getByFilters(filters)) {
+		eventStore.database.remove(ev);
 	}
 	if (loginPubkey !== undefined) {
 		const ev = eventStore.getReplaceable(10005, loginPubkey);
 		if (ev !== undefined) {
-			eventStore.database.removeEvent(ev);
+			eventStore.database.remove(ev);
 		}
 	}
 	eventsTimeline = [];
@@ -663,7 +663,7 @@ const nextOnSubscribeEventStore = (event: NostrEvent | null, kindToDelete?: numb
 	const kind = kindToDelete !== undefined ? kindToDelete : event?.kind;
 	switch (kind) {
 		case 0: {
-			eventsProfile = Array.from(eventStore.getAll([{ kinds: [0] }]));
+			eventsProfile = Array.from(eventStore.getByFilters([{ kinds: [0] }]));
 			break;
 		}
 		case 3: {
@@ -673,7 +673,7 @@ const nextOnSubscribeEventStore = (event: NostrEvent | null, kindToDelete?: numb
 			break;
 		}
 		case 5: {
-			eventsDeletion = sortEvents(Array.from(eventStore.getAll([{ kinds: [5] }])));
+			eventsDeletion = sortEvents(Array.from(eventStore.getByFilters([{ kinds: [5] }])));
 			const kinds = event?.tags
 				.filter((tag) => tag.length >= 2 && tag[0] === 'k')
 				.map((tag) => parseInt(tag[1]));
@@ -683,15 +683,15 @@ const nextOnSubscribeEventStore = (event: NostrEvent | null, kindToDelete?: numb
 			break;
 		}
 		case 7: {
-			eventsReaction = sortEvents(Array.from(eventStore.getAll([{ kinds: [7] }])));
+			eventsReaction = sortEvents(Array.from(eventStore.getByFilters([{ kinds: [7] }])));
 			break;
 		}
 		case 40: {
-			eventsChannel = sortEvents(Array.from(eventStore.getAll([{ kinds: [40] }])));
+			eventsChannel = sortEvents(Array.from(eventStore.getByFilters([{ kinds: [40] }])));
 			break;
 		}
 		case 41: {
-			eventsChannelEdit = sortEvents(Array.from(eventStore.getAll([{ kinds: [41] }])));
+			eventsChannelEdit = sortEvents(Array.from(eventStore.getByFilters([{ kinds: [41] }])));
 			break;
 		}
 		case 1:
@@ -717,7 +717,7 @@ const nextOnSubscribeEventStore = (event: NostrEvent | null, kindToDelete?: numb
 			}
 			eventsTimeline = sortEvents(
 				Array.from(
-					eventStore.getAll(
+					eventStore.getByFilters(
 						loginPubkey === undefined
 							? [{ kinds: isEnabledSkipKind1 ? [16, 42, 1111] : [1, 6, 16, 42, 1068, 1111] }]
 							: [
@@ -743,7 +743,7 @@ const nextOnSubscribeEventStore = (event: NostrEvent | null, kindToDelete?: numb
 			break;
 		}
 		case 10005: {
-			eventsChannelBookmark = sortEvents(Array.from(eventStore.getAll([{ kinds: [10005] }])));
+			eventsChannelBookmark = sortEvents(Array.from(eventStore.getByFilters([{ kinds: [10005] }])));
 			if (loginPubkey !== undefined) {
 				eventMyPublicChatsList = eventStore.getReplaceable(10005, loginPubkey);
 			}
@@ -753,7 +753,7 @@ const nextOnSubscribeEventStore = (event: NostrEvent | null, kindToDelete?: numb
 			if (loginPubkey !== undefined) {
 				eventEmojiSetList = eventStore.getReplaceable(10030, loginPubkey);
 				if (eventEmojiSetList !== undefined) {
-					const events30030 = sortEvents(Array.from(eventStore.getAll([{ kinds: [30030] }])));
+					const events30030 = sortEvents(Array.from(eventStore.getByFilters([{ kinds: [30030] }])));
 					const aTags = eventEmojiSetList.tags
 						.filter((tag) => tag.length >= 2 && tag[0] === 'a')
 						.map((tag) => tag[1]);
@@ -768,7 +768,7 @@ const nextOnSubscribeEventStore = (event: NostrEvent | null, kindToDelete?: numb
 		}
 		case 30002: {
 			if (loginPubkey !== undefined) {
-				const ds = Array.from(eventStore.getAll([{ kinds: [30002], authors: [loginPubkey] }]))
+				const ds = Array.from(eventStore.getByFilters([{ kinds: [30002], authors: [loginPubkey] }]))
 					.map((ev) => ev.tags.find((tag) => tag.length >= 2 && tag[0] === 'd')?.at(1))
 					.filter((d) => d !== undefined);
 				const events: NostrEvent[] = [];
@@ -784,7 +784,7 @@ const nextOnSubscribeEventStore = (event: NostrEvent | null, kindToDelete?: numb
 		}
 		case 30030: {
 			if (loginPubkey !== undefined && eventEmojiSetList !== undefined) {
-				const events30030 = sortEvents(Array.from(eventStore.getAll([{ kinds: [30030] }])));
+				const events30030 = sortEvents(Array.from(eventStore.getByFilters([{ kinds: [30030] }])));
 				const aTags = eventEmojiSetList.tags
 					.filter((tag) => tag.length >= 2 && tag[0] === 'a')
 					.map((tag) => tag[1]);
@@ -808,7 +808,7 @@ const nextOnSubscribeEventStore = (event: NostrEvent | null, kindToDelete?: numb
 	if (loginPubkey !== undefined) {
 		eventsMention = sortEvents(
 			Array.from(
-				eventStore.getAll(
+				eventStore.getByFilters(
 					isEnabledSkipKind1
 						? [
 								{ '#p': [loginPubkey], kinds: [4, 8, 16, 42, 1111, 9735] },
@@ -825,7 +825,7 @@ const nextOnSubscribeEventStore = (event: NostrEvent | null, kindToDelete?: numb
 				)
 		);
 	}
-	eventsAll = Array.from(eventStore.getAll([{ until: unixNow() }]));
+	eventsAll = Array.from(eventStore.getByFilters([{ until: unixNow() }]));
 };
 
 eventStore
@@ -867,7 +867,7 @@ const next = (packet: EventPacket) => {
 			.map((tag) => tag[1]);
 		for (const id of ids) {
 			if (eventStore.hasEvent(id)) {
-				eventStore.database.removeEvent(id);
+				eventStore.database.remove(id);
 			}
 		}
 	}

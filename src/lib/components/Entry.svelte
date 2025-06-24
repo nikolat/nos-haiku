@@ -481,7 +481,7 @@
 							{:else if [6, 16].includes(event.kind)}
 								<span title={`kind:${event.kind} repost`}>🔁</span>
 								{#if event.kind === 6}
-									<a href="/{nip19.npubEncode(event.pubkey)}">id:{prof?.name ?? 'none'}</a>
+									<a href="/{nip19.npubEncode(event.pubkey)}">{getProfileId(prof)}</a>
 								{:else if event.kind === 16 && event.tags.some((tag) => tag.length >= 2 && tag[0] === 'k' && tag[1] === '42')}
 									{@const channelIdReposted = getRootId(repostedEvent)}
 									{@const repostedChannel = channelMap.get(channelIdReposted ?? '')}

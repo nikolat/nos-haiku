@@ -88,7 +88,6 @@
 	},
 	"Entry": {
 		"kind42-event-without-valid-channel-id": "kind:42 event without valid channel id",
-		"kind42-event-of-unknown-channel": "kind:42 event of unknown channel",
 		"kind42-event-with-unnamed-channel": "kind:42 event with unnamed channel",
 		"invalid-repost": "⚠️Reposting a kind:{repostedEvent-kind} event is disallowed in kind:{event-kind} repost events.",
 		"remove-from-favorites": "Remove from favorites",

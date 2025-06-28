@@ -1,14 +1,22 @@
 <script lang="ts">
-	import { getEventByAddressPointer, getEventById } from '$lib/resource.svelte';
 	import type { NostrEvent } from 'nostr-tools/pure';
 	import * as nip19 from 'nostr-tools/nip19';
 
 	const {
 		currentPubkey,
-		badgeEvent
+		badgeEvent,
+		eventsAll,
+		getEventById,
+		getEventByAddressPointer
 	}: {
 		currentPubkey: string;
 		badgeEvent: NostrEvent | undefined;
+		eventsAll: NostrEvent[];
+		getEventById: (id: string, eventsAll: NostrEvent[]) => NostrEvent | undefined;
+		getEventByAddressPointer: (
+			data: nip19.AddressPointer,
+			eventsAll: NostrEvent[]
+		) => NostrEvent | undefined;
 	} = $props();
 
 	const validBadgeAwards: [NostrEvent, NostrEvent][] = $derived.by(() => {
@@ -22,7 +30,7 @@
 			.filter((tag) => tag.length >= 2 && tag[0] === 'e')
 			.map((tag) => tag[1]);
 		const kind8Events: NostrEvent[] = eIds
-			.map((id) => getEventById(id))
+			.map((id) => getEventById(id, eventsAll))
 			.filter((ev) => ev !== undefined)
 			.filter((ev) => ev.kind === 8);
 		const validEventSets: [NostrEvent, NostrEvent][] = [];
@@ -30,7 +38,7 @@
 			let kind8Event: NostrEvent | undefined;
 			const sp = aId30008.split(':');
 			const ap: nip19.AddressPointer = { identifier: sp[2], pubkey: sp[1], kind: parseInt(sp[0]) };
-			const kind30009Event = getEventByAddressPointer(ap);
+			const kind30009Event = getEventByAddressPointer(ap, eventsAll);
 			if (kind30009Event === undefined) {
 				continue;
 			}

@@ -1,27 +1,32 @@
 <script lang="ts">
 	import { getRoboHashURL } from '$lib/config';
+	import type { RelayConnector } from '$lib/resource';
 	import type { ChannelContent, ProfileContentEvent } from '$lib/utils';
-	import { unmuteChannel, unmuteHashTag, unmuteUser, unmuteWord } from '$lib/resource.svelte';
+	import type { NostrEvent } from 'nostr-tools';
 	import * as nip19 from 'nostr-tools/nip19';
 	import { _ } from 'svelte-i18n';
 
 	let {
+		rc,
 		loginPubkey,
 		profileMap,
 		channelMap,
 		mutedPubkeys,
 		mutedChannelIds,
 		mutedWords,
-		mutedHashTags,
+		mutedHashtags,
+		eventMuteList,
 		isAuthor
 	}: {
+		rc: RelayConnector | undefined;
 		loginPubkey: string | undefined;
 		profileMap: Map<string, ProfileContentEvent>;
 		channelMap: Map<string, ChannelContent>;
 		mutedPubkeys: string[];
 		mutedChannelIds: string[];
 		mutedWords: string[];
-		mutedHashTags: string[];
+		mutedHashtags: string[];
+		eventMuteList: NostrEvent | undefined;
 		isAuthor: boolean;
 	} = $props();
 
@@ -47,11 +52,7 @@
 						<li style="">
 							<div>
 								<a href="/{nip19.npubEncode(pubkey)}"
-									><img
-										alt=""
-										src={profileMap.get(pubkey)?.picture ??
-											getRoboHashURL(nip19.npubEncode(pubkey))}
-									/></a
+									><img alt="" src={prof?.picture ?? getRoboHashURL(nip19.npubEncode(pubkey))} /></a
 								>
 							</div>
 							<div>
@@ -64,7 +65,7 @@
 										aria-label={$_('MuteList.unmute')}
 										onclick={() => {
 											if (loginPubkey !== undefined) {
-												unmuteUser(pubkey, loginPubkey);
+												rc?.unmutePubkey(pubkey, loginPubkey, eventMuteList);
 											}
 										}}><i class="fa-fw fas fa-trash-alt"></i></button
 									>
@@ -113,7 +114,7 @@
 										aria-label={$_('MuteList.unmute')}
 										onclick={() => {
 											if (loginPubkey !== undefined) {
-												unmuteChannel(channel.id, loginPubkey);
+												rc?.unmuteChannel(channel.id, loginPubkey, eventMuteList);
 											}
 										}}><i class="fa-fw fas fa-trash-alt"></i></button
 									>
@@ -152,7 +153,7 @@
 											aria-label={$_('MuteList.unmute')}
 											onclick={() => {
 												if (loginPubkey !== undefined) {
-													unmuteWord(word, loginPubkey);
+													rc?.unmuteWord(word, loginPubkey, eventMuteList);
 												}
 											}}><i class="fa-fw fas fa-trash-alt"></i></button
 										>
@@ -166,7 +167,7 @@
 		</div>
 	</div>
 {/if}
-{#if mutedHashTags.length > 0}
+{#if mutedHashtags.length > 0}
 	<div class="Settings__section">
 		<div class="Label">
 			<i class="fa-fw fas fa-tags"></i>
@@ -179,7 +180,7 @@
 			<div class="BlockList">
 				<div class="BlockList__container">
 					<ul>
-						{#each mutedHashTags as hashTag (hashTag)}
+						{#each mutedHashtags as hashTag (hashTag)}
 							<li>
 								<div>
 									<p>#{hashTag}</p>
@@ -191,7 +192,7 @@
 											aria-label={$_('MuteList.unmute')}
 											onclick={() => {
 												if (loginPubkey !== undefined) {
-													unmuteHashTag(hashTag, loginPubkey);
+													rc?.unmuteHashtag(hashTag, loginPubkey, eventMuteList);
 												}
 											}}><i class="fa-fw fas fa-trash-alt"></i></button
 										>

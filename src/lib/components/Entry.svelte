@@ -1,9 +1,12 @@
 <script lang="ts">
-	import { getClientURL, getRoboHashURL } from '$lib/config';
+	import { defaultReactionToAdd, getClientURL, getRoboHashURL } from '$lib/config';
 	import {
 		getAbsoluteTime,
 		getAddressPointerFromAId,
 		getEvent9734,
+		getName,
+		getProfileId,
+		getPubkeyIfValid,
 		getRelativeTime,
 		getRelaysToUseFromKind10002Event,
 		splitNip51ListPublic,
@@ -11,24 +14,7 @@
 		type ChannelContent,
 		type ProfileContentEvent
 	} from '$lib/utils';
-	import {
-		bookmarkBadge,
-		bookmarkEmojiSets,
-		getChannelBookmarkMap,
-		getEventByAddressPointer,
-		getEventById,
-		getEventsReplying,
-		getIsEnabledOutboxModel,
-		getProfileId,
-		getProfileName,
-		getRelaysToUse,
-		getSeenOn,
-		sendDeletion,
-		sendEvent,
-		sendRepost,
-		unbookmarkBadge,
-		unbookmarkEmojiSets
-	} from '$lib/resource.svelte';
+	import type { RelayConnector } from '$lib/resource';
 	import Profile from '$lib/components/kinds/Profile.svelte';
 	import DirectMessage from '$lib/components/kinds/DirectMessage.svelte';
 	import Reaction from '$lib/components/kinds/Reaction.svelte';
@@ -54,21 +40,30 @@
 
 	let {
 		event,
+		rc,
 		channelMap,
 		profileMap,
 		loginPubkey,
 		mutedPubkeys,
 		mutedChannelIds,
 		mutedWords,
-		mutedHashTags,
+		mutedHashtags,
 		followingPubkeys,
+		eventFollowList,
+		eventEmojiSetList,
+		eventMuteList,
 		eventsTimeline,
+		eventsQuoted,
 		eventsReaction,
 		eventsEmojiSet,
+		eventsChannelBookmark,
+		getSeenOn,
 		uploaderSelected,
 		channelToPost = $bindable(),
 		currentChannelId,
 		isEnabledRelativeTime,
+		isEnabledEventProtection,
+		clientTag,
 		nowRealtime,
 		level,
 		isFullDisplayMode,
@@ -77,21 +72,30 @@
 		baseEventToEdit = $bindable()
 	}: {
 		event: NostrEvent;
+		rc: RelayConnector | undefined;
 		channelMap: Map<string, ChannelContent>;
 		profileMap: Map<string, ProfileContentEvent>;
 		loginPubkey: string | undefined;
 		mutedPubkeys: string[];
 		mutedChannelIds: string[];
 		mutedWords: string[];
-		mutedHashTags: string[];
+		mutedHashtags: string[];
 		followingPubkeys: string[];
+		eventFollowList: NostrEvent | undefined;
+		eventEmojiSetList: NostrEvent | undefined;
+		eventMuteList: NostrEvent | undefined;
 		eventsTimeline: NostrEvent[];
+		eventsQuoted: NostrEvent[];
 		eventsReaction: NostrEvent[];
 		eventsEmojiSet: NostrEvent[];
+		eventsChannelBookmark: NostrEvent[];
+		getSeenOn: (id: string, excludeWs: boolean) => string[];
 		uploaderSelected: string;
 		channelToPost: ChannelContent | undefined;
 		currentChannelId: string | undefined;
 		isEnabledRelativeTime: boolean;
+		isEnabledEventProtection: boolean;
+		clientTag: string[] | undefined;
 		nowRealtime: number;
 		level: number;
 		isFullDisplayMode: boolean;
@@ -146,7 +150,7 @@
 	);
 	const isMutedHashTag: boolean = $derived(
 		event.kind !== 10000 &&
-			mutedHashTags.some(
+			mutedHashtags.some(
 				(t) =>
 					event.tags
 						.filter((tag) => tag.length >= 2 && tag[0] === 't')
@@ -320,17 +324,38 @@
 			return undefined;
 		}
 	});
+	const eventsAll: NostrEvent[] = $derived.by(() => {
+		const eventMap = new Map<string, NostrEvent>();
+		for (const ev of [...eventsTimeline, ...eventsQuoted]) {
+			eventMap.set(ev.id, ev);
+		}
+		return Array.from(eventMap.values());
+	});
+	const getEventById = (id: string, eventsAll: NostrEvent[]): NostrEvent | undefined => {
+		return eventsAll.find((ev) => ev.id === id);
+	};
+	const getEventByAddressPointer = (
+		data: nip19.AddressPointer,
+		eventsAll: NostrEvent[]
+	): NostrEvent | undefined => {
+		return eventsAll.find(
+			(ev) =>
+				ev.pubkey === data.pubkey &&
+				ev.kind === data.kind &&
+				(ev.tags.find((tag) => tag.length >= 2 && tag[0] === 'd')?.at(1) ?? '') === data.identifier
+		);
+	};
 	const pubkeyReplyTo: string | undefined = $derived(
-		getEventById(idReplyTo[0] ?? '')?.pubkey ?? addressReplyTo?.pubkey
+		getEventById(idReplyTo[0] ?? '', eventsAll)?.pubkey ?? addressReplyTo?.pubkey
 	);
 	const profReplyTo: ProfileContentEvent | undefined = $derived(
 		pubkeyReplyTo === undefined ? undefined : profileMap.get(pubkeyReplyTo)
 	);
 	const eventReplyTo: NostrEvent | undefined = $derived.by(() => {
 		if (idReplyTo[0] !== undefined) {
-			return getEventById(idReplyTo[0]);
+			return getEventById(idReplyTo[0], eventsAll);
 		} else if (addressReplyTo !== undefined) {
-			return getEventByAddressPointer(addressReplyTo);
+			return getEventByAddressPointer(addressReplyTo, eventsAll);
 		}
 		return undefined;
 	});
@@ -342,7 +367,21 @@
 	const repostedEventId: string | undefined = $derived(
 		event.tags.findLast((tag) => tag.length >= 2 && tag[0] === 'e')?.at(1)
 	);
-	const repostedEvent: NostrEvent | undefined = $derived(getEventById(repostedEventId ?? ''));
+	const repostedEventAId: string | undefined = $derived(
+		event.tags.findLast((tag) => tag.length >= 2 && tag[0] === 'a')?.at(1)
+	);
+	const repostedEvent: NostrEvent | undefined = $derived.by(() => {
+		if (repostedEventAId !== undefined) {
+			const ap: nip19.AddressPointer | null = getAddressPointerFromAId(repostedEventAId);
+			if (ap !== null) {
+				return getEventByAddressPointer(ap, eventsAll);
+			}
+		}
+		if (repostedEventId !== undefined) {
+			return getEventById(repostedEventId, eventsAll);
+		}
+		return undefined;
+	});
 
 	let zapWindowContainer: HTMLElement | undefined = $state();
 
@@ -375,9 +414,57 @@
 			: nip19.neventEncode({ ...event, author: event.pubkey, relays });
 	};
 
+	const getEventsReplying = (event: NostrEvent): NostrEvent[] => {
+		const d = event.tags.find((tag) => tag.length >= 2 && tag[0] === 'd')?.at(1) ?? '';
+		return eventsAll
+			.filter(
+				(ev) =>
+					([1, 42].includes(event.kind) &&
+						[1, 42].includes(ev.kind) &&
+						ev.tags.some(
+							(tag) =>
+								tag.length >= 4 &&
+								tag[0] === 'e' &&
+								tag[1] === event.id &&
+								(tag[3] === 'reply' || (tag[3] === 'root' && ev.kind === 1))
+						)) ||
+					(![1, 42].includes(event.kind) &&
+						ev.kind === 1111 &&
+						ev.tags.some(
+							(tag) =>
+								tag.length >= 2 &&
+								((tag[0] === 'a' && tag[1] === `${event.kind}:${event.pubkey}:${d}`) ||
+									(tag[0] === 'e' && tag[1] === event.id))
+						))
+			)
+			.filter(
+				(ev) =>
+					!(
+						ev.tags.some(
+							(tag) => tag.length >= 4 && tag[0] === 'e' && tag[1] === event.id && tag[3] === 'root'
+						) && ev.tags.some((tag) => tag.length >= 4 && tag[0] === 'e' && tag[3] === 'reply')
+					)
+			);
+	};
 	const eventsReplying = $derived(
 		getEventsReplying(event).filter((ev) => !mutedPubkeys.includes(ev.pubkey))
 	);
+
+	const getChannelBookmarkMap = (eventsChannelBookmark: NostrEvent[]) => {
+		const eventMap = new Map<string, NostrEvent>();
+		const channelBookmarkMap = new Map<string, string[]>();
+		for (const ev of eventsChannelBookmark) {
+			const event = eventMap.get(ev.pubkey);
+			if (event === undefined || (event !== undefined && event.created_at < ev.created_at)) {
+				eventMap.set(ev.pubkey, ev);
+				channelBookmarkMap.set(
+					ev.pubkey,
+					ev.tags.filter((tag) => tag.length >= 2 && tag[0] === 'e').map((tag) => tag[1])
+				);
+			}
+		}
+		return channelBookmarkMap;
+	};
 
 	let isEmojiPickerOpened: boolean = $state(false);
 
@@ -405,14 +492,12 @@
 	data-npub={nip19.npubEncode(event.pubkey)}
 >
 	{#if (!isMutedPubkey || showMutedPubkey) && (!isMutedChannel || showMutedChannel) && (!isMutedContent || showMutedContent) && (!isMutedHashTag || showMutedHashTag)}
-		{#if !isPreview && event.kind === 42 && (channelId === undefined || channel === undefined || channel.name === undefined)}
+		{#if !isPreview && event.kind === 42 && (channelId === undefined || (channel !== undefined && channel.name === undefined))}
 			<details>
 				<summary>
 					{#if channelId === undefined}
 						{$_('Entry.kind42-event-without-valid-channel-id')}
-					{:else if channel === undefined}
-						{$_('Entry.kind42-event-of-unknown-channel')}
-					{:else if channel.name === undefined}
+					{:else if channel !== undefined && channel.name === undefined}
 						{$_('Entry.kind42-event-with-unnamed-channel')}
 					{/if}
 				</summary>
@@ -427,7 +512,7 @@
 						<a href="/{nip19.npubEncode(event.pubkey)}">
 							<img
 								src={prof?.picture ?? getRoboHashURL(nip19.npubEncode(event.pubkey))}
-								alt={getProfileName(event.pubkey)}
+								alt={getName(event.pubkey, profileMap, eventFollowList)}
 								class="Avatar"
 							/>
 						</a>
@@ -496,7 +581,14 @@
 									{/if}
 								{/if}
 							{:else if [7, 17].includes(event.kind)}
-								Reaction <Reaction reactionEvent={event} profile={undefined} isAuthor={false} />
+								Reaction <Reaction
+									sendDeletion={async (targetEvent: NostrEvent) => {
+										await rc?.sendDeletion(targetEvent);
+									}}
+									reactionEvent={event}
+									profile={undefined}
+									isAuthor={false}
+								/>
 							{:else if event.kind === 4}
 								Encrypted Direct Messages
 							{:else if event.kind === 8}
@@ -561,7 +653,17 @@
 						</h3>
 						{#if !isPreview}
 							<AddStar
-								{event}
+								sendReaction={async (content?: string, emojiurl?: string) => {
+									await rc?.sendReaction(
+										event,
+										content ?? defaultReactionToAdd,
+										emojiurl,
+										clientTag
+									);
+								}}
+								sendDeletion={async (targetEvent: NostrEvent) => {
+									await rc?.sendDeletion(targetEvent);
+								}}
 								{loginPubkey}
 								{profileMap}
 								{eventsReactionToTheEvent}
@@ -580,7 +682,7 @@
 									<a href="/{nip19.npubEncode(p)}">
 										<img
 											src={prof?.picture ?? getRoboHashURL(nip19.npubEncode(p))}
-											alt={getProfileName(p)}
+											alt={getName(p, profileMap, eventFollowList)}
 											class="Avatar Avatar--sm"
 										/>
 									</a>
@@ -607,7 +709,7 @@
 											<img
 												src={profReplyTo?.picture ??
 													getRoboHashURL(nip19.npubEncode(pubkeyReplyTo))}
-												alt={getProfileName(pubkeyReplyTo)}
+												alt={getName(pubkeyReplyTo, profileMap, eventFollowList)}
 												class="Avatar Avatar--sm"
 											/>
 										{/if}
@@ -631,21 +733,30 @@
 										{#if (event.kind === 6 && repostedEvent.kind === 1) || (event.kind === 16 && repostedEvent.kind !== 1)}
 											<Entry
 												event={repostedEvent}
+												{rc}
 												{channelMap}
 												{profileMap}
 												{loginPubkey}
 												{mutedPubkeys}
 												{mutedChannelIds}
 												{mutedWords}
-												{mutedHashTags}
+												{mutedHashtags}
 												{followingPubkeys}
+												{eventFollowList}
+												{eventEmojiSetList}
+												{eventMuteList}
 												{eventsTimeline}
+												{eventsQuoted}
 												{eventsReaction}
 												{eventsEmojiSet}
+												{eventsChannelBookmark}
+												{getSeenOn}
 												{uploaderSelected}
 												bind:channelToPost
 												{currentChannelId}
 												{isEnabledRelativeTime}
+												{isEnabledEventProtection}
+												{clientTag}
 												{nowRealtime}
 												level={level + 1}
 												isFullDisplayMode={false}
@@ -660,23 +771,45 @@
 													.replace('{event-kind}', `${event.kind}`)}
 											</p>
 										{/if}
+									{:else if repostedEventAId !== undefined}
+										{@const ap: nip19.AddressPointer | null = getAddressPointerFromAId(repostedEventAId)}
+										{#if ap !== null}
+											{@const encoded = nip19.naddrEncode(ap)}
+											<a href={`/entry/${encoded}`}>{`nostr:${encoded}`}</a>
+										{/if}
 									{:else if repostedEventId !== undefined}
-										{`nostr:${nip19.neventEncode({ id: repostedEventId })}`}
+										{@const eTag = event.tags.findLast((tag) => tag.length >= 4 && tag[0] === 'e')}
+										{@const pTag = event.tags.findLast((tag) => tag.length >= 2 && tag[0] === 'p')}
+										{@const repostedPubkey =
+											getPubkeyIfValid(eTag?.at(3)) ??
+											getPubkeyIfValid(eTag?.at(4)) ??
+											getPubkeyIfValid(pTag?.at(1))}
+										{@const encoded = nip19.neventEncode({
+											id: repostedEventId,
+											author: repostedPubkey
+										})}
+										<a href={`/entry/${encoded}`}>{`nostr:${encoded}`}</a>
 									{/if}
 								{:else if event.kind === 0}
 									<Profile
+										{rc}
 										{loginPubkey}
 										currentPubkey={event.pubkey}
 										{profileMap}
 										{channelMap}
 										{eventsTimeline}
+										{eventsQuoted}
 										{eventsReaction}
 										{eventsEmojiSet}
+										{eventsChannelBookmark}
 										{mutedPubkeys}
 										{mutedChannelIds}
 										{mutedWords}
-										{mutedHashTags}
+										{mutedHashtags}
 										{followingPubkeys}
+										{eventFollowList}
+										{eventEmojiSetList}
+										{eventMuteList}
 									/>
 								{:else if event.kind === 3}
 									{@const pubkeys = Array.from(
@@ -698,33 +831,33 @@
 										{pubkeyToSend}
 									/>
 								{:else if event.kind === 7}
-									{@const eId = event.tags
-										.findLast((tag) => tag.length >= 2 && tag[0] === 'e')
-										?.at(1)}
-									{@const aId = event.tags
-										.findLast((tag) => tag.length >= 2 && tag[0] === 'a')
-										?.at(1)}
-									{@const ap = getAddressPointerFromAId(aId ?? '')}
-									{@const reactedEvent =
-										ap !== null ? getEventByAddressPointer(ap) : getEventById(eId ?? '')}
-									{#if reactedEvent !== undefined}
+									{#if repostedEvent !== undefined}
 										<Entry
-											event={reactedEvent}
+											event={repostedEvent}
+											{rc}
 											{channelMap}
 											{profileMap}
 											{loginPubkey}
 											{mutedPubkeys}
 											{mutedChannelIds}
 											{mutedWords}
-											{mutedHashTags}
+											{mutedHashtags}
 											{followingPubkeys}
+											{eventEmojiSetList}
+											{eventFollowList}
+											{eventMuteList}
 											{eventsTimeline}
+											{eventsQuoted}
 											{eventsReaction}
 											{eventsEmojiSet}
+											{eventsChannelBookmark}
+											{getSeenOn}
 											{uploaderSelected}
 											bind:channelToPost
 											{currentChannelId}
 											{isEnabledRelativeTime}
+											{isEnabledEventProtection}
+											{clientTag}
 											{nowRealtime}
 											level={level + 1}
 											isFullDisplayMode={false}
@@ -732,10 +865,24 @@
 											{callInsertText}
 											bind:baseEventToEdit
 										/>
-									{:else if ap !== null}
-										{`nostr:${nip19.naddrEncode(ap)}`}
-									{:else if eId !== undefined}
-										{`nostr:${nip19.neventEncode({ id: eId })}`}
+									{:else if repostedEventAId !== undefined}
+										{@const ap: nip19.AddressPointer | null = getAddressPointerFromAId(repostedEventAId)}
+										{#if ap !== null}
+											{@const encoded = nip19.naddrEncode(ap)}
+											<a href={`/entry/${encoded}`}>{`nostr:${encoded}`}</a>
+										{/if}
+									{:else if repostedEventId !== undefined}
+										{@const eTag = event.tags.findLast((tag) => tag.length >= 4 && tag[0] === 'e')}
+										{@const pTag = event.tags.findLast((tag) => tag.length >= 2 && tag[0] === 'p')}
+										{@const repostedPubkey =
+											getPubkeyIfValid(eTag?.at(3)) ??
+											getPubkeyIfValid(eTag?.at(4)) ??
+											getPubkeyIfValid(pTag?.at(1))}
+										{@const encoded = nip19.neventEncode({
+											id: repostedEventId,
+											author: repostedPubkey
+										})}
+										<a href={`/entry/${encoded}`}>{`nostr:${encoded}`}</a>
 									{/if}
 								{:else if event.kind === 8}
 									{@const ps = new Set<string>(
@@ -751,12 +898,15 @@
 									{#if isValidAward}
 										{@const content = ap === null ? '' : `nostr:${nip19.naddrEncode(ap)}`}
 										{#if loginPubkey !== undefined && ps.has(loginPubkey)}
-											{@const profileBadgesEvent = getEventByAddressPointer({
-												identifier: 'profile_badges',
-												pubkey: loginPubkey,
-												kind: 30008
-											})}
-											{@const badgeDefinitionEvent = getEventByAddressPointer(ap)}
+											{@const profileBadgesEvent = getEventByAddressPointer(
+												{
+													identifier: 'profile_badges',
+													pubkey: loginPubkey,
+													kind: 30008
+												},
+												eventsAll
+											)}
+											{@const badgeDefinitionEvent = getEventByAddressPointer(ap, eventsAll)}
 											{@const aIds =
 												profileBadgesEvent?.tags
 													.filter((tag) => tag.length >= 2 && tag[0] === 'a')
@@ -772,7 +922,11 @@
 														<span
 															class="fa-fw fas fa-heart"
 															onclick={() => {
-																unbookmarkBadge(profileBadgesEvent, aId, event.id);
+																rc?.unbookmarkBadge(
+																	$state.snapshot(profileBadgesEvent),
+																	aId,
+																	event.id
+																);
 															}}
 														></span>
 													</div>
@@ -788,8 +942,8 @@
 																	badgeDefinitionEvent?.id ?? '',
 																	true
 																).at(0);
-																bookmarkBadge(
-																	profileBadgesEvent,
+																rc?.bookmarkBadge(
+																	$state.snapshot(profileBadgesEvent),
 																	aId,
 																	recommendedRelayATag,
 																	event.id,
@@ -803,6 +957,7 @@
 										{/if}
 										<p>
 											<Content
+												{rc}
 												{content}
 												tags={event.tags}
 												{channelMap}
@@ -812,13 +967,21 @@
 												{mutedChannelIds}
 												{mutedWords}
 												{followingPubkeys}
+												{eventFollowList}
+												{eventEmojiSetList}
+												{eventMuteList}
 												{eventsTimeline}
+												{eventsQuoted}
 												{eventsReaction}
 												{eventsEmojiSet}
+												{eventsChannelBookmark}
+												{getSeenOn}
 												{uploaderSelected}
 												bind:channelToPost
 												{currentChannelId}
 												{isEnabledRelativeTime}
+												{isEnabledEventProtection}
+												{clientTag}
 												{nowRealtime}
 												{level}
 												isPreview={false}
@@ -854,6 +1017,7 @@
 									{#if title !== undefined}<h2 class="title">{title}</h2>{/if}
 									<p>
 										<Content
+											{rc}
 											content={event.content.length > 0
 												? `${event.content}\n${urls.join(' ')}`
 												: urls.join(' ')}
@@ -865,13 +1029,21 @@
 											{mutedChannelIds}
 											{mutedWords}
 											{followingPubkeys}
+											{eventFollowList}
+											{eventEmojiSetList}
+											{eventMuteList}
 											{eventsTimeline}
+											{eventsQuoted}
 											{eventsReaction}
 											{eventsEmojiSet}
+											{eventsChannelBookmark}
+											{getSeenOn}
 											{uploaderSelected}
 											bind:channelToPost
 											{currentChannelId}
 											{isEnabledRelativeTime}
+											{isEnabledEventProtection}
+											{clientTag}
 											{nowRealtime}
 											{level}
 											isPreview={false}
@@ -891,7 +1063,7 @@
 										.filter((tag) => tag.length >= 2 && tag[0] === 'response')
 										.map((tag) => tag[1])}
 									{@const eId = event.tags.find((tag) => tag.length >= 2 && tag[0] === 'e')?.at(1)}
-									{@const event1068 = getEventById(eId ?? '')}
+									{@const event1068 = getEventById(eId ?? '', eventsAll)}
 									<ul>
 										{#each new Set<string>(responses) as response (response)}
 											<li>{response}</li>
@@ -900,21 +1072,30 @@
 									{#if event1068 !== undefined}
 										<Entry
 											event={event1068}
+											{rc}
 											{channelMap}
 											{profileMap}
 											{loginPubkey}
 											{mutedPubkeys}
 											{mutedChannelIds}
 											{mutedWords}
-											{mutedHashTags}
+											{mutedHashtags}
 											{followingPubkeys}
+											{eventFollowList}
+											{eventEmojiSetList}
+											{eventMuteList}
 											{eventsTimeline}
+											{eventsQuoted}
 											{eventsReaction}
 											{eventsEmojiSet}
+											{eventsChannelBookmark}
+											{getSeenOn}
 											{uploaderSelected}
 											{channelToPost}
 											{currentChannelId}
 											{isEnabledRelativeTime}
+											{isEnabledEventProtection}
+											{clientTag}
 											{nowRealtime}
 											level={level + 1}
 											isFullDisplayMode={false}
@@ -926,6 +1107,7 @@
 								{:else if event.kind === 1068}
 									<p>
 										<Content
+											{rc}
 											content={event.content}
 											tags={event.tags}
 											{channelMap}
@@ -935,13 +1117,21 @@
 											{mutedChannelIds}
 											{mutedWords}
 											{followingPubkeys}
+											{eventFollowList}
+											{eventEmojiSetList}
+											{eventMuteList}
 											{eventsTimeline}
+											{eventsQuoted}
 											{eventsReaction}
 											{eventsEmojiSet}
+											{eventsChannelBookmark}
+											{getSeenOn}
 											{uploaderSelected}
 											bind:channelToPost
 											{currentChannelId}
 											{isEnabledRelativeTime}
+											{isEnabledEventProtection}
+											{clientTag}
 											{nowRealtime}
 											{level}
 											isPreview={false}
@@ -949,7 +1139,14 @@
 											bind:baseEventToEdit
 										/>
 									</p>
-									<Poll {event} {loginPubkey} {nowRealtime} />
+									<Poll
+										{rc}
+										{event}
+										events1018={eventsQuoted.filter((ev) => ev.kind === 1018)}
+										{loginPubkey}
+										{isEnabledEventProtection}
+										{nowRealtime}
+									/>
 								{:else if event.kind === 1111}
 									{#if textAndUrlReplyTo !== undefined}
 										<i class="fa-fw fas fa-arrow-alt-from-right"></i>
@@ -961,6 +1158,7 @@
 									{/if}
 									<p>
 										<Content
+											{rc}
 											content={event.content}
 											tags={event.tags}
 											{channelMap}
@@ -970,13 +1168,21 @@
 											{mutedChannelIds}
 											{mutedWords}
 											{followingPubkeys}
+											{eventFollowList}
+											{eventEmojiSetList}
+											{eventMuteList}
 											{eventsTimeline}
+											{eventsQuoted}
 											{eventsReaction}
 											{eventsEmojiSet}
+											{eventsChannelBookmark}
+											{getSeenOn}
 											{uploaderSelected}
 											bind:channelToPost
 											{currentChannelId}
 											{isEnabledRelativeTime}
+											{isEnabledEventProtection}
+											{clientTag}
 											{nowRealtime}
 											{level}
 											isPreview={false}
@@ -991,28 +1197,37 @@
 									{@const aIdZapped =
 										event.tags.find((tag) => tag.length >= 2 && tag[0] === 'a')?.at(1) ?? ''}
 									{@const ap = getAddressPointerFromAId(aIdZapped)}
-									{@const eventZappedByETag = getEventById(eventIdZapped)}
+									{@const eventZappedByETag = getEventById(eventIdZapped, eventsAll)}
 									{@const eventZappedByATag =
-										ap === null ? undefined : getEventByAddressPointer(ap)}
+										ap === null ? undefined : getEventByAddressPointer(ap, eventsAll)}
 									{@const eventZapped = eventZappedByETag ?? eventZappedByATag}
 									{#if eventZapped !== undefined}
 										<Entry
 											event={eventZapped}
+											{rc}
 											{channelMap}
 											{profileMap}
 											{loginPubkey}
 											{mutedPubkeys}
 											{mutedChannelIds}
 											{mutedWords}
-											{mutedHashTags}
+											{mutedHashtags}
 											{followingPubkeys}
+											{eventFollowList}
+											{eventEmojiSetList}
+											{eventMuteList}
 											{eventsTimeline}
+											{eventsQuoted}
 											{eventsReaction}
 											{eventsEmojiSet}
+											{eventsChannelBookmark}
+											{getSeenOn}
 											{uploaderSelected}
 											{channelToPost}
 											{currentChannelId}
 											{isEnabledRelativeTime}
+											{isEnabledEventProtection}
+											{clientTag}
 											{nowRealtime}
 											level={level + 1}
 											isFullDisplayMode={false}
@@ -1026,21 +1241,30 @@
 									{#if event9734 !== null}
 										<Entry
 											event={event9734}
+											{rc}
 											{channelMap}
 											{profileMap}
 											{loginPubkey}
 											{mutedPubkeys}
 											{mutedChannelIds}
 											{mutedWords}
-											{mutedHashTags}
+											{mutedHashtags}
 											{followingPubkeys}
+											{eventFollowList}
+											{eventEmojiSetList}
+											{eventMuteList}
 											{eventsTimeline}
+											{eventsQuoted}
 											{eventsReaction}
 											{eventsEmojiSet}
+											{eventsChannelBookmark}
+											{getSeenOn}
 											{uploaderSelected}
 											{channelToPost}
 											{currentChannelId}
 											{isEnabledRelativeTime}
+											{isEnabledEventProtection}
+											{clientTag}
 											{nowRealtime}
 											level={level + 1}
 											isFullDisplayMode={false}
@@ -1061,13 +1285,14 @@
 									{@const ap = getAddressPointerFromAId(a ?? '')}
 									{@const eventQuoted =
 										e !== undefined
-											? getEventById(e)
+											? getEventById(e, eventsAll)
 											: ap !== null
-												? getEventByAddressPointer(ap)
+												? getEventByAddressPointer(ap, eventsAll)
 												: undefined}
 									{#if comment !== undefined}
 										<p>
 											<Content
+												{rc}
 												content={comment}
 												tags={event.tags}
 												{channelMap}
@@ -1077,13 +1302,21 @@
 												{mutedChannelIds}
 												{mutedWords}
 												{followingPubkeys}
+												{eventFollowList}
+												{eventEmojiSetList}
+												{eventMuteList}
 												{eventsTimeline}
+												{eventsQuoted}
 												{eventsReaction}
 												{eventsEmojiSet}
+												{eventsChannelBookmark}
+												{getSeenOn}
 												{uploaderSelected}
 												bind:channelToPost
 												{currentChannelId}
 												{isEnabledRelativeTime}
+												{isEnabledEventProtection}
+												{clientTag}
 												{nowRealtime}
 												{level}
 												isPreview={false}
@@ -1096,21 +1329,30 @@
 										<blockquote>
 											<Entry
 												event={eventQuoted}
+												{rc}
 												{channelMap}
 												{profileMap}
 												{loginPubkey}
 												{mutedPubkeys}
 												{mutedChannelIds}
 												{mutedWords}
-												{mutedHashTags}
+												{mutedHashtags}
 												{followingPubkeys}
+												{eventFollowList}
+												{eventEmojiSetList}
+												{eventMuteList}
 												{eventsTimeline}
+												{eventsQuoted}
 												{eventsReaction}
 												{eventsEmojiSet}
+												{eventsChannelBookmark}
+												{getSeenOn}
 												{uploaderSelected}
 												{channelToPost}
 												{currentChannelId}
 												{isEnabledRelativeTime}
+												{isEnabledEventProtection}
+												{clientTag}
 												{nowRealtime}
 												level={level + 1}
 												isFullDisplayMode={false}
@@ -1123,6 +1365,7 @@
 										<blockquote cite={r}>
 											<p>
 												<Content
+													{rc}
 													content={event.content}
 													tags={event.tags}
 													{channelMap}
@@ -1132,13 +1375,21 @@
 													{mutedChannelIds}
 													{mutedWords}
 													{followingPubkeys}
+													{eventFollowList}
+													{eventEmojiSetList}
+													{eventMuteList}
 													{eventsTimeline}
+													{eventsQuoted}
 													{eventsReaction}
 													{eventsEmojiSet}
+													{eventsChannelBookmark}
+													{getSeenOn}
 													{uploaderSelected}
 													bind:channelToPost
 													{currentChannelId}
 													{isEnabledRelativeTime}
+													{isEnabledEventProtection}
+													{clientTag}
 													{nowRealtime}
 													{level}
 													isPreview={false}
@@ -1152,13 +1403,15 @@
 								{:else if event.kind === 10000}
 									{@const { pPub, ePub, wPub, tPub } = splitNip51ListPublic(event)}
 									<MuteList
+										{rc}
 										{loginPubkey}
 										{profileMap}
 										{channelMap}
 										mutedPubkeys={pPub}
 										mutedChannelIds={ePub}
 										mutedWords={wPub}
-										mutedHashTags={tPub}
+										mutedHashtags={tPub}
+										{eventMuteList}
 										isAuthor={false}
 									/>
 								{:else if event.kind === 10001}
@@ -1170,6 +1423,7 @@
 										.join('\n')}
 									<p>
 										<Content
+											{rc}
 											{content}
 											tags={event.tags}
 											{channelMap}
@@ -1179,13 +1433,21 @@
 											{mutedChannelIds}
 											{mutedWords}
 											{followingPubkeys}
+											{eventFollowList}
+											{eventEmojiSetList}
+											{eventMuteList}
 											{eventsTimeline}
+											{eventsQuoted}
 											{eventsReaction}
 											{eventsEmojiSet}
+											{eventsChannelBookmark}
+											{getSeenOn}
 											{uploaderSelected}
 											bind:channelToPost
 											{currentChannelId}
 											{isEnabledRelativeTime}
+											{isEnabledEventProtection}
+											{clientTag}
 											{nowRealtime}
 											{level}
 											isPreview={false}
@@ -1205,11 +1467,12 @@
 										{#if i < 10}
 											{#if tag[0] === 'e' && tag[1] !== undefined}
 												{@const nevent = nip19.neventEncode({ id: tag[1] })}
-												{#if getEventById(tag[1]) === undefined}
+												{#if getEventById(tag[1], eventsAll) === undefined}
 													<p><a href={`/entry/${nevent}`}>nostr:{nevent}</a></p>
 												{:else}
 													<p>
 														<Content
+															{rc}
 															content={`nostr:${nevent}`}
 															tags={event.tags}
 															{channelMap}
@@ -1219,13 +1482,21 @@
 															{mutedChannelIds}
 															{mutedWords}
 															{followingPubkeys}
+															{eventFollowList}
+															{eventEmojiSetList}
+															{eventMuteList}
 															{eventsTimeline}
+															{eventsQuoted}
 															{eventsReaction}
 															{eventsEmojiSet}
+															{eventsChannelBookmark}
+															{getSeenOn}
 															{uploaderSelected}
 															bind:channelToPost
 															{currentChannelId}
 															{isEnabledRelativeTime}
+															{isEnabledEventProtection}
+															{clientTag}
 															{nowRealtime}
 															{level}
 															isPreview={false}
@@ -1238,7 +1509,7 @@
 												{@const ap = getAddressPointerFromAId(tag[1])}
 												{#if ap === null}
 													invalid a tag: {tag[0]}, {tag[1]}
-												{:else if getEventByAddressPointer(ap) === undefined}
+												{:else if getEventByAddressPointer(ap, eventsAll) === undefined}
 													<p>
 														<a href={`/entry/${nip19.naddrEncode(ap)}`}
 															>nostr:{nip19.naddrEncode(ap)}</a
@@ -1247,6 +1518,7 @@
 												{:else}
 													<p>
 														<Content
+															{rc}
 															content={`nostr:${nip19.naddrEncode(ap)}`}
 															tags={event.tags}
 															{channelMap}
@@ -1256,13 +1528,21 @@
 															{mutedChannelIds}
 															{mutedWords}
 															{followingPubkeys}
+															{eventFollowList}
+															{eventEmojiSetList}
+															{eventMuteList}
 															{eventsTimeline}
+															{eventsQuoted}
 															{eventsReaction}
 															{eventsEmojiSet}
+															{eventsChannelBookmark}
+															{getSeenOn}
 															{uploaderSelected}
 															bind:channelToPost
 															{currentChannelId}
 															{isEnabledRelativeTime}
+															{isEnabledEventProtection}
+															{clientTag}
 															{nowRealtime}
 															{level}
 															isPreview={false}
@@ -1283,7 +1563,7 @@
 										{/if}
 									{/each}
 								{:else if event.kind === 10005}
-									{@const channelBookmarkMap = getChannelBookmarkMap()}
+									{@const channelBookmarkMap = getChannelBookmarkMap(eventsChannelBookmark)}
 									{@const channelBookmarkIds = channelBookmarkMap.get(event.pubkey)}
 									{#if channelBookmarkIds !== undefined}
 										<ChannelList
@@ -1302,7 +1582,7 @@
 										{@const newline = '\n'}
 										{#if i > 0}{newline}{/if}
 										{@const ap = getAddressPointerFromAId(aId)}
-										{@const ev = ap === null ? undefined : getEventByAddressPointer(ap)}
+										{@const ev = ap === null ? undefined : getEventByAddressPointer(ap, eventsAll)}
 										{#if ev === undefined}
 											{#if ap !== null}
 												{`nostr:${nip19.naddrEncode(ap)}`}
@@ -1310,21 +1590,30 @@
 										{:else}
 											<Entry
 												event={ev}
+												{rc}
 												{channelMap}
 												{profileMap}
 												{loginPubkey}
 												{mutedPubkeys}
 												{mutedChannelIds}
 												{mutedWords}
-												{mutedHashTags}
+												{mutedHashtags}
 												{followingPubkeys}
+												{eventFollowList}
+												{eventEmojiSetList}
+												{eventMuteList}
 												{eventsTimeline}
+												{eventsQuoted}
 												{eventsReaction}
 												{eventsEmojiSet}
+												{eventsChannelBookmark}
+												{getSeenOn}
 												{uploaderSelected}
 												{channelToPost}
 												{currentChannelId}
 												{isEnabledRelativeTime}
+												{isEnabledEventProtection}
+												{clientTag}
 												{nowRealtime}
 												level={level + 1}
 												isFullDisplayMode={false}
@@ -1335,12 +1624,21 @@
 										{/if}
 									{/each}
 								{:else if event.kind === 30008}
-									{@const badgeEvent = getEventByAddressPointer({
-										identifier: 'profile_badges',
-										pubkey: event.pubkey,
-										kind: event.kind
-									})}
-									<Badges currentPubkey={event.pubkey} {badgeEvent} />
+									{@const badgeEvent = getEventByAddressPointer(
+										{
+											identifier: 'profile_badges',
+											pubkey: event.pubkey,
+											kind: event.kind
+										},
+										eventsAll
+									)}
+									<Badges
+										currentPubkey={event.pubkey}
+										{badgeEvent}
+										{eventsAll}
+										{getEventById}
+										{getEventByAddressPointer}
+									/>
 								{:else if event.kind === 30009}
 									{@const tagMap = new Map<string, string>(
 										event.tags.map((tag) => [tag[0], tag[1]])
@@ -1370,6 +1668,7 @@
 									<h3 class="summary">{summary}</h3>
 									<p>
 										<Content
+											{rc}
 											content={event.content}
 											tags={event.tags}
 											{channelMap}
@@ -1379,13 +1678,21 @@
 											{mutedChannelIds}
 											{mutedWords}
 											{followingPubkeys}
+											{eventFollowList}
+											{eventEmojiSetList}
+											{eventMuteList}
 											{eventsTimeline}
+											{eventsQuoted}
 											{eventsReaction}
 											{eventsEmojiSet}
+											{eventsChannelBookmark}
+											{getSeenOn}
 											{uploaderSelected}
 											bind:channelToPost
 											{currentChannelId}
 											{isEnabledRelativeTime}
+											{isEnabledEventProtection}
+											{clientTag}
 											{nowRealtime}
 											{level}
 											isPreview={false}
@@ -1421,7 +1728,7 @@
 														<span
 															class="fa-fw fas fa-heart"
 															onclick={() => {
-																unbookmarkEmojiSets(aTagStr);
+																rc?.unbookmarkEmojiSets(aTagStr, eventEmojiSetList);
 															}}
 														></span>
 													</div>
@@ -1433,7 +1740,7 @@
 															class="fa-fw fas fa-heart"
 															onclick={() => {
 																const recommendedRelay = getSeenOn(event.id, true).at(0);
-																bookmarkEmojiSets(aTagStr, recommendedRelay);
+																rc?.bookmarkEmojiSets(aTagStr, recommendedRelay, eventEmojiSetList);
 															}}
 														></span>
 													</div>
@@ -1505,6 +1812,7 @@
 									</p>
 									<p>
 										<Content
+											{rc}
 											content={event.content}
 											tags={event.tags}
 											{channelMap}
@@ -1514,13 +1822,21 @@
 											{mutedChannelIds}
 											{mutedWords}
 											{followingPubkeys}
+											{eventFollowList}
+											{eventEmojiSetList}
+											{eventMuteList}
 											{eventsTimeline}
+											{eventsQuoted}
 											{eventsReaction}
 											{eventsEmojiSet}
+											{eventsChannelBookmark}
+											{getSeenOn}
 											{uploaderSelected}
 											bind:channelToPost
 											{currentChannelId}
 											{isEnabledRelativeTime}
+											{isEnabledEventProtection}
+											{clientTag}
 											{nowRealtime}
 											{level}
 											isPreview={false}
@@ -1531,6 +1847,7 @@
 								{:else}
 									<p>
 										<Content
+											{rc}
 											content={event.content}
 											tags={event.tags}
 											{channelMap}
@@ -1540,13 +1857,21 @@
 											{mutedChannelIds}
 											{mutedWords}
 											{followingPubkeys}
+											{eventFollowList}
+											{eventEmojiSetList}
+											{eventMuteList}
 											{eventsTimeline}
+											{eventsQuoted}
 											{eventsReaction}
 											{eventsEmojiSet}
+											{eventsChannelBookmark}
+											{getSeenOn}
 											{uploaderSelected}
 											bind:channelToPost
 											{currentChannelId}
 											{isEnabledRelativeTime}
+											{isEnabledEventProtection}
+											{clientTag}
 											{nowRealtime}
 											{level}
 											isPreview={false}
@@ -1667,11 +1992,11 @@
 									<a href="/{nip19.npubEncode(event.pubkey)}">
 										<img
 											src={prof?.picture ?? getRoboHashURL(nip19.npubEncode(event.pubkey))}
-											alt={getProfileName(event.pubkey)}
+											alt={getName(event.pubkey, profileMap, eventFollowList)}
 											class="Avatar"
 										/>
 										<Content
-											content={getProfileName(event.pubkey)}
+											content={getName(event.pubkey, profileMap, eventFollowList, false, true)}
 											tags={prof?.event.tags ?? []}
 											isAbout={true}
 										/>
@@ -1701,7 +2026,7 @@
 												title={$_('Entry.delete')}
 												onclick={() => {
 													if (confirm($_('Entry.confirm-delete'))) {
-														sendDeletion(event);
+														rc?.sendDeletion(event);
 													}
 												}}><i class="far fa-times-circle"></i></span
 											>
@@ -1764,7 +2089,7 @@
 														<button
 															class="repost"
 															onclick={() => {
-																sendRepost(event);
+																rc?.sendRepost(event, isEnabledEventProtection, clientTag);
 																showRepost = false;
 															}}>{$_('Entry.repost')}</button
 														>
@@ -1795,25 +2120,20 @@
 												title="Zap"
 												onclick={() => {
 													const relaysToAdd: Set<string> = new Set<string>();
-													const relaysToWrite: string[] = Object.entries(getRelaysToUse())
-														.filter((v) => v[1].write)
-														.map((v) => v[0]);
-													for (const relayUrl of relaysToWrite) {
-														relaysToAdd.add(relayUrl);
-													}
-													if (getIsEnabledOutboxModel()) {
-														const relayRecord: RelayRecord = getRelaysToUseFromKind10002Event(
-															getEventByAddressPointer({
+													const relayRecord: RelayRecord = getRelaysToUseFromKind10002Event(
+														getEventByAddressPointer(
+															{
 																kind: 10002,
 																pubkey: event.pubkey,
 																identifier: ''
-															})
-														);
-														for (const [relayUrl, _] of Object.entries(relayRecord).filter(
-															([_, obj]) => obj.read
-														)) {
-															relaysToAdd.add(relayUrl);
-														}
+															},
+															eventsAll
+														)
+													);
+													for (const [relayUrl, _] of Object.entries(relayRecord).filter(
+														([_, obj]) => obj.read
+													)) {
+														relaysToAdd.add(relayUrl);
 													}
 													zap(
 														nip19.npubEncode(event.pubkey),
@@ -1852,15 +2172,13 @@
 											class="broadcast"
 											title={$_('Entry.broadcast')}
 											onclick={() => {
-												const relaysToWrite: string[] = Object.entries(getRelaysToUse())
-													.filter((v) => v[1].write)
-													.map((v) => v[0]);
-												const message = [$_('Entry.confirm-broadcast'), '', ...relaysToWrite].join(
-													'\n'
-												);
-												if (confirm(message)) {
-													const options = { on: { relays: relaysToWrite } };
-													sendEvent(event, options);
+												const message = [
+													$_('Entry.confirm-broadcast'),
+													'',
+													...(rc?.getRelaysToBroadcast(event) ?? [])
+												].join('\n');
+												if (message) {
+													rc?.sendEventWithInboxRelays(event);
 												}
 											}}
 										>
@@ -1930,7 +2248,7 @@
 									{@const prof = profileMap.get(ev.pubkey)}
 									<img
 										src={prof?.picture ?? getRoboHashURL(nip19.npubEncode(ev.pubkey))}
-										alt={getProfileName(ev.pubkey)}
+										alt={getName(ev.pubkey, profileMap, eventFollowList)}
 										class="Avatar"
 									/>
 								{/each}
@@ -2011,13 +2329,18 @@
 					<div class="Entry__composeReply">
 						{#if showForm}
 							<CreateEntry
+								{rc}
 								{loginPubkey}
 								currentChannelId={undefined}
 								eventToReply={event}
 								isTopPage={false}
+								{channelMap}
 								{profileMap}
+								{isEnabledEventProtection}
+								{clientTag}
 								{uploaderSelected}
 								{eventsEmojiSet}
+								{eventFollowList}
 								preInput={null}
 								channelToPost={undefined}
 								bind:showForm
@@ -2031,21 +2354,30 @@
 						{#if previewEvent}
 							<Entry
 								event={{ ...previewEvent, id: getEventHash(previewEvent), sig: '' }}
+								{rc}
 								{channelMap}
 								{profileMap}
 								{loginPubkey}
 								{mutedPubkeys}
 								{mutedChannelIds}
 								{mutedWords}
-								{mutedHashTags}
+								{mutedHashtags}
 								{followingPubkeys}
+								{eventFollowList}
+								{eventEmojiSetList}
+								{eventMuteList}
 								{eventsTimeline}
+								{eventsQuoted}
 								{eventsReaction}
 								{eventsEmojiSet}
+								{eventsChannelBookmark}
+								{getSeenOn}
 								{uploaderSelected}
 								{channelToPost}
 								{currentChannelId}
 								{isEnabledRelativeTime}
+								{isEnabledEventProtection}
+								{clientTag}
 								{nowRealtime}
 								level={level + 1}
 								isFullDisplayMode={false}
@@ -2058,21 +2390,30 @@
 							{#each eventsReplying as ev (ev.id)}
 								<Entry
 									event={ev}
+									{rc}
 									{channelMap}
 									{profileMap}
 									{loginPubkey}
 									{mutedPubkeys}
 									{mutedChannelIds}
 									{mutedWords}
-									{mutedHashTags}
+									{mutedHashtags}
 									{followingPubkeys}
+									{eventFollowList}
+									{eventEmojiSetList}
+									{eventMuteList}
 									{eventsTimeline}
+									{eventsQuoted}
 									{eventsReaction}
 									{eventsEmojiSet}
+									{eventsChannelBookmark}
+									{getSeenOn}
 									{uploaderSelected}
 									{channelToPost}
 									{currentChannelId}
 									{isEnabledRelativeTime}
+									{isEnabledEventProtection}
+									{clientTag}
 									{nowRealtime}
 									level={level + 1}
 									isFullDisplayMode={false}

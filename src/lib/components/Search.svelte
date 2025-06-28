@@ -1,11 +1,17 @@
 <script lang="ts">
 	import type { ChannelContent, ProfileContentEvent } from '$lib/utils';
+	import type { RelayConnector } from '$lib/resource';
+	import type { NostrEvent } from 'nostr-tools/pure';
 	import Header from '$lib/components/Header.svelte';
 	import * as nip19 from 'nostr-tools/nip19';
 	import { _ } from 'svelte-i18n';
 
 	const {
+		rc,
 		loginPubkey,
+		eventsMention,
+		eventFollowList,
+		readTimeOfNotification,
 		currentProfilePointer,
 		query,
 		urlSearchParams,
@@ -13,11 +19,15 @@
 		channelMap,
 		mutedPubkeys,
 		mutedWords,
-		mutedHashTags,
+		mutedHashtags,
 		isEnabledRelativeTime,
 		nowRealtime
 	}: {
+		rc: RelayConnector | undefined;
 		loginPubkey: string | undefined;
+		eventsMention: NostrEvent[];
+		eventFollowList: NostrEvent | undefined;
+		readTimeOfNotification: number;
 		currentProfilePointer: nip19.ProfilePointer | undefined;
 		query: string;
 		urlSearchParams: URLSearchParams;
@@ -25,7 +35,7 @@
 		channelMap: Map<string, ChannelContent>;
 		mutedPubkeys: string[];
 		mutedWords: string[];
-		mutedHashTags: string[];
+		mutedHashtags: string[];
 		isEnabledRelativeTime: boolean;
 		nowRealtime: number;
 	} = $props();
@@ -41,14 +51,18 @@
 </script>
 
 <Header
+	{rc}
 	{loginPubkey}
+	{eventsMention}
+	{eventFollowList}
+	{readTimeOfNotification}
 	{currentProfilePointer}
 	{query}
 	{urlSearchParams}
 	{profileMap}
 	{mutedPubkeys}
 	{mutedWords}
-	{mutedHashTags}
+	{mutedHashtags}
 	{isEnabledRelativeTime}
 	{nowRealtime}
 	isEnabledScrollInfinitely={false}

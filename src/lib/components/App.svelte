@@ -1,30 +1,26 @@
 <script lang="ts">
-	import type { ChannelContent, ProfileContentEvent, UrlParams } from '$lib/utils';
-	import { initialLocale } from '$lib/config';
 	import {
-		clearCache,
 		getChannelMap,
-		getEventsFirst,
-		getFollowList,
-		getIsEnabledDarkMode,
-		getIsEnabledEventProtection,
-		getIsEnabledOutboxModel,
-		getIsEnabledRelativeTime,
-		getIsEnabledSkipKind1,
-		getIsEnabledUseClientTag,
-		getLang,
+		getEventsAddressableLatest,
+		getEventsFilteredByMute,
+		getMuteList,
+		mergeFilterForAddressableEvents,
+		type ChannelContent,
+		type ProfileContentEvent,
+		type UrlParams
+	} from '$lib/utils';
+	import { initialLocale, uploaderURLs } from '$lib/config';
+	import {
+		getDeadRelays,
+		getEventsQuoted,
 		getLoginPubkey,
-		getMutedChannelIds,
-		getMutedHashTags,
-		getMutedPubkeys,
-		getMutedWords,
-		getProfileMap,
-		getRelaysSelected,
-		getUploaderSelected,
-		resetRelaysDefault,
+		getRelayConnector,
+		setDeadRelays,
+		setEventsQuoted,
 		setLoginPubkey,
-		setRxNostr
+		setRelayConnector
 	} from '$lib/resource.svelte';
+	import { RelayConnector } from '$lib/resource';
 	import Header from '$lib/components/Header.svelte';
 	import Settings from '$lib/components/Settings.svelte';
 	import Search from '$lib/components/Search.svelte';
@@ -32,86 +28,653 @@
 	import { onMount } from 'svelte';
 	import { afterNavigate, beforeNavigate } from '$app/navigation';
 	import { page } from '$app/state';
-	import type { NostrEvent } from 'nostr-tools/pure';
-	import { unixNow } from 'applesauce-core/helpers';
+	import { sortEvents, type NostrEvent } from 'nostr-tools/pure';
+	import { isAddressableKind } from 'nostr-tools/kinds';
+	import type { Filter } from 'nostr-tools/filter';
+	import { normalizeURL } from 'nostr-tools/utils';
+	import * as nip19 from 'nostr-tools/nip19';
+	import {
+		getAddressPointerFromATag,
+		getInboxes,
+		getOutboxes,
+		getProfileContent,
+		isValidProfile,
+		unixNow
+	} from 'applesauce-core/helpers';
+	import type { Subscription } from 'rxjs';
 	import '$lib/haiku.css';
 	import { _, locale } from 'svelte-i18n';
+	import type { Unsubscriber } from 'svelte/store';
+	import { preferences } from '$lib/store';
+	import type { ConnectionStatePacket } from 'rx-nostr';
 
 	const {
 		up
 	}: {
 		up: UrlParams;
 	} = $props();
-	const {
-		currentProfilePointer,
-		currentChannelPointer,
-		currentEventPointer,
-		currentAddressPointer,
-		hashtag,
-		category,
-		query,
-		isSettings,
-		isAntenna,
-		isError
-	}: UrlParams = $derived(up);
-	const loginPubkey: string | undefined = $derived(getLoginPubkey());
-	const lang: string = $derived(getLang());
-	const isEnabledDarkMode: boolean = $derived(getIsEnabledDarkMode());
-	const isEnabledRelativeTime: boolean = $derived(getIsEnabledRelativeTime());
-	const isEnabledSkipKind1: boolean = $derived(getIsEnabledSkipKind1());
-	const isEnabledUseClientTag: boolean = $derived(getIsEnabledUseClientTag());
-	const isEnabledOutboxModel: boolean = $derived(getIsEnabledOutboxModel());
-	const isEnabledEventProtection: boolean = $derived(getIsEnabledEventProtection());
-	const relaysSelected: string = $derived(getRelaysSelected());
-	const uploaderSelected: string = $derived(getUploaderSelected());
-	const profileMap: Map<string, ProfileContentEvent> = $derived(getProfileMap());
-	const channelMap: Map<string, ChannelContent> = $derived(getChannelMap());
-	const mutedPubkeys: string[] = $derived(getMutedPubkeys());
-	const mutedChannelIds: string[] = $derived(getMutedChannelIds());
-	const mutedWords: string[] = $derived(getMutedWords());
-	const mutedHashTags: string[] = $derived(getMutedHashTags());
-	const eventFollowList: NostrEvent | undefined = $derived(getFollowList());
+
+	let loginPubkey: string | undefined = $state(getLoginPubkey());
+	let isEnabledUseClientTag: boolean = $state(false);
+	let deadRelays: string[] = $derived(getDeadRelays());
+	let rc: RelayConnector | undefined = $derived(getRelayConnector());
+	let sub: Subscription | undefined;
+	let eventsProfile: NostrEvent[] = $state([]);
+	const profileMap: Map<string, ProfileContentEvent> = $derived(
+		new Map<string, ProfileContentEvent>(
+			eventsProfile.map((ev) => {
+				const pce: ProfileContentEvent = { event: ev, ...getProfileContent(ev) };
+				return [ev.pubkey, pce];
+			})
+		)
+	);
+	let eventsTimeline: NostrEvent[] = $state([]);
+	let eventsReaction: NostrEvent[] = $state([]);
+	let eventFollowList: NostrEvent | undefined = $state();
 	const followingPubkeys: string[] = $derived(
 		eventFollowList?.tags.filter((tag) => tag.length >= 2 && tag[0] === 'p').map((tag) => tag[1]) ??
 			[]
 	);
-
-	let urlSearchParams: URLSearchParams = $state(page.url.searchParams);
-	let isLoading: boolean = $state(false);
-	let idTimeoutLoading: number;
-	let nowRealtime: number = $state(unixNow());
-	let intervalID: number;
-	const getEventsFirstWithLoading = () => {
-		isLoading = true;
-		setRxNostr(loginPubkey !== undefined);
-		getEventsFirst(
-			{ ...up, urlSearchParams },
-			undefined,
-			() => {
-				isLoading = false;
-			},
-			true
+	let eventMuteList: NostrEvent | undefined = $state();
+	let eventRelayList: NostrEvent | undefined = $state();
+	let eventMyPublicChatsList: NostrEvent | undefined = $state();
+	let eventEmojiSetList: NostrEvent | undefined = $state();
+	let eventRead: NostrEvent | undefined = $state();
+	let mutedPubkeys: string[] = $state([]);
+	let mutedChannelIds: string[] = $state([]);
+	let mutedWords: string[] = $state([]);
+	let mutedHashtags: string[] = $state([]);
+	const getMuteListPromise: Promise<[string[], string[], string[], string[]]> = $derived(
+		getMuteList(eventMuteList, loginPubkey)
+	);
+	$effect(() => {
+		getMuteListPromise.then((v: [string[], string[], string[], string[]]) => {
+			[mutedPubkeys, mutedChannelIds, mutedWords, mutedHashtags] = v;
+		});
+	});
+	let eventsEmojiSet: NostrEvent[] = $state([]);
+	let eventsQuoted: NostrEvent[] = $derived(getEventsQuoted());
+	let eventsMention: NostrEvent[] = $state([]);
+	const _getEventsFiltered = (events: NostrEvent[]) => {
+		return getEventsFilteredByMute(
+			events,
+			mutedPubkeys,
+			mutedChannelIds,
+			mutedWords,
+			mutedHashtags
 		);
 	};
-	const nlAuth = (e: Event) => {
-		clearTimeout(idTimeoutLoading);
-		const ce: CustomEvent = e as CustomEvent;
-		//何故か2回呼ばれる
-		if (isLoading) {
+
+	let lang: string = $state(initialLocale);
+	let isEnabledDarkMode: boolean = $state(true);
+	let isEnabledRelativeTime: boolean = $state(true);
+	let isEnabledEventProtection: boolean = $state(false);
+	let uploaderSelected: string = $state(uploaderURLs[0]);
+	let eventsChannel: NostrEvent[] = $state([]);
+	let eventsChannelEdit: NostrEvent[] = $state([]);
+	let eventsChannelBookmark: NostrEvent[] = $state([]);
+	const channelMap: Map<string, ChannelContent> = $derived(
+		getChannelMap(eventsChannel, eventsChannelEdit)
+	);
+
+	const setLang = (value: string): void => {
+		lang = value;
+		locale.set(value);
+		saveLocalStorage();
+	};
+	const setIsEnabledDarkMode = (value: boolean): void => {
+		isEnabledDarkMode = value;
+		saveLocalStorage();
+	};
+	const setIsEnabledRelativeTime = (value: boolean): void => {
+		isEnabledRelativeTime = value;
+		saveLocalStorage();
+	};
+	const setIsEnabledUseClientTag = (value: boolean): void => {
+		isEnabledUseClientTag = value;
+		saveLocalStorage();
+	};
+	const setIsEnabledEventProtection = (value: boolean): void => {
+		isEnabledEventProtection = value;
+		saveLocalStorage();
+	};
+	const setUploaderSelected = (value: string): void => {
+		uploaderSelected = value;
+		saveLocalStorage();
+	};
+
+	let urlSearchParams: URLSearchParams = $state(page.url.searchParams);
+	let nowRealtime: number = $state(unixNow());
+	let intervalID: number;
+
+	const callback = (kind: number, event?: NostrEvent): void => {
+		if (rc === undefined) {
 			return;
 		}
-		if (ce.detail.type === 'login' || ce.detail.type === 'signup') {
-			setLoginPubkey(ce.detail.pubkey);
-			getEventsFirstWithLoading();
-		} else {
-			setLoginPubkey(undefined);
-			clearCache([{ since: 0 }]);
-			resetRelaysDefault();
-			getEventsFirstWithLoading();
+		switch (kind) {
+			case 0: {
+				eventsProfile = getEventsAddressableLatest(rc.getEventsByFilter({ kinds: [kind] })).filter(
+					(ev) => isValidProfile(ev)
+				);
+				break;
+			}
+			case 1:
+			case 6:
+			case 16:
+			case 42:
+			case 1068:
+			case 1111:
+			case 39701: {
+				const kinds: number[] = [1, 6, 16, 42, 1068, 1111, 39701];
+				let tl: NostrEvent[] = [];
+				if (up.isAntenna && loginPubkey !== undefined) {
+					const authors: string[] =
+						rc
+							.getReplaceableEvent(3, loginPubkey)
+							?.tags.filter((tag) => tag.length >= 2 && tag[0] === 'p')
+							.map((tag) => tag[1]) ?? [];
+					if (authors.length > 0) {
+						if (kindSet.size === 0) {
+							tl = rc.getEventsByFilter({ kinds, authors });
+						} else {
+							tl = rc.getEventsByFilter({
+								kinds: Array.from(kindSet),
+								authors
+							});
+						}
+					} else {
+						tl = [];
+					}
+				} else if (up.currentEventPointer !== undefined) {
+					tl = rc.getEventsByFilter({ ids: [up.currentEventPointer.id] });
+				} else if (up.currentAddressPointer !== undefined) {
+					const ap = up.currentAddressPointer;
+					const filter: Filter = {
+						kinds: [ap.kind],
+						authors: [ap.pubkey]
+					};
+					if (ap.identifier.length > 0) {
+						filter['#d'] = [ap.identifier];
+					}
+					tl = rc.getEventsByFilter(filter);
+				} else if (up.currentProfilePointer !== undefined) {
+					if (kindSet.size === 0) {
+						tl = rc.getEventsByFilter({ kinds, authors: [up.currentProfilePointer.pubkey] });
+					} else {
+						tl = rc.getEventsByFilter({
+							kinds: Array.from(kindSet),
+							authors: [up.currentProfilePointer.pubkey]
+						});
+					}
+				} else if (up.currentChannelPointer !== undefined) {
+					tl = rc.getEventsByFilter({ kinds: [42], '#e': [up.currentChannelPointer.id] });
+				} else if (up.query !== undefined) {
+					if (kindSet.size === 0) {
+						tl = rc.getEventsByFilter([{ kinds: [42] }, { kinds: [16], '#k': ['42'] }]);
+					} else {
+						tl = rc.getEventsByFilter({ kinds: Array.from(kindSet) });
+					}
+					tl = tl.filter((ev) => ev.content.includes(up.query?.toLowerCase() ?? ''));
+				} else if (up.hashtag !== undefined) {
+					tl = rc.getEventsByFilter({ '#t': [up.hashtag.toLowerCase()] });
+				} else if (up.category !== undefined) {
+					tl = rc.getEventsByFilter({ kinds: [40, 41], '#t': [up.category.toLowerCase()] });
+				} else {
+					if (kindSet.size === 0) {
+						tl = rc.getEventsByFilter([{ kinds: [42] }, { kinds: [16], '#k': ['42'] }]);
+					} else {
+						tl = rc.getEventsByFilter({ kinds: Array.from(kindSet) });
+					}
+				}
+				if (kindSet.size > 0) {
+					tl = tl.filter((ev) => kindSet.has(ev.kind));
+				}
+				if (pSet.size > 0) {
+					tl = tl.filter((ev) => {
+						const ps = ev.tags
+							.filter((tag) => tag.length >= 2 && tag[0] === 'p')
+							.map((tag) => tag[1]);
+						return ps.some((p) => pSet.has(p));
+					});
+				}
+				if (authorSet.size > 0) {
+					tl = tl.filter((ev) => authorSet.has(ev.pubkey));
+				}
+				if (relaySet.size > 0) {
+					tl = tl.filter((ev) => rc?.getSeenOn(ev.id, false).some((r) => relaySet.has(r)));
+				}
+				eventsTimeline = sortEvents(tl);
+				break;
+			}
+			case 3: {
+				if (loginPubkey !== undefined && (event?.pubkey === loginPubkey || event === undefined)) {
+					eventFollowList = rc.getReplaceableEvent(kind, loginPubkey);
+				}
+				break;
+			}
+			case 5: {
+				if (event !== undefined) {
+					const kSet: Set<number> = new Set<number>(
+						event.tags
+							.filter((tag) => tag.length >= 2 && tag[0] === 'k' && /^\d+$/.test(tag[1]))
+							.map((tag) => parseInt(tag[1]))
+					);
+					for (const k of kSet) {
+						callback(k);
+					}
+				}
+				break;
+			}
+			case 7: {
+				eventsReaction = sortEvents(rc.getEventsByFilter({ kinds: [kind] }));
+				break;
+			}
+			case 40: {
+				eventsChannel = rc.getEventsByFilter({ kinds: [kind] });
+				break;
+			}
+			case 41: {
+				eventsChannelEdit = rc.getEventsByFilter({ kinds: [kind] });
+				break;
+			}
+			case 1018: {
+				if (event !== undefined) {
+					callbackQuote(event);
+				}
+				break;
+			}
+			case 10000: {
+				if (loginPubkey !== undefined && (event?.pubkey === loginPubkey || event === undefined)) {
+					eventMuteList = rc.getReplaceableEvent(kind, loginPubkey);
+				}
+				break;
+			}
+			case 10002: {
+				if (loginPubkey !== undefined && event?.pubkey === loginPubkey) {
+					rc.setRelays(event);
+					eventRelayList = event;
+				}
+				break;
+			}
+			case 10005: {
+				eventsChannelBookmark = rc.getEventsByFilter({ kinds: [kind] });
+				if (loginPubkey !== undefined && event?.pubkey === loginPubkey) {
+					eventMyPublicChatsList = rc.getReplaceableEvent(kind, loginPubkey);
+				}
+				break;
+			}
+			case 10006: {
+				if (loginPubkey !== undefined && event?.pubkey === loginPubkey) {
+					const eventBlockedRelay = rc.getReplaceableEvent(kind, loginPubkey);
+					const blockedRelays: string[] =
+						eventBlockedRelay?.tags
+							.filter((tag) => tag.length >= 2 && tag[0] === 'relay' && URL.canParse(tag[1]))
+							.map((tag) => normalizeURL(tag[1])) ?? [];
+					rc.setBlockedRelays(blockedRelays);
+				}
+				break;
+			}
+			case 10030:
+			case 30030: {
+				if (loginPubkey !== undefined) {
+					const ev10030 = rc.getReplaceableEvent(10030, loginPubkey);
+					if (ev10030 !== undefined) {
+						const aTags: string[][] = ev10030.tags.filter(
+							(tag) => tag.length >= 2 && tag[0] === 'a'
+						);
+						const aps: nip19.AddressPointer[] = aTags.map((aTag) =>
+							getAddressPointerFromATag(aTag)
+						);
+						const filters: Filter[] = mergeFilterForAddressableEvents(
+							aps
+								.filter((ap) => isAddressableKind(ap.kind))
+								.map((ap) => {
+									return { kinds: [ap.kind], authors: [ap.pubkey], '#d': [ap.identifier] };
+								})
+						);
+						eventEmojiSetList = ev10030;
+						eventsEmojiSet = getEventsAddressableLatest(
+							rc.getEventsByFilter(filters).concat(ev10030)
+						);
+					}
+				}
+				break;
+			}
+			case 30078: {
+				if (loginPubkey !== undefined) {
+					eventRead = rc.getReplaceableEvent(30078, loginPubkey, 'nostter-read');
+				}
+				break;
+			}
+			default:
+				{
+					if (up.currentEventPointer !== undefined) {
+						eventsTimeline = rc.getEventsByFilter({ ids: [up.currentEventPointer.id] });
+					} else if (up.currentAddressPointer !== undefined) {
+						const ap = up.currentAddressPointer;
+						eventsTimeline = rc.getEventsByFilter({
+							kinds: [ap.kind],
+							authors: [ap.pubkey],
+							'#d': [ap.identifier]
+						});
+					}
+				}
+				break;
+		}
+		const kinds: number[] = [1, 4, 6, 7, 8, 16, 42, 1111, 9735, 39701];
+		if (
+			kinds.includes(kind) &&
+			loginPubkey !== undefined &&
+			event?.tags.some((tag) => tag.length >= 2 && tag[0] === 'p' && tag[1] === loginPubkey)
+		) {
+			const isSeenOnInboxRelays = (ev: NostrEvent): boolean => {
+				if (rc === undefined || loginPubkey === undefined) {
+					return false;
+				}
+				const event10002 = rc.getReplaceableEvent(10002, loginPubkey);
+				if (event10002 === undefined) {
+					return false;
+				}
+				const relays = getInboxes(event10002);
+				return rc.getSeenOn(ev.id, false).some((r) => relays.includes(r));
+			};
+			eventsMention = sortEvents(
+				rc
+					.getEventsByFilter({ kinds, '#p': [loginPubkey] })
+					.filter(
+						(ev) =>
+							!(
+								ev.kind === 7 &&
+								ev.tags.findLast((tag) => tag.length >= 2 && tag[0] === 'p')?.at(1) !== loginPubkey
+							)
+					)
+					.filter(isSeenOnInboxRelays)
+			);
 		}
 	};
+
+	const callbackQuote = (event: NostrEvent): void => {
+		if (!eventsQuoted.map((ev) => ev.id).includes(event.id)) {
+			switch (event.kind) {
+				case 0:
+					if (!isValidProfile(event)) {
+						return;
+					}
+					break;
+				default:
+					break;
+			}
+			eventsQuoted.push(event);
+			setEventsQuoted(eventsQuoted);
+			if (rc !== undefined) {
+				fetchQuotedUserData(rc, event);
+			}
+		}
+	};
+	const fetchQuotedUserData = (rc: RelayConnector, event: NostrEvent): void => {
+		const isForwardReq: boolean = rc.since < event.created_at;
+		rc.setFetchListAfter10002([event.pubkey], () => {
+			if (rc.getReplaceableEvent(0, event.pubkey) === undefined) {
+				rc.fetchProfile(event.pubkey);
+			}
+			if (!isForwardReq) {
+				rc.fetchDeletion(event);
+				rc.fetchReaction(event);
+			}
+			if (event.kind === 1) {
+				rc.fetchEventsQuoted(event);
+			}
+		});
+	};
+
+	const callbackConnectionState = (packet: ConnectionStatePacket) => {
+		const relay: string = normalizeURL(packet.from);
+		if (['error', 'rejected'].includes(packet.state)) {
+			if (!deadRelays.includes(relay)) {
+				deadRelays.push(relay);
+				rc?.setDeadRelays(deadRelays);
+				setDeadRelays(deadRelays);
+			}
+		} else {
+			if (deadRelays.includes(relay)) {
+				deadRelays = deadRelays.filter((r) => r !== relay);
+				rc?.setDeadRelays(deadRelays);
+				setDeadRelays(deadRelays);
+			}
+		}
+	};
+
+	const clearCache = () => {
+		eventsProfile = [];
+		eventsTimeline = [];
+		eventsReaction = [];
+		eventMuteList = undefined;
+		eventRelayList = undefined;
+		eventMyPublicChatsList = undefined;
+		eventEmojiSetList = undefined;
+		eventRead = undefined;
+		eventsEmojiSet = [];
+		eventsQuoted = [];
+		eventsMention = [];
+	};
+
+	const initStatus = () => {
+		countToShow = 10;
+		isScrolledBottom = false;
+		isLoading = false;
+		lastUntil = undefined;
+	};
+
+	const initFetch = () => {
+		sub?.unsubscribe();
+		initStatus();
+		const pubkeySet = new Set<string>();
+		if (rc === undefined) {
+			clearCache();
+			rc = new RelayConnector(loginPubkey !== undefined, callbackConnectionState, callbackQuote);
+			setRelayConnector(rc);
+			sub = rc.subscribeEventStore(callback);
+			if (loginPubkey !== undefined) {
+				pubkeySet.add(loginPubkey);
+			}
+		} else {
+			sub = rc.subscribeEventStore(callback);
+			for (const k of [0, 1, 3, 7, 40, 41, 10000, 10005, 10006, 10030, 30078]) {
+				callback(k);
+			}
+		}
+		const pubkey: string | undefined =
+			up.currentProfilePointer?.pubkey ??
+			up.currentAddressPointer?.pubkey ??
+			up.currentEventPointer?.author;
+		if (pubkey !== undefined) {
+			pubkeySet.add(pubkey);
+		}
+		fetchKind10002AndFollowees(rc, loginPubkey, Array.from(pubkeySet));
+	};
+
+	const fetchKind10002AndFollowees = (
+		rc: RelayConnector,
+		loginPubkey: string | undefined,
+		pubkeys: string[]
+	) => {
+		if (pubkeys.length > 0) {
+			rc.fetchKind10002(pubkeys, () => {
+				if (loginPubkey !== undefined && eventFollowList === undefined) {
+					rc.fetchUserSettings(loginPubkey, () => {
+						//ミュートリスト対象情報を取得
+						getMutedInfo(rc, loginPubkey);
+						//被メンションを取得
+						rc.fetchEventsMention(loginPubkey, unixNow(), 10);
+						//フォローイーのkind:10002を全取得
+						const pubkeysSecond: string[] =
+							eventFollowList?.tags
+								.filter((tag) => tag.length >= 2 && tag[0] === 'p')
+								.map((tag) => tag[1]) ?? [];
+						if (pubkeysSecond.length > 0) {
+							rc.fetchKind10002(pubkeysSecond, () => {
+								rc.fetchTimeline(up, urlSearchParams, loginPubkey, followingPubkeys);
+							});
+						} else {
+							rc.fetchTimeline(up, urlSearchParams, loginPubkey, followingPubkeys);
+						}
+					});
+				} else {
+					rc.fetchTimeline(up, urlSearchParams, loginPubkey, followingPubkeys);
+				}
+			});
+		} else {
+			rc.fetchTimeline(up, urlSearchParams, loginPubkey, followingPubkeys);
+		}
+	};
+
+	const getMutedInfo = (rc: RelayConnector, loginPubkey: string) => {
+		const ev10002 = rc.getReplaceableEvent(10002, loginPubkey);
+		if (ev10002 !== undefined) {
+			const relays = getOutboxes(ev10002);
+			const idsExist: string[] = rc.getEventsByFilter({ ids: mutedChannelIds }).map((ev) => ev.id);
+			const idsToFetch: string[] = mutedChannelIds.filter((id) => !idsExist.includes(id));
+			if (idsToFetch.length > 0) {
+				rc.fetchEventsByIds(idsToFetch, relays);
+			}
+			for (const pubkey of mutedPubkeys) {
+				if (rc.getReplaceableEvent(0, pubkey) !== undefined) {
+					continue;
+				}
+				rc.setFetchListAfter10002([pubkey], () => {
+					rc.fetchProfile(pubkey);
+				});
+			}
+		}
+	};
+
+	const saveLocalStorage = () => {
+		preferences.set({
+			loginPubkey,
+			lang,
+			isEnabledDarkMode,
+			isEnabledRelativeTime,
+			isEnabledUseClientTag,
+			isEnabledEventProtection,
+			uploaderSelected
+		});
+	};
+
+	const nlAuth = (e: Event) => {
+		let newLoginPubkey: string | undefined;
+		const ce: CustomEvent = e as CustomEvent;
+		if (ce.detail.type === 'login' || ce.detail.type === 'signup') {
+			newLoginPubkey = ce.detail.pubkey;
+		} else {
+			newLoginPubkey = undefined;
+		}
+		if (loginPubkey === newLoginPubkey) {
+			return;
+		}
+		loginPubkey = newLoginPubkey;
+		setLoginPubkey(loginPubkey);
+		saveLocalStorage();
+		rc?.dispose();
+		rc = undefined;
+		setRelayConnector(rc);
+		initFetch();
+	};
+
+	const kindSet: Set<number> = $derived.by(() => {
+		const kindSet: Set<number> = new Set<number>();
+		for (const [k, v] of urlSearchParams) {
+			if (k === 'kind' && /^\d+$/.test(v)) {
+				kindSet.add(parseInt(v));
+			}
+		}
+		return kindSet;
+	});
+	const pSet: Set<string> = $derived.by(() => {
+		const pSet: Set<string> = new Set<string>();
+		for (const [k, v] of urlSearchParams) {
+			if (k === 'p' && /^\w{64}$/.test(v)) {
+				pSet.add(v);
+			}
+		}
+		return pSet;
+	});
+	const authorSet: Set<string> = $derived.by(() => {
+		const authorSet: Set<string> = new Set<string>();
+		for (const [k, v] of urlSearchParams) {
+			if (k === 'author') {
+				authorSet.add(v);
+			}
+		}
+		return authorSet;
+	});
+	const relaySet: Set<string> = $derived.by(() => {
+		const relaySet: Set<string> = new Set<string>();
+		for (const [k, v] of urlSearchParams) {
+			if (k === 'relay' && URL.canParse(v)) {
+				relaySet.add(normalizeURL(v));
+			}
+		}
+		return relaySet;
+	});
+	let countToShow: number = $state(10);
+	const timelineSliced = $derived(eventsTimeline.slice(0, countToShow));
+	const isFullDisplayMode: boolean = $derived(
+		up.currentAddressPointer !== undefined || up.currentEventPointer !== undefined
+	);
+	const scrollThreshold: number = 300;
+	let isScrolledBottom: boolean = false;
+	let isLoading: boolean = $state(false);
+	let lastUntil: number | undefined = undefined;
+	const completeCustom = (): void => {
+		console.info('[Loading Complete]');
+		const correctionCount = timelineSliced.filter((ev) => ev.created_at === lastUntil).length;
+		countToShow += 11 - correctionCount; //unitlと同時刻のイベントは被って取得されるので補正
+		isLoading = false;
+	};
+
+	const handlerScroll = (): void => {
+		if (rc === undefined || isFullDisplayMode) {
+			return;
+		}
+		const scrollHeight = Math.max(
+			document.body.scrollHeight,
+			document.documentElement.scrollHeight,
+			document.body.offsetHeight,
+			document.documentElement.offsetHeight,
+			document.body.clientHeight,
+			document.documentElement.clientHeight
+		);
+		const pageMostBottom = scrollHeight - window.innerHeight;
+		const scrollTop = window.scrollY || document.documentElement.scrollTop;
+		if (scrollTop > pageMostBottom - scrollThreshold) {
+			if (!isScrolledBottom && !isLoading) {
+				isScrolledBottom = true;
+				isLoading = true;
+				const lastUntilNext: number | undefined = timelineSliced.at(-1)?.created_at;
+				if (lastUntilNext === undefined || lastUntil === lastUntilNext) {
+					return;
+				}
+				lastUntil = lastUntilNext;
+				console.info('[Loading Start]');
+				rc.fetchTimeline(
+					up,
+					urlSearchParams,
+					loginPubkey,
+					followingPubkeys,
+					lastUntil,
+					completeCustom
+				);
+			}
+		} else if (isScrolledBottom && scrollTop < pageMostBottom + scrollThreshold) {
+			isScrolledBottom = false;
+		}
+	};
+
+	let unsubscriber: Unsubscriber | undefined;
 	onMount(async () => {
-		locale.set(lang ?? initialLocale);
+		if (up.isError) {
+			return;
+		}
 		if (document.querySelector('body > nl-banner') === null) {
 			const { init } = await import('nostr-login');
 			init({
@@ -126,39 +689,70 @@
 		}
 	});
 	beforeNavigate(() => {
+		if (unsubscriber !== undefined) {
+			unsubscriber();
+		}
 		clearInterval(intervalID);
 		document.removeEventListener('nlAuth', nlAuth);
+		document.removeEventListener('scroll', handlerScroll);
 	});
 	afterNavigate(() => {
+		unsubscriber = preferences.subscribe(
+			(value: {
+				loginPubkey: string | undefined;
+				lang: string;
+				isEnabledDarkMode: boolean;
+				isEnabledRelativeTime: boolean;
+				isEnabledUseClientTag: boolean;
+				isEnabledEventProtection: boolean;
+				uploaderSelected: string;
+			}) => {
+				loginPubkey = value.loginPubkey;
+				setLoginPubkey(loginPubkey);
+				lang = value.lang;
+				isEnabledDarkMode = value.isEnabledDarkMode;
+				isEnabledRelativeTime = value.isEnabledRelativeTime;
+				isEnabledUseClientTag = value.isEnabledUseClientTag;
+				isEnabledEventProtection = value.isEnabledEventProtection;
+				uploaderSelected = value.uploaderSelected;
+			}
+		);
+		if (up.isError) {
+			return;
+		}
+		urlSearchParams = page.url.searchParams;
 		document.addEventListener('nlAuth', nlAuth);
-		idTimeoutLoading = setTimeout(getEventsFirstWithLoading, 100);
+		document.addEventListener('scroll', handlerScroll);
+		setTimeout(() => {
+			locale.set(lang);
+			initFetch();
+		}, 10);
 		intervalID = setInterval(() => {
 			nowRealtime = unixNow();
 		}, 5000);
-		urlSearchParams = page.url.searchParams;
 	});
 
 	const title: string = $derived.by(() => {
 		let title: string | undefined;
-		if (isSettings) {
+		if (up.isSettings) {
 			title = $_('App.title.settings');
-		} else if (query !== undefined) {
+		} else if (up.query !== undefined) {
 			title = $_('App.title.search');
-		} else if (isAntenna) {
+		} else if (up.isAntenna) {
 			title = $_('App.title.antenna');
-		} else if (currentEventPointer !== undefined || currentAddressPointer !== undefined) {
+		} else if (up.currentEventPointer !== undefined || up.currentAddressPointer !== undefined) {
 			title = $_('App.title.entry');
-		} else if (currentProfilePointer !== undefined) {
-			const prof = profileMap.get(currentProfilePointer.pubkey);
-			title = `${prof?.display_name ?? ''} (id:${prof?.name ?? `${currentProfilePointer.pubkey.slice(0, 15)}...`})`;
-		} else if (currentChannelPointer !== undefined) {
-			const channel = channelMap.get(currentChannelPointer.id);
+		} else if (up.currentProfilePointer !== undefined) {
+			const prof = profileMap.get(up.currentProfilePointer.pubkey);
+			title = `${prof?.display_name ?? ''} (id:${prof?.name ?? `${up.currentProfilePointer.pubkey.slice(0, 15)}...`})`;
+		} else if (up.currentChannelPointer !== undefined) {
+			const channel = channelMap.get(up.currentChannelPointer.id);
 			title = channel?.name ?? 'unknown channel';
-		} else if (hashtag !== undefined) {
-			title = `#${hashtag}`;
-		} else if (category !== undefined) {
-			title = `#${category}`;
-		} else if (isError) {
+		} else if (up.hashtag !== undefined) {
+			title = `#${up.hashtag}`;
+		} else if (up.category !== undefined) {
+			title = `#${up.category}`;
+		} else if (up.isError) {
 			title = $_('App.title.home');
 		} else if (page.url.pathname === '/') {
 			title = $_('App.title.home');
@@ -179,16 +773,20 @@
 </svelte:head>
 
 <div id="app" class={loginPubkey !== undefined && isEnabledDarkMode ? 'dark' : 'light'}>
-	{#if isError}
+	{#if up.isError}
 		<Header
+			{rc}
 			{loginPubkey}
-			{currentProfilePointer}
-			{query}
+			{eventsMention}
+			{eventFollowList}
+			readTimeOfNotification={eventRead?.created_at ?? 0}
+			currentProfilePointer={up.currentProfilePointer}
+			query={up.query}
 			{urlSearchParams}
 			{profileMap}
 			{mutedPubkeys}
 			{mutedWords}
-			{mutedHashTags}
+			{mutedHashtags}
 			{isEnabledRelativeTime}
 			{nowRealtime}
 			isEnabledScrollInfinitely={false}
@@ -206,63 +804,91 @@
 				</div>
 			</div>
 		</main>
-	{:else if isSettings === true}
+	{:else if up.isSettings === true}
 		<Settings
+			{rc}
 			{loginPubkey}
-			{query}
+			{eventsMention}
+			{eventFollowList}
+			readTimeOfNotification={eventRead?.created_at ?? 0}
+			query={up.query}
 			{urlSearchParams}
 			{lang}
+			{setLang}
 			{isEnabledDarkMode}
+			{setIsEnabledDarkMode}
 			{isEnabledRelativeTime}
-			{isEnabledSkipKind1}
+			{setIsEnabledRelativeTime}
 			{isEnabledUseClientTag}
-			{isEnabledOutboxModel}
+			{setIsEnabledUseClientTag}
 			{isEnabledEventProtection}
-			{relaysSelected}
+			{setIsEnabledEventProtection}
+			{eventMuteList}
+			{eventRelayList}
 			{uploaderSelected}
+			{setUploaderSelected}
+			{eventsQuoted}
 			{profileMap}
 			{channelMap}
 			{mutedPubkeys}
 			{mutedChannelIds}
 			{mutedWords}
-			{mutedHashTags}
+			{mutedHashtags}
 			{followingPubkeys}
 			{nowRealtime}
 		/>
-	{:else if query !== undefined && Array.from(urlSearchParams.entries()).every(([k, v]) => k === 'kind' && /^\d+$/.test(v) && [40, 41].includes(parseInt(v)))}
+	{:else if up.query !== undefined && Array.from(urlSearchParams.entries()).every(([k, v]) => k === 'kind' && /^\d+$/.test(v) && [40, 41].includes(parseInt(v)))}
 		<Search
+			{rc}
 			{loginPubkey}
-			{currentProfilePointer}
-			{query}
+			{eventsMention}
+			{eventFollowList}
+			readTimeOfNotification={eventRead?.created_at ?? 0}
+			currentProfilePointer={up.currentProfilePointer}
+			query={up.query}
 			{urlSearchParams}
 			{profileMap}
 			{channelMap}
 			{mutedPubkeys}
 			{mutedWords}
-			{mutedHashTags}
+			{mutedHashtags}
 			{isEnabledRelativeTime}
 			{nowRealtime}
 		/>
 	{:else}
 		<Page
+			{rc}
 			{loginPubkey}
-			{isAntenna}
-			{currentProfilePointer}
-			{currentChannelPointer}
-			{currentEventPointer}
-			{currentAddressPointer}
-			{query}
+			{eventsMention}
+			readTimeOfNotification={eventRead?.created_at ?? 0}
+			eventsTimeline={timelineSliced}
+			{eventsQuoted}
+			{eventsReaction}
+			{eventsChannelBookmark}
+			{eventsEmojiSet}
+			{eventFollowList}
+			{eventMuteList}
+			{eventMyPublicChatsList}
+			{eventEmojiSetList}
+			isAntenna={up.isAntenna}
+			currentProfilePointer={up.currentProfilePointer}
+			currentChannelPointer={up.currentChannelPointer}
+			currentEventPointer={up.currentEventPointer}
+			currentAddressPointer={up.currentAddressPointer}
+			query={up.query}
 			{urlSearchParams}
-			{hashtag}
-			{category}
+			hashtag={up.hashtag}
+			category={up.category}
 			{profileMap}
 			{channelMap}
 			{mutedPubkeys}
 			{mutedChannelIds}
 			{mutedWords}
-			{mutedHashTags}
+			{mutedHashtags}
 			{followingPubkeys}
 			{uploaderSelected}
+			{isEnabledEventProtection}
+			{isEnabledUseClientTag}
 			{isEnabledRelativeTime}
 			{nowRealtime}
 			bind:isLoading

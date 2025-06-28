@@ -1,17 +1,18 @@
 <script lang="ts">
 	import { defaultReactionToShow, getRoboHashURL } from '$lib/config';
 	import { isCustomEmoji, isValidEmoji } from '$lib/utils';
-	import { sendDeletion } from '$lib/resource.svelte';
 	import type { NostrEvent } from 'nostr-tools/pure';
 	import * as nip19 from 'nostr-tools/nip19';
 	import type { ProfileContent } from 'applesauce-core/helpers';
 
 	let {
 		reactionEvent,
+		sendDeletion,
 		profile,
 		isAuthor
 	}: {
 		reactionEvent: NostrEvent;
+		sendDeletion: (targetEvent: NostrEvent) => Promise<void>;
 		profile: ProfileContent | undefined;
 		isAuthor: boolean;
 	} = $props();

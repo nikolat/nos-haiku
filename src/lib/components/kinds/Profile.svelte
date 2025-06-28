@@ -1,15 +1,12 @@
 <script lang="ts">
 	import { getRoboHashURL, serviceIconImageUri, getUrlToLinkProfile } from '$lib/config';
-	import { loginWithNpub, type ChannelContent, type ProfileContentEvent } from '$lib/utils';
 	import {
-		followUser,
-		getEventByAddressPointer,
-		getProfileId,
-		getProfileName,
-		muteUser,
-		unfollowUser,
-		unmuteUser
-	} from '$lib/resource.svelte';
+		getName,
+		loginWithNpub,
+		type ChannelContent,
+		type ProfileContentEvent
+	} from '$lib/utils';
+	import type { RelayConnector } from '$lib/resource';
 	import Content from '$lib/components/Content.svelte';
 	import Badges from '$lib/components/kinds/Badges.svelte';
 	import { onMount } from 'svelte';
@@ -17,40 +14,80 @@
 	import type { NostrEvent } from 'nostr-tools/pure';
 	import * as nip05 from 'nostr-tools/nip05';
 	import * as nip19 from 'nostr-tools/nip19';
+	import type { ProfileContent } from 'applesauce-core/helpers';
 	import { _ } from 'svelte-i18n';
 
 	const {
+		rc,
 		loginPubkey,
 		currentPubkey,
 		profileMap,
 		channelMap,
 		eventsTimeline,
+		eventsQuoted,
 		eventsReaction,
 		eventsEmojiSet,
+		eventsChannelBookmark,
 		mutedPubkeys,
 		mutedChannelIds,
 		mutedWords,
-		mutedHashTags,
-		followingPubkeys
+		mutedHashtags,
+		followingPubkeys,
+		eventFollowList,
+		eventEmojiSetList,
+		eventMuteList
 	}: {
+		rc: RelayConnector | undefined;
 		loginPubkey: string | undefined;
 		currentPubkey: string;
 		profileMap: Map<string, ProfileContentEvent>;
 		channelMap: Map<string, ChannelContent>;
 		eventsTimeline: NostrEvent[];
+		eventsQuoted: NostrEvent[];
 		eventsReaction: NostrEvent[];
 		eventsEmojiSet: NostrEvent[];
+		eventsChannelBookmark: NostrEvent[];
 		mutedPubkeys: string[];
 		mutedChannelIds: string[];
 		mutedWords: string[];
-		mutedHashTags: string[];
+		mutedHashtags: string[];
 		followingPubkeys: string[];
+		eventFollowList: NostrEvent | undefined;
+		eventEmojiSetList: NostrEvent | undefined;
+		eventMuteList: NostrEvent | undefined;
 	} = $props();
 
+	const name = $derived(getName(currentPubkey, profileMap, eventFollowList));
 	const prof = $derived(profileMap.get(currentPubkey));
 	const nip05string: string | undefined = $derived(prof?.nip05);
+
+	const eventsAll: NostrEvent[] = $derived.by(() => {
+		const eventMap = new Map<string, NostrEvent>();
+		for (const ev of [...eventsTimeline, ...eventsQuoted]) {
+			eventMap.set(ev.id, ev);
+		}
+		return Array.from(eventMap.values());
+	});
+	const getEventById = (id: string, eventsAll: NostrEvent[]): NostrEvent | undefined => {
+		return eventsAll.find((ev) => ev.id === id);
+	};
+	const getEventByAddressPointer = (
+		data: nip19.AddressPointer,
+		eventsAll: NostrEvent[]
+	): NostrEvent | undefined => {
+		return eventsAll.find(
+			(ev) =>
+				ev.pubkey === data.pubkey &&
+				ev.kind === data.kind &&
+				(ev.tags.find((tag) => tag.length >= 2 && tag[0] === 'd')?.at(1) ?? '') === data.identifier
+		);
+	};
+
 	const badgeEvent: NostrEvent | undefined = $derived(
-		getEventByAddressPointer({ identifier: 'profile_badges', pubkey: currentPubkey, kind: 30008 })
+		getEventByAddressPointer(
+			{ kind: 30008, pubkey: currentPubkey, identifier: 'profile_badges' },
+			eventsAll
+		)
 	);
 
 	let showSetting: boolean = $state(false);
@@ -59,6 +96,14 @@
 		if (!target?.closest('.Actions')) {
 			showSetting = false;
 		}
+	};
+
+	const getProfileId = (prof: ProfileContent | undefined) => {
+		let name = prof?.name !== undefined ? `id:${prof.name}` : 'anonymouse';
+		if (name.length > 30) {
+			name = `${name.slice(0, 25)}...`;
+		}
+		return name;
 	};
 
 	onMount(() => {
@@ -89,7 +134,7 @@
 					<a href={`/${nip19.npubEncode(currentPubkey)}`}>
 						<img
 							src={prof?.picture ?? getRoboHashURL(nip19.npubEncode(currentPubkey))}
-							alt={$_('Profile.profile-image-of').replace('{name}', getProfileName(currentPubkey))}
+							alt={$_('Profile.profile-image-of').replace('{name}', name)}
 						/>
 					</a>
 				</div>
@@ -136,62 +181,46 @@
 								{#if mutedPubkeys.includes(currentPubkey)}
 									<a
 										onclick={() => {
-											unmuteUser(currentPubkey, loginPubkey);
+											rc?.unmutePubkey(currentPubkey, loginPubkey, $state.snapshot(eventMuteList));
 										}}
 									>
 										<i class="fa-fw fas fa-eye"></i>
 										{$_('Profile.unmute-pre')}
-										<Content
-											content={getProfileName(currentPubkey)}
-											tags={prof?.event.tags ?? []}
-											isAbout={true}
-										/>
+										<Content content={name} tags={prof?.event.tags ?? []} isAbout={true} />
 										{$_('Profile.unmute-suf')}
 									</a>
 								{:else}
 									<a
 										onclick={() => {
-											muteUser(currentPubkey, loginPubkey);
+											rc?.mutePubkey(currentPubkey, loginPubkey, $state.snapshot(eventMuteList));
 										}}
 									>
 										<i class="fa-fw fas fa-eye-slash"></i>
 										{$_('Profile.mute-pre')}
-										<Content
-											content={getProfileName(currentPubkey)}
-											tags={prof?.event.tags ?? []}
-											isAbout={true}
-										/>
+										<Content content={name} tags={prof?.event.tags ?? []} isAbout={true} />
 										{$_('Profile.mute-suf')}
 									</a>
 								{/if}
 							{:else}
 								<a
-									title={`${$_('Profile.login-as-the-user-pre')}${getProfileName(currentPubkey)}${$_('Profile.login-as-the-user-suf')}`}
+									title={`${$_('Profile.login-as-the-user-pre')}${name}${$_('Profile.login-as-the-user-suf')}`}
 									onclick={() => {
 										loginWithNpub(nip19.npubEncode(currentPubkey));
 									}}
 								>
 									<i class="fa-fw fas fa-eye"></i>
 									{$_('Profile.login-as-the-user-pre')}
-									<Content
-										content={getProfileName(currentPubkey)}
-										tags={prof?.event.tags ?? []}
-										isAbout={true}
-									/>
+									<Content content={name} tags={prof?.event.tags ?? []} isAbout={true} />
 									{$_('Profile.login-as-the-user-suf')}
 								</a>
 							{/if}
 							<a
-								title={`${$_('Profile.view-custom-emoji-pre')}${getProfileName(currentPubkey)}${$_('Profile.view-custom-emoji-suf')}`}
+								title={`${$_('Profile.view-custom-emoji-pre')}${name}${$_('Profile.view-custom-emoji-suf')}`}
 								href={`/entry/${nip19.naddrEncode({ identifier: '', pubkey: currentPubkey, kind: 10030 })}`}
 							>
 								<i class="fa-fw fas fa-smile"></i>
 								{$_('Profile.view-custom-emoji-pre')}
-								<Content
-									content={getProfileName(currentPubkey)}
-									tags={prof?.event.tags ?? []}
-									isAbout={true}
-								/>
+								<Content content={name} tags={prof?.event.tags ?? []} isAbout={true} />
 								{$_('Profile.view-custom-emoji-suf')}
 							</a>
 						</div>
@@ -207,7 +236,9 @@
 								<span
 									class="fa-fw fas fa-heart"
 									onclick={() => {
-										unfollowUser(currentPubkey);
+										if (rc !== undefined && eventFollowList !== undefined) {
+											rc.unfollowPubkey(currentPubkey, eventFollowList);
+										}
 									}}
 								></span>
 							</div>
@@ -218,7 +249,7 @@
 								<span
 									class="fa-fw fas fa-heart"
 									onclick={() => {
-										followUser(currentPubkey);
+										rc?.followPubkey(currentPubkey, eventFollowList);
 									}}
 								></span>
 							</div>
@@ -228,14 +259,10 @@
 			{/if}
 		</div>
 		<div class="ProfileBox__content">
-			<Badges {currentPubkey} {badgeEvent} />
+			<Badges {currentPubkey} {badgeEvent} {eventsAll} {getEventById} {getEventByAddressPointer} />
 			<h3 class="router-link-exact-active router-link-active">
 				<a href={`/${nip19.npubEncode(currentPubkey)}`}>
-					<Content
-						content={getProfileName(currentPubkey)}
-						tags={prof?.event.tags ?? []}
-						isAbout={true}
-					/>
+					<Content content={name} tags={prof?.event.tags ?? []} isAbout={true} />
 				</a>
 			</h3>
 			<div class="HatenaID">
@@ -266,6 +293,7 @@
 			{/if}
 			<p>
 				<Content
+					{rc}
 					content={prof?.about ?? ''}
 					tags={profileMap.get(currentPubkey)?.event.tags ?? []}
 					{channelMap}
@@ -274,15 +302,25 @@
 					{mutedPubkeys}
 					{mutedChannelIds}
 					{mutedWords}
-					{mutedHashTags}
+					{mutedHashtags}
 					{followingPubkeys}
+					{eventFollowList}
+					{eventEmojiSetList}
+					{eventMuteList}
 					{eventsTimeline}
+					{eventsQuoted}
 					{eventsReaction}
 					{eventsEmojiSet}
+					{eventsChannelBookmark}
+					getSeenOn={() => {
+						return [];
+					}}
 					uploaderSelected=""
 					channelToPost={undefined}
 					currentChannelId={undefined}
 					isEnabledRelativeTime={true}
+					isEnabledEventProtection={false}
+					clientTag={undefined}
 					nowRealtime={0}
 					level={0}
 					isPreview={false}

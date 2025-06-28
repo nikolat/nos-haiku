@@ -1,12 +1,18 @@
 <script lang="ts">
 	import { getRoboHashURL } from '$lib/config';
-	import { urlLinkString, type ChannelContent, type ProfileContentEvent } from '$lib/utils';
-	import { getEventById, getEventByAddressPointer, getProfileName } from '$lib/resource.svelte';
+	import {
+		getName,
+		urlLinkString,
+		type ChannelContent,
+		type ProfileContentEvent
+	} from '$lib/utils';
+	import type { RelayConnector } from '$lib/resource';
 	import Entry from '$lib/components/Entry.svelte';
 	import type { NostrEvent } from 'nostr-tools/pure';
 	import * as nip19 from 'nostr-tools/nip19';
 
 	let {
+		rc,
 		content,
 		tags,
 		channelMap = new Map<string, ChannelContent>(),
@@ -15,11 +21,17 @@
 		mutedPubkeys = [],
 		mutedChannelIds = [],
 		mutedWords = [],
-		mutedHashTags = [],
+		mutedHashtags = [],
 		followingPubkeys = [],
+		eventFollowList,
+		eventEmojiSetList,
+		eventMuteList,
 		eventsTimeline = [],
+		eventsQuoted = [],
 		eventsReaction = [],
 		eventsEmojiSet = [],
+		eventsChannelBookmark = [],
+		getSeenOn = () => [],
 		uploaderSelected = '',
 		channelToPost = $bindable(),
 		currentChannelId,
@@ -30,8 +42,11 @@
 		isAbout = false,
 		enableAutoLink = true,
 		isEnabledRelativeTime = true,
+		isEnabledEventProtection = false,
+		clientTag,
 		nowRealtime = 0
 	}: {
+		rc?: RelayConnector | undefined;
 		content: string;
 		tags: string[][];
 		channelMap?: Map<string, ChannelContent>;
@@ -40,11 +55,17 @@
 		mutedPubkeys?: string[];
 		mutedChannelIds?: string[];
 		mutedWords?: string[];
-		mutedHashTags?: string[];
+		mutedHashtags?: string[];
 		followingPubkeys?: string[];
+		eventFollowList?: NostrEvent | undefined;
+		eventEmojiSetList?: NostrEvent | undefined;
+		eventMuteList?: NostrEvent | undefined;
 		eventsTimeline?: NostrEvent[];
+		eventsQuoted?: NostrEvent[];
 		eventsReaction?: NostrEvent[];
 		eventsEmojiSet?: NostrEvent[];
+		eventsChannelBookmark?: NostrEvent[];
+		getSeenOn?: (id: string, excludeWs: boolean) => string[];
 		uploaderSelected?: string;
 		channelToPost?: ChannelContent;
 		currentChannelId?: string;
@@ -55,6 +76,8 @@
 		isAbout?: boolean;
 		enableAutoLink?: boolean;
 		isEnabledRelativeTime?: boolean;
+		isEnabledEventProtection?: boolean;
+		clientTag?: string[] | undefined;
 		nowRealtime?: number;
 	} = $props();
 
@@ -106,6 +129,22 @@
 			url.searchParams.append('relay', relayUrl);
 		}
 		return url.href;
+	};
+
+	const eventsAll: NostrEvent[] = $derived([...eventsTimeline, ...eventsQuoted]);
+	const getEventById = (id: string, eventsAll: NostrEvent[]): NostrEvent | undefined => {
+		return eventsAll.find((ev) => ev.id === id);
+	};
+	const getEventByAddressPointer = (
+		data: nip19.AddressPointer,
+		eventsAll: NostrEvent[]
+	): NostrEvent | undefined => {
+		return eventsAll.find(
+			(ev) =>
+				ev.pubkey === data.pubkey &&
+				ev.kind === data.kind &&
+				(ev.tags.find((tag) => tag.length >= 2 && tag[0] === 'd')?.at(1) ?? '') === data.identifier
+		);
 	};
 </script>
 
@@ -173,10 +212,10 @@
 			<a href="/{npubText}"
 				><img
 					src={prof?.picture ?? getRoboHashURL(nip19.npubEncode(d.data))}
-					alt={getProfileName(d.data)}
-					title={getProfileName(d.data)}
+					alt={getName(d.data, profileMap, eventFollowList)}
+					title={getName(d.data, profileMap, eventFollowList)}
 					class="Avatar"
-				/>{getProfileName(d.data)}</a
+				/>{getName(d.data, profileMap, eventFollowList)}</a
 			>
 		{:else}{matchedText}
 		{/if}
@@ -189,10 +228,10 @@
 			<a href="/{nprofileText}"
 				><img
 					src={prof?.picture ?? getRoboHashURL(nip19.npubEncode(d.data.pubkey))}
-					alt={getProfileName(d.data.pubkey)}
-					title={getProfileName(d.data.pubkey)}
+					alt={getName(d.data.pubkey, profileMap, eventFollowList)}
+					title={getName(d.data.pubkey, profileMap, eventFollowList)}
 					class="Avatar"
-				/>{getProfileName(d.data.pubkey)}</a
+				/>{getName(d.data.pubkey, profileMap, eventFollowList)}</a
 			>
 		{:else}{matchedText}
 		{/if}
@@ -201,25 +240,34 @@
 		{@const d = nip19decode(matchedText.replace(/nostr:/, ''))}
 		{#if d?.type === 'note'}
 			{@const eventId = d.data}
-			{@const event = getEventById(eventId)}
+			{@const event = getEventById(eventId, eventsAll)}
 			{#if event !== undefined}
 				<Entry
 					{event}
+					{rc}
 					{channelMap}
 					{profileMap}
 					{loginPubkey}
 					{mutedPubkeys}
 					{mutedChannelIds}
 					{mutedWords}
-					{mutedHashTags}
+					{mutedHashtags}
 					{followingPubkeys}
+					{eventFollowList}
+					{eventEmojiSetList}
+					{eventMuteList}
 					{eventsTimeline}
+					{eventsQuoted}
 					{eventsReaction}
 					{eventsEmojiSet}
+					{eventsChannelBookmark}
+					{getSeenOn}
 					{uploaderSelected}
 					bind:channelToPost
 					{currentChannelId}
 					{isEnabledRelativeTime}
+					{isEnabledEventProtection}
+					{clientTag}
 					{nowRealtime}
 					level={level + 1}
 					isFullDisplayMode={false}
@@ -236,25 +284,34 @@
 		{@const d = nip19decode(matchedText.replace(/nostr:/, ''))}
 		{#if d?.type === 'nevent'}
 			{@const eventId = d.data.id}
-			{@const event = getEventById(eventId)}
+			{@const event = getEventById(eventId, eventsAll)}
 			{#if event !== undefined}
 				<Entry
 					{event}
+					{rc}
 					{channelMap}
 					{profileMap}
 					{loginPubkey}
 					{mutedPubkeys}
 					{mutedChannelIds}
 					{mutedWords}
-					{mutedHashTags}
+					{mutedHashtags}
 					{followingPubkeys}
+					{eventFollowList}
+					{eventEmojiSetList}
+					{eventMuteList}
 					{eventsTimeline}
+					{eventsQuoted}
 					{eventsReaction}
 					{eventsEmojiSet}
+					{eventsChannelBookmark}
+					{getSeenOn}
 					{uploaderSelected}
 					bind:channelToPost
 					{currentChannelId}
 					{isEnabledRelativeTime}
+					{isEnabledEventProtection}
+					{clientTag}
 					{nowRealtime}
 					level={level + 1}
 					isFullDisplayMode={false}
@@ -270,28 +327,37 @@
 		{@const matchedText = nostr_naddr1}
 		{@const d = nip19decode(matchedText.replace(/nostr:/, ''))}
 		{#if d?.type === 'naddr'}
-			{@const event = getEventByAddressPointer(d.data)}
+			{@const event = getEventByAddressPointer(d.data, eventsAll)}
 			{#if event !== undefined}
 				{#if level >= 10}
 					{matchedText}
 				{:else}
 					<Entry
 						{event}
+						{rc}
 						{channelMap}
 						{profileMap}
 						{loginPubkey}
 						{mutedPubkeys}
 						{mutedChannelIds}
 						{mutedWords}
-						{mutedHashTags}
+						{mutedHashtags}
 						{followingPubkeys}
+						{eventFollowList}
+						{eventEmojiSetList}
+						{eventMuteList}
 						{eventsTimeline}
+						{eventsQuoted}
 						{eventsReaction}
 						{eventsEmojiSet}
+						{eventsChannelBookmark}
+						{getSeenOn}
 						{uploaderSelected}
 						bind:channelToPost
 						{currentChannelId}
 						{isEnabledRelativeTime}
+						{isEnabledEventProtection}
+						{clientTag}
 						{nowRealtime}
 						level={level + 1}
 						isFullDisplayMode={false}

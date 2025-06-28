@@ -1,87 +1,96 @@
 <script lang="ts">
 	import { uploaderURLs, urlToLinkProfileEditor } from '$lib/config';
-	import type { ChannelContent, ProfileContentEvent } from '$lib/utils';
 	import {
-		clearCache,
-		getRelaySets,
-		getRelaysToUse,
-		setIsEnabledDarkMode,
-		setIsEnabledEventProtection,
-		setIsEnabledOutboxModel,
-		setIsEnabledRelativeTime,
-		setIsEnabledSkipKind1,
-		setIsEnabledUseClientTag,
-		setLang,
-		setRelaysSelected,
-		setRelaysToUseSelected,
-		setUploaderSelected
-	} from '$lib/resource.svelte';
+		getRelaysToUseFromKind10002Event,
+		type ChannelContent,
+		type ProfileContentEvent
+	} from '$lib/utils';
+	import type { RelayConnector } from '$lib/resource';
 	import Profile from '$lib/components/kinds/Profile.svelte';
 	import MuteList from '$lib/components/kinds/MuteList.svelte';
 	import RelayList from '$lib/components/kinds/RelayList.svelte';
 	import Header from '$lib/components/Header.svelte';
-	import { goto } from '$app/navigation';
 	import type { NostrEvent } from 'nostr-tools/pure';
-	import type { RelayRecord } from 'nostr-tools/relay';
 	import { _ } from 'svelte-i18n';
 
 	let {
+		rc,
 		loginPubkey,
+		eventsMention,
+		eventFollowList,
+		readTimeOfNotification,
 		query,
 		urlSearchParams,
 		lang,
+		setLang,
 		isEnabledDarkMode,
+		setIsEnabledDarkMode,
 		isEnabledRelativeTime,
-		isEnabledSkipKind1,
+		setIsEnabledRelativeTime,
 		isEnabledUseClientTag,
-		isEnabledOutboxModel,
+		setIsEnabledUseClientTag,
 		isEnabledEventProtection,
-		relaysSelected,
+		setIsEnabledEventProtection,
+		eventMuteList,
+		eventRelayList,
 		uploaderSelected,
+		setUploaderSelected,
+		eventsQuoted,
 		profileMap,
 		channelMap,
 		mutedPubkeys,
 		mutedChannelIds,
 		mutedWords,
-		mutedHashTags,
+		mutedHashtags,
 		followingPubkeys,
 		nowRealtime
 	}: {
+		rc: RelayConnector | undefined;
 		loginPubkey: string | undefined;
+		eventsMention: NostrEvent[];
+		eventFollowList: NostrEvent | undefined;
+		readTimeOfNotification: number;
 		query: string | undefined;
 		urlSearchParams: URLSearchParams;
 		lang: string;
+		setLang: (value: string) => void;
 		isEnabledDarkMode: boolean;
+		setIsEnabledDarkMode: (value: boolean) => void;
 		isEnabledRelativeTime: boolean;
-		isEnabledSkipKind1: boolean;
+		setIsEnabledRelativeTime: (value: boolean) => void;
 		isEnabledUseClientTag: boolean;
-		isEnabledOutboxModel: boolean;
+		setIsEnabledUseClientTag: (value: boolean) => void;
 		isEnabledEventProtection: boolean;
-		relaysSelected: string;
+		setIsEnabledEventProtection: (value: boolean) => void;
+		eventMuteList: NostrEvent | undefined;
+		eventRelayList: NostrEvent | undefined;
 		uploaderSelected: string;
+		setUploaderSelected: (value: string) => void;
+		eventsQuoted: NostrEvent[];
 		profileMap: Map<string, ProfileContentEvent>;
 		channelMap: Map<string, ChannelContent>;
 		mutedPubkeys: string[];
 		mutedChannelIds: string[];
 		mutedWords: string[];
-		mutedHashTags: string[];
+		mutedHashtags: string[];
 		followingPubkeys: string[];
 		nowRealtime: number;
 	} = $props();
-
-	const relaysToUse: RelayRecord = $derived(getRelaysToUse());
-	const relaySets: NostrEvent[] = $derived(getRelaySets());
 </script>
 
 <Header
+	{rc}
 	{loginPubkey}
+	{eventsMention}
+	{eventFollowList}
+	{readTimeOfNotification}
 	currentProfilePointer={undefined}
 	{query}
 	{urlSearchParams}
 	{profileMap}
 	{mutedPubkeys}
 	{mutedWords}
-	{mutedHashTags}
+	{mutedHashtags}
 	{isEnabledRelativeTime}
 	{nowRealtime}
 	isEnabledScrollInfinitely={false}
@@ -137,18 +146,24 @@
 							<div class="Control">
 								{#if loginPubkey !== undefined}
 									<Profile
+										{rc}
 										{loginPubkey}
 										currentPubkey={loginPubkey}
 										{profileMap}
 										channelMap={new Map<string, ChannelContent>()}
 										eventsTimeline={[]}
+										{eventsQuoted}
 										eventsReaction={[]}
 										eventsEmojiSet={[]}
+										eventsChannelBookmark={[]}
 										{followingPubkeys}
 										{mutedPubkeys}
 										{mutedChannelIds}
 										{mutedWords}
-										{mutedHashTags}
+										{mutedHashtags}
+										eventFollowList={undefined}
+										eventEmojiSetList={undefined}
+										{eventMuteList}
 									/>
 								{/if}
 							</div>
@@ -215,24 +230,6 @@
 							</div>
 						</div>
 						<div class="Settings__section">
-							<div class="Label"><span>{$_('Settings.account.skip-kind-1')}</span></div>
-							<div class="Control">
-								<label class="SliderSwitch"
-									><input
-										name="ui_theme"
-										type="checkbox"
-										disabled={loginPubkey === undefined}
-										bind:checked={isEnabledSkipKind1}
-										onchange={() => {
-											setIsEnabledSkipKind1(isEnabledSkipKind1);
-											clearCache();
-											goto(location.href);
-										}}
-									/><span class="Slider Round"></span></label
-								>
-							</div>
-						</div>
-						<div class="Settings__section">
 							<div class="Label"><span>{$_('Settings.account.client-tag')}</span></div>
 							<div class="Control">
 								<label class="SliderSwitch"
@@ -243,24 +240,6 @@
 										bind:checked={isEnabledUseClientTag}
 										onchange={() => {
 											setIsEnabledUseClientTag(isEnabledUseClientTag);
-										}}
-									/><span class="Slider Round"></span></label
-								>
-							</div>
-						</div>
-						<div class="Settings__section">
-							<div class="Label"><span>{$_('Settings.account.outbox-model')}</span></div>
-							<div class="Control">
-								<label class="SliderSwitch"
-									><input
-										name="ui_theme"
-										type="checkbox"
-										disabled={loginPubkey === undefined}
-										bind:checked={isEnabledOutboxModel}
-										onchange={() => {
-											setIsEnabledOutboxModel(isEnabledOutboxModel);
-											clearCache();
-											goto(location.href);
 										}}
 									/><span class="Slider Round"></span></label
 								>
@@ -285,35 +264,10 @@
 						<div class="Settings__section">
 							<div class="Label"><span>{$_('Settings.account.relays')}</span></div>
 							<div class="Control">
-								<label for="select-relay-list">{$_('Settings.account.select-relay-set')}: </label>
-								<select
-									id="select-relay-list"
-									bind:value={relaysSelected}
-									onchange={async () => {
-										setRelaysSelected(relaysSelected);
-										await setRelaysToUseSelected(relaysSelected);
-										clearCache();
-										goto(location.href);
-									}}
-								>
-									{#if loginPubkey !== undefined}
-										<option value="kind10002">kind 10002</option>
-										{#if relaySets.length > 0}
-											<optgroup label="kind 30002">
-												{#each relaySets as relaySet (relaySet.id)}
-													{@const dTag =
-														relaySet.tags.find((tag) => tag.length >= 2 && tag[0] === 'd')?.at(1) ??
-														''}
-													<option value={`${relaySet.kind}:${relaySet.pubkey}:${dTag}`}
-														>{dTag}</option
-													>
-												{/each}
-											</optgroup>
-										{/if}
-									{/if}
-									<option value="default">Default</option>
-								</select>
-								<RelayList {relaysToUse} showIcon={true} />
+								<RelayList
+									relaysToUse={getRelaysToUseFromKind10002Event(eventRelayList)}
+									showIcon={true}
+								/>
 							</div>
 						</div>
 						<div class="Settings__section">
@@ -346,13 +300,15 @@
 					</div>
 					<div class="Settings__body">
 						<MuteList
+							{rc}
 							{loginPubkey}
 							{profileMap}
 							{channelMap}
 							{mutedPubkeys}
 							{mutedChannelIds}
 							{mutedWords}
-							{mutedHashTags}
+							{mutedHashtags}
+							{eventMuteList}
 							isAuthor={true}
 						/>
 					</div>

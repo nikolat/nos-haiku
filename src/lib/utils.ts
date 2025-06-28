@@ -1,11 +1,17 @@
-import { verifyEvent, type NostrEvent, type VerifiedEvent } from 'nostr-tools/pure';
+import { sortEvents, verifyEvent, type NostrEvent, type VerifiedEvent } from 'nostr-tools/pure';
+import type { Filter } from 'nostr-tools/filter';
 import type { RelayRecord } from 'nostr-tools/relay';
+import { isAddressableKind, isReplaceableKind } from 'nostr-tools/kinds';
 import { normalizeURL } from 'nostr-tools/utils';
 import * as nip19 from 'nostr-tools/nip19';
-import { defaultRelays } from '$lib/config';
-import { getEventByAddressPointer, getEventById } from '$lib/resource.svelte';
-import type { EventStore } from 'applesauce-core';
-import type { ProfileContent } from 'applesauce-core/helpers';
+import type { LazyFilter } from 'rx-nostr';
+import {
+	getCoordinateFromAddressPointer,
+	getOutboxes,
+	getProfileContent,
+	getTagValue,
+	type ProfileContent
+} from 'applesauce-core/helpers';
 import data from '@emoji-mart/data';
 // @ts-expect-error なんもわからんかも
 import type { BaseEmoji } from '@types/emoji-mart';
@@ -41,7 +47,6 @@ export type UrlParams = {
 	hashtag?: string;
 	category?: string;
 	query?: string;
-	urlSearchParams?: URLSearchParams;
 	isSettings?: boolean;
 	isAntenna?: boolean;
 	isError?: boolean;
@@ -51,6 +56,27 @@ interface MyBaseEmoji extends BaseEmoji {
 	shortcodes: string;
 	src: string | undefined;
 }
+
+export const kindsForParse: number[] = [1, 42, 1111, 30023, 39701];
+
+export const getEventsAddressableLatest = (events: NostrEvent[]): NostrEvent[] => {
+	const eventMap: Map<string, NostrEvent> = new Map<string, NostrEvent>();
+	for (const ev of events) {
+		if (!(isAddressableKind(ev.kind) || isReplaceableKind(ev.kind))) {
+			continue;
+		}
+		const ap: nip19.AddressPointer = {
+			...ev,
+			identifier: isAddressableKind(ev.kind) ? (getTagValue(ev, 'd') ?? '') : ''
+		};
+		const s: string = getCoordinateFromAddressPointer(ap);
+		const event: NostrEvent | undefined = eventMap.get(s);
+		if (event === undefined || ev.created_at > event.created_at) {
+			eventMap.set(s, ev);
+		}
+	}
+	return sortEvents(Array.from(eventMap.values()));
+};
 
 const dtformat = new Intl.DateTimeFormat('ja-jp', {
 	year: 'numeric',
@@ -197,30 +223,6 @@ export const getEvent9734WithVerification = async (
 	return event9734;
 };
 
-export const getTargetEvent = (ev: NostrEvent): NostrEvent | undefined => {
-	const eId = (
-		ev.tags.find(
-			(tag) => tag.length >= 4 && tag[0] === 'e' && tag[3] === 'reply' && [1, 42].includes(ev.kind)
-		) ??
-		ev.tags.find(
-			(tag) => tag.length >= 4 && tag[0] === 'e' && tag[3] === 'root' && ev.kind === 1
-		) ??
-		ev.tags.find(
-			(tag) => tag.length >= 2 && tag[0] === 'e' && [6, 16, 1111, 9735].includes(ev.kind)
-		) ??
-		ev.tags.findLast((tag) => tag.length >= 2 && tag[0] === 'e' && ev.kind === 7)
-	)?.at(1);
-	const aId = ev.tags.findLast((tag) => tag.length >= 2 && tag[0] === 'a')?.at(1);
-	let targetEvent: NostrEvent | undefined;
-	if (eId !== undefined) {
-		targetEvent = getEventById(eId);
-	} else if (aId !== undefined && [7, 8, 16, 1111].includes(ev.kind)) {
-		const ap: nip19.AddressPointer | null = getAddressPointerFromAId(aId);
-		targetEvent = ap === null ? undefined : getEventByAddressPointer(ap);
-	}
-	return targetEvent;
-};
-
 export const getAddressPointerFromAId = (aId: string): nip19.AddressPointer | null => {
 	const sp = aId.split(':');
 	if (sp.length < 3) {
@@ -298,80 +300,132 @@ export const splitNip51List = async (
 	return { pPub, ePub, wPub, tPub, pSec, eSec, wSec, tSec, tagList, contentList };
 };
 
-export const getPubkeysForFilter = (events: NostrEvent[]): string[] => {
-	const pubkeys: Set<string> = new Set();
-	for (const ev of events.filter((ev) => ev.kind === 0)) {
-		//npubでの言及
-		let profile: ProfileContent;
-		try {
-			profile = JSON.parse(ev.content);
-		} catch (error) {
-			console.warn(error);
-			console.info(ev);
+export const getMuteList = async (
+	eventMuteList: NostrEvent | undefined,
+	loginPubkey: string | undefined
+): Promise<[string[], string[], string[], string[]]> => {
+	let [mutedPubkeys, mutedIds, mutedWords, mutedHashTags]: [
+		string[],
+		string[],
+		string[],
+		string[]
+	] = [[], [], [], []];
+	if (
+		eventMuteList === undefined ||
+		loginPubkey === undefined ||
+		eventMuteList.pubkey !== loginPubkey
+	) {
+		return [mutedPubkeys, mutedIds, mutedWords, mutedHashTags];
+	}
+	const { pPub, ePub, wPub, tPub, pSec, eSec, wSec, tSec } = await splitNip51List(
+		eventMuteList,
+		loginPubkey
+	);
+	mutedPubkeys = Array.from(new Set<string>([...pPub, ...pSec]));
+	mutedIds = Array.from(new Set<string>([...ePub, ...eSec]));
+	mutedWords = Array.from(new Set<string>([...wPub, ...wSec].map((w) => w.toLowerCase())));
+	mutedHashTags = Array.from(new Set<string>([...tPub, ...tSec].map((t) => t.toLowerCase())));
+	return [mutedPubkeys, mutedIds, mutedWords, mutedHashTags];
+};
+
+export const getEventsFilteredByMute = (
+	events: NostrEvent[],
+	mutedPubkeys: string[],
+	mutedIds: string[],
+	mutedWords: string[],
+	mutedHashTags: string[]
+) => {
+	const filteredEvents: NostrEvent[] = [];
+	for (const event of events) {
+		if (mutedPubkeys.includes(event.pubkey)) {
 			continue;
 		}
-		if (!profile.about) continue;
-		const matchesIteratorNpub = profile.about.matchAll(/nostr:(npub1\w{58})/g);
-		for (const match of matchesIteratorNpub) {
-			let d;
-			try {
-				d = nip19.decode(match[1]);
-			} catch (error) {
-				console.warn(error);
-				console.info(ev);
-				continue;
-			}
-			if (d.type === 'npub') {
-				pubkeys.add(d.data);
+		if (mutedIds.includes(event.id)) {
+			continue;
+		}
+		if (mutedWords.some((word) => event.content.includes(word))) {
+			continue;
+		}
+		if (
+			mutedHashTags.some((hashTag) =>
+				event.tags
+					.filter((tag) => tag.length >= 2 && tag[0] === 't')
+					.map((tag) => tag[1].toLowerCase())
+					.includes(hashTag)
+			)
+		) {
+			continue;
+		}
+		filteredEvents.push(event);
+	}
+	return filteredEvents;
+};
+
+export const getPubkeysForFilter = (
+	events: NostrEvent[]
+): { pubkeys: string[]; relays: string[] } => {
+	const pubkeySet: Set<string> = new Set();
+	const relaySet: Set<string> = new Set<string>();
+	for (const ev of events) {
+		let content: string | undefined = undefined;
+		if (ev.kind === 0) {
+			content = getProfileContent(ev).about;
+		} else if (kindsForParse.includes(ev.kind)) {
+			content = ev.content;
+		}
+		if (content !== undefined) {
+			const matchesIterator = content.matchAll(
+				/nostr:(npub1\w{58}|nprofile1\w+|nevent1\w+|naddr1\w+)/g
+			);
+			for (const match of matchesIterator) {
+				let d;
+				try {
+					d = nip19.decode(match[1]);
+				} catch (_error) {
+					continue;
+				}
+				if (d.type === 'npub') {
+					pubkeySet.add(d.data);
+				} else if (d.type === 'nprofile') {
+					pubkeySet.add(d.data.pubkey);
+					if (d.data.relays !== undefined) {
+						for (const relay of d.data.relays) {
+							relaySet.add(normalizeURL(relay));
+						}
+					}
+				} else if (d.type === 'nevent' && d.data.author !== undefined) {
+					pubkeySet.add(d.data.author);
+					if (d.data.relays !== undefined) {
+						for (const relay of d.data.relays) {
+							relaySet.add(normalizeURL(relay));
+						}
+					}
+				} else if (d.type === 'naddr') {
+					pubkeySet.add(d.data.pubkey);
+					if (d.data.relays !== undefined) {
+						for (const relay of d.data.relays) {
+							relaySet.add(normalizeURL(relay));
+						}
+					}
+				}
 			}
 		}
 	}
-	for (const ev of events.filter((ev) => [1, 42].includes(ev.kind))) {
-		pubkeys.add(ev.pubkey);
-		//pタグ送信先
-		for (const pubkey of ev.tags
-			.filter((tag) => tag.length >= 2 && tag[0] === 'p')
-			.map((tag) => tag[1])) {
-			pubkeys.add(pubkey);
-		}
-		//npubでの言及
-		const matchesIteratorNpub = ev.content.matchAll(/nostr:(npub1\w{58})/g);
-		for (const match of matchesIteratorNpub) {
-			let d;
-			try {
-				d = nip19.decode(match[1]);
-			} catch (error) {
-				console.warn(error);
-				console.info(ev);
-				continue;
-			}
-			if (d.type === 'npub') {
-				pubkeys.add(d.data);
-			}
-		}
-	}
-	return Array.from(pubkeys);
+	return { pubkeys: Array.from(pubkeySet), relays: Array.from(relaySet) };
 };
 
 export const getIdsForFilter = (
 	events: NostrEvent[]
-): { ids: string[]; aps: nip19.AddressPointer[] } => {
-	const ids: Set<string> = new Set();
+): { ids: string[]; aps: nip19.AddressPointer[]; relays: string[] } => {
+	const idSet: Set<string> = new Set<string>();
 	const aps: nip19.AddressPointer[] = [];
-	const apsStr: Set<string> = new Set();
+	const apsSet: Set<string> = new Set<string>();
+	const relaySet: Set<string> = new Set<string>();
 	for (const ev of events) {
 		let content: string | undefined = undefined;
 		if (ev.kind === 0) {
-			let profile: ProfileContent;
-			try {
-				profile = JSON.parse(ev.content);
-			} catch (error) {
-				console.warn(error);
-				console.info(ev);
-				continue;
-			}
-			content = profile.about;
-		} else if ([1, 42, 30023].includes(ev.kind)) {
+			content = getProfileContent(ev).about;
+		} else if (kindsForParse.includes(ev.kind)) {
 			content = ev.content;
 		}
 		if (content !== undefined) {
@@ -384,28 +438,182 @@ export const getIdsForFilter = (
 					continue;
 				}
 				if (d.type === 'note') {
-					ids.add(d.data);
+					idSet.add(d.data);
 				} else if (d.type === 'nevent') {
-					ids.add(d.data.id);
+					idSet.add(d.data.id);
+					if (d.data.relays !== undefined) {
+						for (const relay of d.data.relays) {
+							relaySet.add(normalizeURL(relay));
+						}
+					}
 				} else if (d.type === 'naddr') {
-					const str = `${d.data.kind}:${d.data.pubkey}:${d.data.identifier}`;
-					if (!apsStr.has(str)) {
+					const str = getCoordinateFromAddressPointer(d.data);
+					if (!apsSet.has(str)) {
 						aps.push(d.data);
-						apsStr.add(str);
+						apsSet.add(str);
+					}
+					if (d.data.relays !== undefined) {
+						for (const relay of d.data.relays) {
+							relaySet.add(normalizeURL(relay));
+						}
 					}
 				}
 			}
 		}
-		//kind1,42は個別に探索する(スレッドの上限を決めている)
-		if (![1, 42, 30023].includes(ev.kind)) {
-			for (const id of ev.tags
-				.filter((tag) => tag.length >= 2 && tag[0] === 'e')
-				.map((tag) => tag[1])) {
-				ids.add(id);
+	}
+	return { ids: Array.from(idSet), aps: aps, relays: Array.from(relaySet) };
+};
+
+export const getTagsForContent = (
+	content: string,
+	eventsEmojiSet: NostrEvent[],
+	getSeenOn: (id: string, excludeWs: boolean) => string[],
+	getEventsByFilter: (filters: Filter | Filter[]) => NostrEvent[],
+	getReplaceableEvent: (kind: number, pubkey: string, d?: string) => NostrEvent | undefined
+): string[][] => {
+	const tags: string[][] = [];
+	const ppMap: Map<string, nip19.ProfilePointer> = new Map<string, nip19.ProfilePointer>();
+	const epMap: Map<string, nip19.EventPointer> = new Map<string, nip19.EventPointer>();
+	const apMap: Map<string, nip19.AddressPointer> = new Map<string, nip19.AddressPointer>();
+	const matchesIteratorId = content.matchAll(
+		/(^|\W|\b)(nostr:(note1\w{58}|nevent1\w+|naddr1\w+))($|\W|\b)/g
+	);
+	for (const match of matchesIteratorId) {
+		let d;
+		try {
+			d = nip19.decode(match[3]);
+		} catch (_error) {
+			continue;
+		}
+		if (d.type === 'note') {
+			epMap.set(d.data, { id: d.data });
+		} else if (d.type === 'nevent') {
+			if (!epMap.has(d.data.id) || d.data.relays !== undefined) {
+				epMap.set(d.data.id, d.data);
+			}
+			if (d.data.author !== undefined) {
+				ppMap.set(d.data.author, { pubkey: d.data.author });
+			}
+		} else if (d.type === 'naddr') {
+			const c = getCoordinateFromAddressPointer(d.data);
+			if (!apMap.has(c) || d.data.relays !== undefined) {
+				apMap.set(c, d.data);
+			}
+			ppMap.set(d.data.pubkey, { pubkey: d.data.pubkey });
+		}
+	}
+	const matchesIteratorPubkey = content.matchAll(
+		/(^|\W|\b)(nostr:(npub1\w{58}|nprofile1\w+))($|\W|\b)/g
+	);
+	for (const match of matchesIteratorPubkey) {
+		let d;
+		try {
+			d = nip19.decode(match[3]);
+		} catch (_error) {
+			continue;
+		}
+		if (d.type === 'npub') {
+			if (!ppMap.has(d.data)) {
+				ppMap.set(d.data, { pubkey: d.data });
+			}
+		} else if (d.type === 'nprofile') {
+			if (!ppMap.has(d.data.pubkey) || d.data.relays !== undefined) {
+				ppMap.set(d.data.pubkey, d.data);
 			}
 		}
 	}
-	return { ids: Array.from(ids), aps: aps };
+	const matchesIteratorLink = content.matchAll(/https?:\/\/[\w!?/=+\-_~:;.,*&@#$%()[\]]+/g);
+	const links: Set<string> = new Set<string>();
+	for (const match of matchesIteratorLink) {
+		links.add(urlLinkString(match[0])[0]);
+	}
+	const emojiMapToAdd: Map<string, string> = new Map<string, string>();
+	const emojiMap: Map<string, string> = getEmojiMap(eventsEmojiSet);
+	const matchesIteratorEmojiTag = content.matchAll(
+		new RegExp(`:(${Array.from(emojiMap.keys()).join('|')}):`, 'g')
+	);
+	for (const match of matchesIteratorEmojiTag) {
+		const url = emojiMap.get(match[1]);
+		if (url !== undefined) {
+			emojiMapToAdd.set(match[1], url);
+		}
+	}
+	for (const [id, ep] of epMap) {
+		const qTag: string[] = ['q', id];
+		const ev: NostrEvent | undefined = getEventsByFilter({ ids: [id] }).at(0);
+		const recommendedRelayForQuote: string | undefined =
+			getSeenOn(id, true).at(0) ?? ep.relays?.filter((relay) => relay.startsWith('wss://')).at(0);
+		const pubkey: string | undefined = ev?.pubkey ?? ep.author;
+		if (recommendedRelayForQuote !== undefined) {
+			qTag.push(recommendedRelayForQuote);
+			if (pubkey !== undefined) {
+				qTag.push(pubkey);
+			}
+		}
+		tags.push(qTag);
+		if (pubkey !== undefined && !ppMap.has(pubkey)) {
+			ppMap.set(pubkey, { pubkey });
+		}
+	}
+	for (const [a, ap] of apMap) {
+		const qTag: string[] = ['q', a];
+		const ev: NostrEvent | undefined = getReplaceableEvent(ap.kind, ap.pubkey, ap.identifier);
+		const recommendedRelayForQuote: string | undefined =
+			getSeenOn(ev?.id ?? '', true).at(0) ??
+			ap.relays?.filter((relay) => relay.startsWith('wss://')).at(0);
+		if (recommendedRelayForQuote !== undefined) {
+			qTag.push(recommendedRelayForQuote);
+		}
+		tags.push(qTag);
+		if (!ppMap.has(ap.pubkey)) {
+			ppMap.set(ap.pubkey, { pubkey: ap.pubkey });
+		}
+	}
+	for (const [p, pp] of ppMap) {
+		const pTag: string[] = ['p', p];
+		const kind0: NostrEvent | undefined = getReplaceableEvent(0, p);
+		const recommendedRelayForPubkey: string | undefined =
+			getSeenOn(kind0?.id ?? '', true).at(0) ??
+			pp.relays?.filter((relay) => relay.startsWith('wss://')).at(0);
+		if (recommendedRelayForPubkey !== undefined) {
+			pTag.push(recommendedRelayForPubkey);
+		}
+		tags.push(pTag);
+	}
+	for (const r of links) {
+		tags.push(['r', r]);
+	}
+	for (const [shortcode, url] of emojiMapToAdd) {
+		tags.push(['emoji', shortcode, url]);
+	}
+	return tags;
+};
+
+export const mergeFilterForAddressableEvents = (filters: LazyFilter[]): Filter[] => {
+	const kinds: Set<number> = new Set<number>(filters.map((f) => f.kinds ?? []).flat());
+	const newFilters: Filter[] = [];
+	for (const kind of kinds) {
+		const filterMap: Map<string, Set<string>> = new Map<string, Set<string>>();
+		for (const filter of filters.filter((f) => f.kinds?.includes(kind))) {
+			const author: string = filter.authors?.at(0) ?? '';
+			const dTags: string[] = filter['#d'] ?? [];
+			if (filterMap.has(author)) {
+				for (const dTag of dTags) {
+					filterMap.set(author, filterMap.get(author)!.add(dTag));
+				}
+			} else {
+				filterMap.set(author, new Set<string>(dTags));
+			}
+		}
+		for (const [author, dTagSet] of filterMap) {
+			const filter: Filter = { kinds: [kind], authors: [author] };
+			if (isAddressableKind(kind)) {
+				filter['#d'] = Array.from(dTagSet);
+			}
+			newFilters.push(filter);
+		}
+	}
+	return newFilters;
 };
 
 export const getRelaysToUseFromKind10002Event = (event?: NostrEvent): RelayRecord => {
@@ -433,74 +641,28 @@ export const getRelaysToUseFromKind10002Event = (event?: NostrEvent): RelayRecor
 	return newRelays;
 };
 
-export const getRelaysToUseByRelaysSelected = (
-	relaysSelected: string,
-	eventRelayList?: NostrEvent,
-	eventsRelaySets?: NostrEvent[]
-): Promise<RelayRecord> => {
-	switch (relaysSelected.startsWith('30002:') ? 'kind30002' : relaysSelected) {
-		case 'kind10002': {
-			const newRelays: RelayRecord = getRelaysToUseFromKind10002Event(eventRelayList);
-			return Promise.resolve(newRelays);
-		}
-		case 'kind30002': {
-			const [kind, pubkey, dTag] = relaysSelected.split(':');
-			const eventRelaySets = (
-				eventsRelaySets?.filter(
-					(ev) =>
-						ev.kind === parseInt(kind) &&
-						ev.pubkey === pubkey &&
-						(ev.tags.find((tag) => tag.length >= 2 && tag[0] === 'd')?.at(1) ?? '') === dTag
-				) ?? []
-			).at(0);
-			const newRelays: RelayRecord = {};
-			for (const tag of eventRelaySets?.tags.filter(
-				(tag) => tag.length >= 2 && tag[0] === 'relay' && URL.canParse(tag[1])
-			) ?? []) {
-				newRelays[normalizeURL(tag[1])] = {
-					read: true,
-					write: true
-				};
-			}
-			return Promise.resolve(newRelays);
-		}
-		case 'default':
-		default: {
-			return Promise.resolve(defaultRelays);
-		}
-	}
-};
-
 export const getReadRelaysWithOutboxModel = (
 	pubkeys: string[],
-	eventStore: EventStore,
-	relaysToRead: string[]
+	getReplaceable: (kind: number, pubkey: string, d?: string) => NostrEvent | undefined,
+	relayFilter: (relay: string) => boolean
 ): string[] => {
 	const relayUserMap: Map<string, Set<string>> = new Map<string, Set<string>>();
 	for (const pubkey of pubkeys) {
-		const relayRecord: RelayRecord = getRelaysToUseFromKind10002Event(
-			eventStore.getReplaceable(10002, pubkey)
-		);
-		for (const [relayUrl, _] of Object.entries(relayRecord).filter(
-			([relayUrl, obj]) => relayUrl.startsWith('wss://') && obj.write
-		)) {
+		const event: NostrEvent | undefined = getReplaceable(10002, pubkey);
+		if (event === undefined) {
+			continue;
+		}
+		const relays = getOutboxes(event).filter(relayFilter);
+		for (const relayUrl of relays) {
 			const users: Set<string> = relayUserMap.get(relayUrl) ?? new Set<string>();
 			users.add(pubkey);
 			relayUserMap.set(relayUrl, users);
 		}
 	}
-	const requiredRelays: string[] = getRequiredRelays(relayUserMap, relaysToRead);
-	const relaySet = new Set<string>();
-	for (const relayUrl of [...relaysToRead, ...requiredRelays]) {
-		relaySet.add(relayUrl);
-	}
-	return Array.from(relaySet);
+	return getRequiredRelays(relayUserMap);
 };
 
-const getRequiredRelays = (
-	relayUserMap: Map<string, Set<string>>,
-	relaysUsed: string[]
-): string[] => {
+const getRequiredRelays = (relayUserMap: Map<string, Set<string>>): string[] => {
 	const relayUserMapArray: [string, string[]][] = [];
 	for (const [relayUrl, users] of relayUserMap) {
 		relayUserMapArray.push([relayUrl, Array.from(users)]);
@@ -516,13 +678,7 @@ const getRequiredRelays = (
 	for (const up of relayUserMapArray) {
 		relayUserMapCloned.set(up[0], new Set<string>(up[1]));
 	}
-	for (const relay of relaysUsed) {
-		const users: Set<string> = relayUserMapCloned.get(relay) ?? new Set<string>();
-		for (const p of users) {
-			allPubkeySet.delete(p);
-		}
-	}
-	for (const relay of relaysAll.filter((r) => !relaysUsed.includes(r))) {
+	for (const relay of relaysAll) {
 		if (allPubkeySet.size === 0) {
 			break;
 		}
@@ -561,6 +717,22 @@ export const isCustomEmoji = (event: NostrEvent): boolean => {
 
 export const isValidEmoji = (event: NostrEvent): boolean => {
 	return isCustomEmoji(event) || inputCount(event.content) <= 1;
+};
+
+export const getPubkeyIfValid = (pubkey: string | undefined): string | undefined => {
+	if (pubkey === undefined) {
+		return undefined;
+	}
+	return isValidPubkey(pubkey) ? pubkey : undefined;
+};
+
+const isValidPubkey = (pubkey: string): boolean => {
+	try {
+		nip19.npubEncode(pubkey);
+		return true;
+	} catch (_error) {
+		return false;
+	}
 };
 
 export const zap = async (
@@ -739,4 +911,116 @@ export const loginWithNpub = (npub: string) => {
 			nlbutton.click();
 		}, 100);
 	}, 100);
+};
+
+const getCategories = (event: NostrEvent): string[] =>
+	Array.from(
+		new Set<string>(
+			event.tags
+				.filter((tag) => tag.length >= 2 && tag[0] === 't' && /^[^\s#]+$/.test(tag[1]))
+				.map((tag) => tag[1].toLowerCase())
+		)
+	);
+
+export const getChannelContent = (event: NostrEvent): ChannelContent | null => {
+	let channel: ChannelContent;
+	try {
+		channel = JSON.parse(event.content);
+	} catch (error) {
+		console.warn(error);
+		return null;
+	}
+	if (Array.isArray(channel.relays)) {
+		channel.relays = Array.from(
+			new Set<string>(
+				channel.relays.filter((relay) => URL.canParse(relay)).map((relay) => normalizeURL(relay))
+			)
+		);
+	} else {
+		channel.relays = [];
+	}
+	channel.categories = getCategories(event);
+	channel.id = event.id;
+	channel.kind = event.kind;
+	channel.pubkey = event.pubkey;
+	channel.author = event.pubkey;
+	channel.created_at = event.created_at;
+	return channel;
+};
+
+export const getChannelMap = (eventsChannel: NostrEvent[], eventsChannelEdit: NostrEvent[]) => {
+	const channelMap = new Map<string, ChannelContent>();
+	for (const ev of eventsChannel) {
+		const channel: ChannelContent | null = getChannelContent(ev);
+		if (channel !== null) {
+			channel.eventkind40 = ev;
+			channelMap.set(ev.id, channel);
+		}
+	}
+	for (const ev of eventsChannelEdit) {
+		const id = ev.tags.find((tag) => tag.length >= 2 && tag[0] === 'e')?.at(1);
+		if (id === undefined) continue;
+		const c = channelMap.get(id);
+		if (c !== undefined) {
+			if (ev.created_at <= c.created_at) {
+				continue;
+			}
+			if (c.pubkey === ev.pubkey) {
+				const channel: ChannelContent | null = getChannelContent(ev);
+				if (channel === null) {
+					continue;
+				}
+				channel.eventkind40 = c.eventkind40;
+				channel.eventkind41 = ev;
+				channel.id = c.id;
+				channel.kind = c.kind;
+				channelMap.set(id, channel);
+			}
+		}
+	}
+	return channelMap;
+};
+
+export const getName = (
+	pubkey: string,
+	profileMap: Map<string, ProfileContent>,
+	eventFollowList: NostrEvent | undefined,
+	isNameDisabled?: boolean,
+	excludeIcon?: boolean
+): string => {
+	const prof = profileMap.get(pubkey);
+	let name: string | undefined = prof?.name;
+	const display_name: string | undefined = prof?.display_name;
+	const petname: string | undefined = eventFollowList?.tags
+		.find((tag) => tag.length >= 4 && tag[0] === 'p' && tag[1] === pubkey)
+		?.at(3);
+	const namePrefix: string = excludeIcon ? '' : '@';
+	const petnamePrefix: string = excludeIcon ? '' : '📛';
+	let nameToShow: string | undefined;
+	if (isNameDisabled) {
+		name = undefined;
+	}
+	if (petname !== undefined && petname.length > 0) {
+		nameToShow = `${petnamePrefix}${petname}`;
+	} else if (name !== undefined && name.length > 0) {
+		nameToShow = `${namePrefix}${name}`;
+	} else if (display_name !== undefined && display_name.length > 0) {
+		nameToShow = display_name;
+	} else if (isNameDisabled) {
+		nameToShow = `${namePrefix}${nip19.npubEncode(pubkey)}`;
+	} else {
+		nameToShow = '';
+	}
+	if (nameToShow.length > 20) {
+		nameToShow = `${nameToShow.slice(0, 20)}...`;
+	}
+	return nameToShow;
+};
+
+export const getProfileId = (prof: ProfileContent | undefined) => {
+	let name = prof?.name !== undefined ? `id:${prof.name}` : 'anonymouse';
+	if (name.length > 30) {
+		name = `${name.slice(0, 25)}...`;
+	}
+	return name;
 };

@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { defaultAccountUri, getRoboHashURL } from '$lib/config';
-	import { getEmoji, getEmojiMap, type ChannelContent } from '$lib/utils';
-	import { getChannelEventMap, getProfileName, makeEvent, sendNote } from '$lib/resource.svelte';
+	import { getEmoji, getEmojiMap, getName, type ChannelContent } from '$lib/utils';
+	import type { RelayConnector } from '$lib/resource';
 	import { beforeNavigate, goto } from '$app/navigation';
 	import { onMount } from 'svelte';
 	import type { EventTemplate, NostrEvent, UnsignedEvent } from 'nostr-tools/pure';
@@ -19,13 +19,18 @@
 	import { browser } from '$app/environment';
 
 	let {
+		rc,
 		loginPubkey,
 		currentChannelId,
 		eventToReply,
 		isTopPage,
+		channelMap,
 		profileMap,
+		isEnabledEventProtection,
+		clientTag,
 		uploaderSelected,
 		eventsEmojiSet,
+		eventFollowList,
 		preInput,
 		channelToPost = $bindable(),
 		showForm = $bindable(),
@@ -33,13 +38,18 @@
 		callInsertText = $bindable(),
 		baseEventToEdit = $bindable()
 	}: {
+		rc: RelayConnector | undefined;
 		loginPubkey: string | undefined;
 		currentChannelId?: string | undefined;
 		eventToReply?: NostrEvent;
 		isTopPage: boolean;
+		channelMap: Map<string, ChannelContent>;
 		profileMap: Map<string, ProfileContent>;
+		isEnabledEventProtection: boolean;
+		clientTag: string[] | undefined;
 		uploaderSelected: string;
 		eventsEmojiSet: NostrEvent[];
+		eventFollowList: NostrEvent | undefined;
 		preInput: string | null;
 		channelToPost: ChannelContent | undefined;
 		showForm: boolean;
@@ -202,17 +212,20 @@
 		const targetEventToReply =
 			channelToPost?.eventkind40 ??
 			eventToReply ??
-			(currentChannelId !== undefined ? getChannelEventMap().get(currentChannelId) : undefined);
+			(currentChannelId !== undefined ? channelMap.get(currentChannelId)?.eventkind40 : undefined);
 		const contentWarningReason = addContentWarning
 			? reasonContentWarning.length > 0
 				? reasonContentWarning
 				: null
 			: undefined;
-		return makeEvent(
+		return rc?.makeEvent(
 			loginPubkey ?? '',
 			contentToSend,
 			addPoll ? '' : channelNameToCreate,
 			[], //除外をプレビューに反映させると選択できなくなってしまう
+			isEnabledEventProtection,
+			clientTag,
+			channelMap,
 			addPoll ? undefined : targetEventToReply,
 			emojiMap,
 			imetaMap,
@@ -232,7 +245,7 @@
 	);
 	$effect(() => {
 		if (canSendNote) {
-			previewEvent = previewEvents.eventToSend;
+			previewEvent = previewEvents?.eventToSend;
 		} else {
 			previewEvent = undefined;
 		}
@@ -245,17 +258,20 @@
 		const targetEventToReply =
 			channelToPost?.eventkind40 ??
 			eventToReply ??
-			(currentChannelId !== undefined ? getChannelEventMap().get(currentChannelId) : undefined);
+			(currentChannelId !== undefined ? channelMap.get(currentChannelId)?.eventkind40 : undefined);
 		const contentWarningReason = addContentWarning
 			? reasonContentWarning.length > 0
 				? reasonContentWarning
 				: null
 			: undefined;
-		sendNote(
+		rc?.sendNote(
 			loginPubkey,
 			contentToSend,
 			addPoll ? '' : channelNameToCreate,
 			pubkeysExcluded,
+			isEnabledEventProtection,
+			clientTag,
+			channelMap,
 			addPoll ? undefined : targetEventToReply,
 			emojiMap,
 			imetaMap,
@@ -488,7 +504,7 @@
 										}}
 										><img
 											src={prof?.picture ?? getRoboHashURL(nip19.npubEncode(p))}
-											alt={getProfileName(p)}
+											alt={getName(p, profileMap, eventFollowList)}
 											class="Avatar Avatar--sm"
 										/></button
 									>

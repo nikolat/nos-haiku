@@ -584,13 +584,7 @@ export class RelayConnector {
 					break;
 				}
 				case 10030: {
-					setTimeout(
-						() => {
-							console.info('[fetch emoji set]');
-							this.#fetchEventsByATags(event, 'a');
-						},
-						isForwardReq ? 0 : initialFetchDelay
-					);
+					this.#fetchEventsByATags(event, 'a');
 					break;
 				}
 				case 30008: {
@@ -610,14 +604,7 @@ export class RelayConnector {
 						.map((aTag) => aTag[1].split(':').at(1))
 						.filter((pubkey) => pubkey !== undefined);
 					const pubkeys: string[] = Array.from(new Set<string>([...pubkeysE, ...pubkeysA]));
-					const isForwardReq: boolean = this.#since < event.created_at;
-					setTimeout(
-						() => {
-							console.info('[fetch badges]');
-							this.setFetchListAfter10002(pubkeys, fetchAfter10002);
-						},
-						isForwardReq ? 0 : initialFetchDelay
-					);
+					this.setFetchListAfter10002(pubkeys, fetchAfter10002);
 					break;
 				}
 				case 39701: {
@@ -968,14 +955,24 @@ export class RelayConnector {
 	};
 
 	fetchUserSettings = (pubkey: string, completeCustom: () => void) => {
-		const filter: LazyFilter = {
-			kinds: [0, 3, 10000, 10002, 10005, 10006, 10030, 30008],
+		const filterBase: LazyFilter = {
 			authors: [pubkey],
 			until: unixNow()
 		};
+		const filter1: LazyFilter = {
+			...filterBase,
+			kinds: [0, 3, 10000, 10002, 10005, 10006]
+		};
+		const filter2: LazyFilter = {
+			...filterBase,
+			kinds: [10030, 30008]
+		};
 		const relays = this.#getRelays('write').filter(this.#relayFilter).slice(0, this.#limitRelay);
 		const options = relays.length > 0 ? { relays } : undefined;
-		this.#fetchRpCustom(filter, completeCustom, options);
+		this.#fetchRpCustom(filter1, completeCustom, options);
+		setTimeout(() => {
+			this.#fetchRpCustom(filter2, () => {}, options);
+		}, initialFetchDelay);
 	};
 
 	#fetchRpCustom = (

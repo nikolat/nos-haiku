@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { uploaderURLs, urlToLinkProfileEditor } from '$lib/config';
+	import { uploaderURLs, urlToLinkProfileEditor, urlToLinkRelayEditor } from '$lib/config';
 	import {
 		getRelaysToUseFromKind10002Event,
 		type ChannelContent,
@@ -262,7 +262,16 @@
 							</div>
 						</div>
 						<div class="Settings__section">
-							<div class="Label"><span>{$_('Settings.account.relays')}</span></div>
+							<div class="Label">
+								<span>{$_('Settings.account.relays')}</span>
+								<a
+									href={urlToLinkRelayEditor}
+									target="_blank"
+									rel="noreferrer"
+									aria-label={$_('Settings.account.relays-edit')}
+									title={$_('Settings.account.relays-edit')}><i class="far fa-edit"></i></a
+								>
+							</div>
 							<div class="Control">
 								<RelayList
 									relaysToUse={getRelaysToUseFromKind10002Event(eventRelayList)}

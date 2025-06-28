@@ -152,12 +152,10 @@
 			"language": "Language",
 			"darkmode": "Dark mode",
 			"relative-time": "Relative time",
-			"skip-kind-1": "Skip kind:1",
 			"client-tag": "Client tag",
-			"outbox-model": "Outbox Model(NIP-65)",
 			"event-protection": "Event protection(NIP-70)",
 			"relays": "Relays",
-			"select-relay-set": "Select relay set",
+			"relays-edit": "Edit your relays",
 			"uploader": "Uploader",
 			"select-uploader": "Select uploader"
 		}

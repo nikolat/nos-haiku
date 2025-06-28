@@ -193,7 +193,7 @@
 						kinds: [ap.kind],
 						authors: [ap.pubkey]
 					};
-					if (ap.identifier.length > 0) {
+					if (isAddressableKind(ap.kind)) {
 						filter['#d'] = [ap.identifier];
 					}
 					tl = rc.getEventsByFilter(filter);
@@ -290,9 +290,9 @@
 				break;
 			}
 			case 10002: {
-				if (loginPubkey !== undefined && event?.pubkey === loginPubkey) {
-					rc.setRelays(event);
-					eventRelayList = event;
+				if (loginPubkey !== undefined && (event?.pubkey === loginPubkey || event === undefined)) {
+					eventRelayList = rc.getReplaceableEvent(kind, loginPubkey);
+					rc.setRelays(eventRelayList);
 				}
 				break;
 			}
@@ -347,22 +347,20 @@
 				break;
 			}
 			default:
-				{
-					if (up.currentEventPointer !== undefined) {
-						eventsTimeline = rc.getEventsByFilter({ ids: [up.currentEventPointer.id] });
-					} else if (up.currentAddressPointer !== undefined) {
-						const ap = up.currentAddressPointer;
-						const filter: Filter = {
-							kinds: [ap.kind],
-							authors: [ap.pubkey]
-						};
-						if (isAddressableKind(ap.kind)) {
-							filter['#d'] = [ap.identifier];
-						}
-						eventsTimeline = rc.getEventsByFilter(filter);
-					}
-				}
 				break;
+		}
+		if (up.currentEventPointer !== undefined) {
+			eventsTimeline = rc.getEventsByFilter({ ids: [up.currentEventPointer.id] });
+		} else if (up.currentAddressPointer !== undefined) {
+			const ap = up.currentAddressPointer;
+			const filter: Filter = {
+				kinds: [ap.kind],
+				authors: [ap.pubkey]
+			};
+			if (isAddressableKind(ap.kind)) {
+				filter['#d'] = [ap.identifier];
+			}
+			eventsTimeline = rc.getEventsByFilter(filter);
 		}
 		const kinds: number[] = [1, 4, 6, 7, 8, 16, 42, 1111, 9735, 39701];
 		if (
@@ -483,7 +481,7 @@
 			}
 		} else {
 			sub = rc.subscribeEventStore(callback);
-			for (const k of [0, 1, 3, 7, 40, 41, 10000, 10005, 10006, 10030, 30078]) {
+			for (const k of [0, 1, 3, 7, 40, 41, 10000, 10002, 10005, 10006, 10030, 30078]) {
 				callback(k);
 			}
 		}

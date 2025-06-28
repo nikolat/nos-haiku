@@ -1006,10 +1006,8 @@ export const getName = (
 		nameToShow = `${namePrefix}${name}`;
 	} else if (display_name !== undefined && display_name.length > 0) {
 		nameToShow = display_name;
-	} else if (isNameDisabled) {
-		nameToShow = `${namePrefix}${nip19.npubEncode(pubkey)}`;
 	} else {
-		nameToShow = '';
+		nameToShow = `${namePrefix}${nip19.npubEncode(pubkey)}`;
 	}
 	if (nameToShow.length > 20) {
 		nameToShow = `${nameToShow.slice(0, 20)}...`;

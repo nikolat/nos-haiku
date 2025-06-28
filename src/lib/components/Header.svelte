@@ -447,17 +447,19 @@
 							class="NoticeItem"
 						>
 							<div class="NoticeItem__icon">
-								<img
-									alt=""
-									loading="lazy"
-									src={prof?.picture ?? getRoboHashURL(nip19.npubEncode(evFrom.pubkey))}
-									title={getName(evFrom.pubkey, profileMap, eventFollowList)}
-									class="Avatar Avatar--md"
-								/>
+								<a href="/{nip19.npubEncode(evFrom.pubkey)}">
+									<img
+										alt=""
+										loading="lazy"
+										src={prof?.picture ?? getRoboHashURL(nip19.npubEncode(evFrom.pubkey))}
+										title={getName(evFrom.pubkey, profileMap, eventFollowList)}
+										class="Avatar Avatar--md"
+									/>
+								</a>
 							</div>
 							<div class="NoticeItem__body">
 								<p>
-									<a href="/{nip19.npubEncode(evFrom.pubkey)}" class="">
+									<a href="/{nip19.npubEncode(evFrom.pubkey)}">
 										<Content
 											content={getName(evFrom.pubkey, profileMap, eventFollowList)}
 											tags={prof?.event.tags ?? []}

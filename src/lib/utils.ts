@@ -442,7 +442,7 @@ export const getIdsForFilter = (
 				} else if (d.type === 'nevent') {
 					idSet.add(d.data.id);
 					if (d.data.relays !== undefined) {
-						for (const relay of d.data.relays) {
+						for (const relay of d.data.relays.filter((relay) => URL.canParse(relay))) {
 							relaySet.add(normalizeURL(relay));
 						}
 					}
@@ -453,7 +453,7 @@ export const getIdsForFilter = (
 						apsSet.add(str);
 					}
 					if (d.data.relays !== undefined) {
-						for (const relay of d.data.relays) {
+						for (const relay of d.data.relays.filter((relay) => URL.canParse(relay))) {
 							relaySet.add(normalizeURL(relay));
 						}
 					}

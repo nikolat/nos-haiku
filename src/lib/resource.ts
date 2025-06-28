@@ -192,6 +192,7 @@ export class RelayConnector {
 	};
 
 	#relayFilter = (relay: string) =>
+		URL.canParse(relay) &&
 		relay.startsWith('wss://') &&
 		!this.#deadRelays.includes(relay) &&
 		!this.#blockedRelays.includes(relay);

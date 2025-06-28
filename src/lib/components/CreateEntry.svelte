@@ -255,10 +255,11 @@
 		if (loginPubkey === undefined || !canSendNote) {
 			return;
 		}
-		const targetEventToReply =
+		const targetEventToReply = $state.snapshot(
 			channelToPost?.eventkind40 ??
-			eventToReply ??
-			(currentChannelId !== undefined ? channelMap.get(currentChannelId)?.eventkind40 : undefined);
+				eventToReply ??
+				(currentChannelId !== undefined ? channelMap.get(currentChannelId)?.eventkind40 : undefined)
+		);
 		const contentWarningReason = addContentWarning
 			? reasonContentWarning.length > 0
 				? reasonContentWarning

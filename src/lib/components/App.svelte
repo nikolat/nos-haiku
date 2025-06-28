@@ -365,7 +365,8 @@
 		if (
 			kinds.includes(kind) &&
 			loginPubkey !== undefined &&
-			event?.tags.some((tag) => tag.length >= 2 && tag[0] === 'p' && tag[1] === loginPubkey)
+			(event?.tags.some((tag) => tag.length >= 2 && tag[0] === 'p' && tag[1] === loginPubkey) ||
+				event === undefined)
 		) {
 			const isSeenOnInboxRelays = (ev: NostrEvent): boolean => {
 				if (rc === undefined || loginPubkey === undefined) {

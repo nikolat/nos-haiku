@@ -756,7 +756,7 @@ export class RelayConnector {
 
 	#fetchChannelMetadata = (event: NostrEvent) => {
 		const until = unixNow();
-		const filter = { kinds: [41], '#e': [event.id], until };
+		const filter: LazyFilter = { kinds: [41], '#e': [event.id], authors: [event.pubkey], until };
 		let options: { relays: string[] } | undefined;
 		const event10002: NostrEvent | undefined = this.getReplaceableEvent(10002, event.pubkey);
 		if (event10002 !== undefined) {

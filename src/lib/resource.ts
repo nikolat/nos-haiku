@@ -412,7 +412,6 @@ export class RelayConnector {
 			const isForwardReq: boolean = this.#since < event.created_at;
 			switch (event.kind) {
 				case 1:
-				case 4:
 				case 42: {
 					const fetchAfter10002 = () => {
 						if (!this.#eventStore.hasReplaceable(0, event.pubkey)) {
@@ -424,6 +423,21 @@ export class RelayConnector {
 						}
 						this.#fetchEventsByETags(event, 'e', false);
 						this.fetchEventsQuoted(event);
+						if (event.kind === 1) {
+							this.#fetchReply(event);
+						}
+					};
+					this.setFetchListAfter10002([event.pubkey], fetchAfter10002);
+					break;
+				}
+				case 4: {
+					const fetchAfter10002 = () => {
+						if (!this.#eventStore.hasReplaceable(0, event.pubkey)) {
+							this.fetchProfile(event.pubkey);
+						}
+						if (!isForwardReq) {
+							this.fetchDeletion(event);
+						}
 					};
 					this.setFetchListAfter10002([event.pubkey], fetchAfter10002);
 					break;
@@ -744,6 +758,22 @@ export class RelayConnector {
 	#fetchChannelMetadata = (event: NostrEvent) => {
 		const until = unixNow();
 		const filter: LazyFilter = { kinds: [41], '#e': [event.id], authors: [event.pubkey], until };
+		let options: { relays: string[] } | undefined;
+		const event10002: NostrEvent | undefined = this.getReplaceableEvent(10002, event.pubkey);
+		if (event10002 !== undefined) {
+			const relays = getInboxes(event10002).filter(this.#relayFilter).slice(0, this.#limitRelay);
+			options = relays.length > 0 ? { relays } : undefined;
+		}
+		this.#rxReqBRg.emit(filter, options);
+	};
+
+	#fetchReply = (event: NostrEvent) => {
+		const filter: LazyFilter = {
+			kinds: [1],
+			'#e': [event.id],
+			limit: this.#limitComment,
+			until: unixNow()
+		};
 		let options: { relays: string[] } | undefined;
 		const event10002: NostrEvent | undefined = this.getReplaceableEvent(10002, event.pubkey);
 		if (event10002 !== undefined) {

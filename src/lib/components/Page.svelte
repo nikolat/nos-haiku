@@ -1,5 +1,6 @@
 <script lang="ts">
 	import {
+		clientTag,
 		getRoboHashURL,
 		serviceLogoImageUri,
 		zapImageUri,
@@ -8,38 +9,12 @@
 		zapRelays
 	} from '$lib/config';
 	import {
-		getEvent9734,
+		getName,
+		getProfileId,
 		zap,
 		type ChannelContent,
-		type ProfileContentEvent,
-		type UrlParams
+		type ProfileContentEvent
 	} from '$lib/utils';
-	import {
-		bookmarkChannel,
-		followUser,
-		getChannelBookmarkMap,
-		getEventByAddressPointer,
-		getEventById,
-		getEventsByFilter,
-		getEventsChannel,
-		getEventsEmojiSet,
-		getEventsFirst,
-		getEventsReaction,
-		getEventsTimelineTop,
-		getProfileId,
-		getProfileName,
-		getSeenOn,
-		muteChannel,
-		muteHashTag,
-		muteUser,
-		sendChannelEdit,
-		sendDeletion,
-		unbookmarkChannel,
-		unfollowUser,
-		unmuteChannel,
-		unmuteHashTag,
-		unmuteUser
-	} from '$lib/resource.svelte';
 	import Profile from '$lib/components/kinds/Profile.svelte';
 	import ChannelMeta from '$lib/components/kinds/ChannelMeta.svelte';
 	import ChannelList from '$lib/components/kinds/ChannelList.svelte';
@@ -51,11 +26,23 @@
 	import { getEventHash, type NostrEvent, type UnsignedEvent } from 'nostr-tools/pure';
 	import { normalizeURL } from 'nostr-tools/utils';
 	import * as nip19 from 'nostr-tools/nip19';
-	import { unixNow } from 'applesauce-core/helpers';
 	import { _ } from 'svelte-i18n';
+	import type { RelayConnector } from '$lib/resource';
 
 	let {
+		rc,
 		loginPubkey,
+		eventsMention,
+		readTimeOfNotification,
+		eventsTimeline,
+		eventsQuoted,
+		eventsReaction,
+		eventsChannelBookmark,
+		eventsEmojiSet,
+		eventFollowList,
+		eventMuteList,
+		eventMyPublicChatsList,
+		eventEmojiSetList,
 		isAntenna,
 		currentProfilePointer,
 		currentChannelPointer,
@@ -70,14 +57,28 @@
 		mutedPubkeys,
 		mutedChannelIds,
 		mutedWords,
-		mutedHashTags,
+		mutedHashtags,
 		followingPubkeys,
 		uploaderSelected,
+		isEnabledEventProtection,
+		isEnabledUseClientTag,
 		isEnabledRelativeTime,
 		nowRealtime,
 		isLoading = $bindable()
 	}: {
+		rc: RelayConnector | undefined;
 		loginPubkey: string | undefined;
+		eventsMention: NostrEvent[];
+		readTimeOfNotification: number;
+		eventsTimeline: NostrEvent[];
+		eventsQuoted: NostrEvent[];
+		eventsReaction: NostrEvent[];
+		eventsChannelBookmark: NostrEvent[];
+		eventsEmojiSet: NostrEvent[];
+		eventFollowList: NostrEvent | undefined;
+		eventMuteList: NostrEvent | undefined;
+		eventMyPublicChatsList: NostrEvent | undefined;
+		eventEmojiSetList: NostrEvent | undefined;
 		isAntenna: boolean | undefined;
 		currentProfilePointer: nip19.ProfilePointer | undefined;
 		currentChannelPointer: nip19.EventPointer | undefined;
@@ -92,9 +93,11 @@
 		mutedPubkeys: string[];
 		mutedChannelIds: string[];
 		mutedWords: string[];
-		mutedHashTags: string[];
+		mutedHashtags: string[];
 		followingPubkeys: string[];
 		uploaderSelected: string;
+		isEnabledEventProtection: boolean;
+		isEnabledUseClientTag: boolean;
 		isEnabledRelativeTime: boolean;
 		nowRealtime: number;
 		isLoading: boolean;
@@ -122,7 +125,7 @@
 		}
 		return kindSet;
 	});
-	const pSet: Set<string> = $derived.by(() => {
+	const _pSet: Set<string> = $derived.by(() => {
 		const pSet: Set<string> = new Set<string>();
 		for (const [k, v] of urlSearchParams) {
 			if (k === 'p' && /^\w{64}$/.test(v)) {
@@ -131,7 +134,7 @@
 		}
 		return pSet;
 	});
-	const authorSet: Set<string> = $derived.by(() => {
+	const _authorSet: Set<string> = $derived.by(() => {
 		const authorSet: Set<string> = new Set<string>();
 		for (const [k, v] of urlSearchParams) {
 			if (k === 'author') {
@@ -149,13 +152,21 @@
 		}
 		return relaySet;
 	});
-	const eventsTimeline: NostrEvent[] = $derived(
-		category === undefined
-			? kindSet.size === 0 && authorSet.size === 0
-				? getEventsTimelineTop()
-				: getEventsByFilter(kindSet, authorSet, query)
-			: getEventsChannel()
-	);
+	const getChannelBookmarkMap = () => {
+		const eventMap = new Map<string, NostrEvent>();
+		const channelBookmarkMap = new Map<string, string[]>();
+		for (const ev of eventsChannelBookmark) {
+			const event = eventMap.get(ev.pubkey);
+			if (event === undefined || (event !== undefined && event.created_at < ev.created_at)) {
+				eventMap.set(ev.pubkey, ev);
+				channelBookmarkMap.set(
+					ev.pubkey,
+					ev.tags.filter((tag) => tag.length >= 2 && tag[0] === 'e').map((tag) => tag[1])
+				);
+			}
+		}
+		return channelBookmarkMap;
+	};
 	const channelBookmarkMap: Map<string, string[]> = $derived(getChannelBookmarkMap());
 	const followingChannelIds: string[] = $derived(channelBookmarkMap.get(loginPubkey ?? '') ?? []);
 	const channelIds: string[] = $derived(
@@ -173,11 +184,14 @@
 							!mutedWords.some((w) =>
 								(channelMap.get(id)?.name?.toLowerCase() ?? '').includes(w)
 							) &&
-							!mutedHashTags.some((t) => (channelMap.get(id)?.categories ?? []).includes(t))
+							!mutedHashtags.some((t) => (channelMap.get(id)?.categories ?? []).includes(t))
 					)
 			)
 		)
 	);
+	const getSeenOn = (id: string, excludeWs: boolean): string[] => {
+		return rc?.getSeenOn(id, excludeWs) ?? [];
+	};
 	const profilePubkeysActive: string[] = $derived(
 		Array.from(
 			new Set<string>(
@@ -213,202 +227,26 @@
 			)
 		).filter((pubkey) => !mutedPubkeys.includes(pubkey))
 	);
-	const eventsReaction: NostrEvent[] = $derived(getEventsReaction());
-	const eventsEmojiSet: NostrEvent[] = $derived(getEventsEmojiSet());
+	const eventsAll: NostrEvent[] = $derived([...eventsTimeline, ...eventsQuoted]);
+	const getEventByAddressPointer = (
+		data: nip19.AddressPointer,
+		eventsAll: NostrEvent[]
+	): NostrEvent | undefined => {
+		return eventsAll.find(
+			(ev) =>
+				ev.pubkey === data.pubkey &&
+				ev.kind === data.kind &&
+				(ev.tags.find((tag) => tag.length >= 2 && tag[0] === 'd')?.at(1) ?? '') === data.identifier
+		);
+	};
 	const pinnedNotesEvent: NostrEvent | undefined = $derived(
 		currentProfilePointer === undefined || kindSet.size > 0
 			? undefined
-			: getEventByAddressPointer({
-					identifier: '',
-					pubkey: currentProfilePointer.pubkey,
-					kind: 10001
-				})
-	);
-
-	let countToShow: number = $state(10);
-
-	const timelineAll: NostrEvent[] = $derived.by(() => {
-		let tl: NostrEvent[];
-		if (isAntenna) {
-			tl = eventsTimeline.filter((ev) =>
-				ev.kind === 9735
-					? followingPubkeys.includes(getEvent9734(ev)?.pubkey ?? '')
-					: followingPubkeys.includes(ev.pubkey)
-			);
-		} else if (currentEventPointer !== undefined) {
-			const entry = getEventById(currentEventPointer.id);
-			tl = entry !== undefined ? [entry] : [];
-		} else if (currentAddressPointer !== undefined) {
-			const entry = getEventByAddressPointer(currentAddressPointer);
-			tl = entry !== undefined ? [entry] : [];
-		} else if (currentProfilePointer !== undefined) {
-			tl = eventsTimeline.filter((ev) =>
-				ev.kind === 9735
-					? getEvent9734(ev)?.pubkey === currentProfilePointer.pubkey
-					: ev.pubkey === currentProfilePointer.pubkey
-			);
-		} else if (currentChannelPointer !== undefined) {
-			tl = eventsTimeline.filter(
-				(ev) =>
-					(ev.kind === 42 &&
-						ev.tags
-							.filter((tag) => tag.length >= 4 && tag[0] === 'e' && tag[3] === 'root')
-							.map((tag) => tag[1])
-							.includes(currentChannelPointer.id)) ||
-					(ev.kind === 16 &&
-						ev.tags.some((tag) => tag.length >= 2 && tag[0] === 'k' && tag[1] === '42') &&
-						getEventById(ev.tags.findLast((tag) => tag.length >= 2 && tag[0] === 'e')?.at(1) ?? '')
-							?.tags.filter((tag) => tag.length >= 4 && tag[0] === 'e' && tag[3] === 'root')
-							.map((tag) => tag[1])
-							.includes(currentChannelPointer.id))
-			);
-		} else if (query !== undefined) {
-			tl = eventsTimeline.filter((ev) => ev.content.toLowerCase().includes(query.toLowerCase()));
-		} else if (hashtag !== undefined) {
-			tl = eventsTimeline.filter((ev) =>
-				ev.tags.some((tag) => tag.length >= 2 && tag[0] === 't' && tag[1].toLowerCase() === hashtag)
-			);
-		} else if (category !== undefined) {
-			tl = eventsTimeline.filter((ev) => {
-				const channel = channelMap.get(ev.id);
-				return channel?.categories.includes(category) === true;
-			});
-		} else {
-			if (kindSet.size === 0) {
-				tl = eventsTimeline.filter(
-					(ev) =>
-						ev.kind === 42 ||
-						(ev.kind === 16 &&
-							ev.tags.some((tag) => tag.length >= 2 && tag[0] === 'k' && tag[1] === '42'))
-				);
-			} else {
-				tl = eventsTimeline;
-			}
-		}
-		if (kindSet.size > 0) {
-			tl = tl.filter((ev) => kindSet.has(ev.kind));
-		}
-		if (pSet.size > 0) {
-			tl = tl.filter((ev) => {
-				const ps = ev.tags.filter((tag) => tag.length >= 2 && tag[0] === 'p').map((tag) => tag[1]);
-				return ps.some((p) => pSet.has(p));
-			});
-		}
-		if (relaySet.size > 0) {
-			tl = tl.filter((ev) => getSeenOn(ev.id, false).some((r) => relaySet.has(r)));
-		}
-		return tl;
-	});
-	const timelineSliced = $derived(timelineAll.slice(0, countToShow));
-	const timelineMuted: NostrEvent[] = $derived(
-		timelineSliced.filter((ev) => {
-			const rootIds: string[] = ev.tags
-				.filter((tag) => tag.length >= 4 && tag[0] === 'e' && tag[3] === 'root')
-				.map((tag) => tag.at(1))
-				.filter((id) => id !== undefined);
-			return (
-				!(currentProfilePointer === undefined && mutedPubkeys.includes(ev.pubkey)) &&
-				!(
-					currentChannelPointer === undefined &&
-					rootIds.some((rootId) => mutedChannelIds.includes(rootId))
-				) &&
-				!mutedWords.some(
-					(word) =>
-						ev.content.toLowerCase().includes(word) ||
-						(ev.kind === 42 &&
-							rootIds.some((rootId) =>
-								(channelMap.get(rootId)?.name?.toLowerCase() ?? '').includes(word)
-							))
-				) &&
-				!mutedHashTags.some(
-					(t) =>
-						([1, 42].includes(ev.kind) &&
-							ev.tags
-								.filter((tag) => tag.length >= 2 && tag[0] === 't')
-								.map((tag) => tag.at(1)?.toLowerCase())
-								.filter((s) => s !== undefined)
-								.includes(t)) ||
-						(ev.kind === 42 &&
-							rootIds.some((rootId) => (channelMap.get(rootId)?.categories ?? []).includes(t)))
+			: getEventByAddressPointer(
+					{ kind: 10001, pubkey: currentProfilePointer.pubkey, identifier: '' },
+					eventsAll
 				)
-			);
-		})
 	);
-	const maxToShow = 30;
-	const startToShow = $derived(
-		timelineMuted.length <= maxToShow ? 0 : timelineMuted.length - maxToShow
-	);
-	const endToShow = $derived(timelineMuted.length);
-	const timelineToShow = $derived(timelineMuted.slice(startToShow, endToShow));
-
-	let isScrolledBottom = false;
-	const scrollThreshold = 300;
-
-	const urlParams: UrlParams = $derived({
-		currentProfilePointer,
-		currentChannelPointer,
-		currentEventPointer,
-		currentAddressPointer,
-		isAntenna,
-		urlSearchParams
-	});
-
-	const handlerScroll = () => {
-		if (isFullDisplayMode) {
-			return;
-		}
-		const scrollHeight = Math.max(
-			document.body.scrollHeight,
-			document.documentElement.scrollHeight,
-			document.body.offsetHeight,
-			document.documentElement.offsetHeight,
-			document.body.clientHeight,
-			document.documentElement.clientHeight
-		);
-		const pageMostBottom = scrollHeight - window.innerHeight;
-		const pageMostTop = 0;
-		const scrollTop = window.scrollY || document.documentElement.scrollTop;
-		if (scrollTop > pageMostBottom - scrollThreshold) {
-			if (isEnabledScrollInfinitely && !isScrolledBottom && !isLoading) {
-				console.log('[Loading Start]');
-				isScrolledBottom = true;
-				isLoading = true;
-				const until: number = timelineSliced.at(-1)?.created_at ?? unixNow();
-				const correctionCount: number = $state.snapshot(
-					timelineSliced.filter((ev) => ev.created_at === until).length
-				);
-				getEventsFirst(
-					urlParams,
-					until,
-					() => {
-						console.log('[Loading Complete]');
-						countToShow += 10 - correctionCount; //unitlと同時刻のイベントは被って取得されるので補正
-						if (countToShow > maxToShow) {
-							const lastChild = document.querySelector('.FeedList > .Entry:last-child');
-							setTimeout(() => {
-								lastChild?.scrollIntoView({ block: 'end' });
-								isLoading = false;
-							}, 10);
-						} else {
-							isLoading = false;
-						}
-					},
-					false
-				);
-			}
-		} else if (isScrolledBottom && scrollTop < pageMostBottom + scrollThreshold) {
-			isScrolledBottom = false;
-		}
-		if (scrollTop === pageMostTop) {
-			countToShow = countToShow - 10 < 10 ? 10 : countToShow - 10;
-			if (countToShow > 10) {
-				setTimeout(() => {
-					window.scrollBy({ top: 10, behavior: 'smooth' });
-				}, 100);
-			}
-		}
-	};
-
 	let showSetting: boolean = $state(false);
 	const handlerSetting = (ev: MouseEvent): void => {
 		const target: HTMLElement | null = ev.target as HTMLElement | null;
@@ -437,7 +275,11 @@
 		c.about = editChannelAbout;
 		c.picture = editChannelPicture;
 		c.categories = editChannelTags;
-		await sendChannelEdit(c);
+		await rc?.sendChannelEdit(
+			c,
+			isEnabledEventProtection,
+			isEnabledUseClientTag ? clientTag : undefined
+		);
 		editChannelName = '';
 		editChannelAbout = '';
 		editChannelPicture = '';
@@ -448,28 +290,25 @@
 
 	beforeNavigate(() => {
 		document.removeEventListener('click', handlerSetting);
-		document.removeEventListener('scroll', handlerScroll);
-		countToShow = 10;
 	});
 	afterNavigate(() => {
 		document.addEventListener('click', handlerSetting);
-		document.addEventListener('scroll', handlerScroll);
-		const correctionCount: number = $state.snapshot(
-			timelineSliced.filter((ev) => ev.created_at === timelineSliced.at(-1)?.created_at).length
-		);
-		countToShow = 10 - correctionCount;
 	});
 </script>
 
 <Header
+	{rc}
 	{loginPubkey}
+	{eventsMention}
+	{eventFollowList}
+	{readTimeOfNotification}
 	{currentProfilePointer}
 	{query}
 	{urlSearchParams}
 	{profileMap}
 	{mutedPubkeys}
 	{mutedWords}
-	{mutedHashTags}
+	{mutedHashtags}
 	{isEnabledRelativeTime}
 	{nowRealtime}
 	bind:isEnabledScrollInfinitely
@@ -502,8 +341,8 @@
 									<a href="/{nip19.npubEncode(pubkey)}">
 										<img
 											src={prof?.picture ?? getRoboHashURL(nip19.npubEncode(pubkey))}
-											alt={getProfileName(pubkey)}
-											title={getProfileName(pubkey)}
+											alt={getName(pubkey, profileMap, eventFollowList)}
+											title={getName(pubkey, profileMap, eventFollowList)}
 											class="Avatar"
 										/>
 									</a>
@@ -512,18 +351,24 @@
 						</div>
 					{:else}
 						<Profile
+							{rc}
 							{loginPubkey}
 							currentPubkey={currentProfilePointer.pubkey}
 							{profileMap}
 							{channelMap}
 							{eventsTimeline}
+							{eventsQuoted}
 							{eventsReaction}
 							{eventsEmojiSet}
+							{eventsChannelBookmark}
 							{mutedPubkeys}
 							{mutedChannelIds}
 							{mutedWords}
-							{mutedHashTags}
+							{mutedHashtags}
 							{followingPubkeys}
+							{eventFollowList}
+							{eventEmojiSetList}
+							{eventMuteList}
 						/>
 					{/if}
 				</div>
@@ -544,7 +389,7 @@
 								{@const profile = profileMap.get(currentEventPointer.author)}
 								<h1 class="Feed__title">
 									<Content
-										content={getProfileName(currentEventPointer.author)}
+										content={getName(currentEventPointer.author, profileMap, eventFollowList)}
 										tags={profile?.event.tags ?? []}
 										isAbout={true}
 									/>
@@ -559,7 +404,7 @@
 							<h1 class="Feed__title">
 								<i class="fa-fw fas fa-book-user"></i>
 								<Content
-									content={getProfileName(currentProfilePointer.pubkey)}
+									content={getName(currentProfilePointer.pubkey, profileMap, eventFollowList)}
 									tags={profile?.event.tags ?? []}
 									isAbout={true}
 								/>
@@ -580,7 +425,10 @@
 											<span
 												class="fa-fw fas fa-heart"
 												onclick={() => {
-													unfollowUser(currentProfilePointer.pubkey);
+													if (rc === undefined || eventFollowList === undefined) {
+														return;
+													}
+													rc.unfollowPubkey(currentProfilePointer.pubkey, eventFollowList);
 												}}
 											></span>
 										</div>
@@ -591,7 +439,10 @@
 											<span
 												class="fa-fw fas fa-heart"
 												onclick={() => {
-													followUser(currentProfilePointer.pubkey);
+													if (rc === undefined || eventFollowList === undefined) {
+														return;
+													}
+													rc.followPubkey(currentProfilePointer.pubkey, eventFollowList);
 												}}
 											></span>
 										</div>
@@ -612,7 +463,14 @@
 												<a
 													title={$_('Page.main.unmute-it').replace('{idView}', idView)}
 													onclick={() => {
-														unmuteUser(currentProfilePointer.pubkey, loginPubkey);
+														if (rc === undefined) {
+															return;
+														}
+														rc.unmutePubkey(
+															currentProfilePointer.pubkey,
+															loginPubkey,
+															$state.snapshot(eventMuteList)
+														);
 													}}
 													><i class="fa-fw fas fa-eye"></i>
 													{$_('Page.main.unmute-it').replace('{idView}', idView)}</a
@@ -621,7 +479,14 @@
 												<a
 													title={$_('Page.main.mute-it').replace('{idView}', idView)}
 													onclick={() => {
-														muteUser(currentProfilePointer.pubkey, loginPubkey);
+														if (rc === undefined) {
+															return;
+														}
+														rc.mutePubkey(
+															currentProfilePointer.pubkey,
+															loginPubkey,
+															$state.snapshot(eventMuteList)
+														);
 													}}
 													><i class="fa-fw fas fa-eye-slash"></i>
 													{$_('Page.main.mute-it').replace('{idView}', idView)}</a
@@ -756,7 +621,7 @@
 											<!-- svelte-ignore a11y_no_static_element_interactions -->
 											<span
 												onclick={() => {
-													unmuteChannel(currentChannelPointer.id, loginPubkey);
+													rc?.unmuteChannel(currentChannelPointer.id, loginPubkey, eventMuteList);
 												}}>{$_('Page.main.unmute')}</span
 											></span
 										>
@@ -772,7 +637,11 @@
 												<span
 													class="fa-fw fas fa-heart"
 													onclick={() => {
-														unbookmarkChannel(currentChannelPointer.id, loginPubkey);
+														rc?.unbookmarkChannel(
+															currentChannelPointer.id,
+															loginPubkey,
+															eventMyPublicChatsList
+														);
 													}}
 												></span>
 											</div>
@@ -783,7 +652,7 @@
 												<span
 													class="fa-fw fas fa-heart"
 													onclick={() => {
-														bookmarkChannel(currentChannelPointer.id);
+														rc?.bookmarkChannel(currentChannelPointer.id, eventMyPublicChatsList);
 													}}
 												></span>
 											</div>
@@ -806,7 +675,11 @@
 													<a
 														title={$_('Page.main.unmute-it').replace('{idView}', channel.name)}
 														onclick={() => {
-															unmuteChannel(currentChannelPointer.id, loginPubkey);
+															rc?.unmuteChannel(
+																currentChannelPointer.id,
+																loginPubkey,
+																eventMuteList
+															);
 														}}
 														><i class="fa-fw fas fa-eye"></i>
 														{$_('Page.main.unmute-it').replace('{idView}', channel.name)}</a
@@ -815,7 +688,7 @@
 													<a
 														title={$_('Page.main.mute-it').replace('{idView}', channel.name)}
 														onclick={() => {
-															muteChannel(currentChannelPointer.id, loginPubkey);
+															rc?.muteChannel(currentChannelPointer.id, loginPubkey, eventMuteList);
 														}}
 														><i class="fa-fw fas fa-eye-slash"></i>
 														{$_('Page.main.mute-it').replace('{idView}', channel.name)}</a
@@ -838,7 +711,7 @@
 														title={$_('Page.main.delete-it').replace('{idDelete}', channel.name)}
 														onclick={() => {
 															if (confirm($_('confirm-channel-delete'))) {
-																sendDeletion(channel.eventkind40);
+																rc?.sendDeletion(channel.eventkind40);
 															}
 														}}
 														><i class="fa-fw fas fa-times-circle"></i>
@@ -856,7 +729,7 @@
 								{$_('Page.main.feed-subtitle-entry').replace('{idView}', `#${hashtag}`)}
 							</h3>
 							{#if loginPubkey !== undefined}
-								{#if mutedHashTags.includes(hashtag)}
+								{#if mutedHashtags.includes(hashtag)}
 									<span class="Feed__muted"
 										><i class="fa-fw fas fa-eye-slash"></i>
 										{$_('Page.main.muted-entries-hashtag')}
@@ -864,7 +737,7 @@
 										<!-- svelte-ignore a11y_no_static_element_interactions -->
 										<span
 											onclick={() => {
-												unmuteHashTag(hashtag, loginPubkey);
+												rc?.unmuteHashtag(hashtag, loginPubkey, eventMuteList);
 											}}>{$_('Page.main.unmute')}</span
 										></span
 									>
@@ -884,11 +757,11 @@
 										</div>
 										<!-- svelte-ignore a11y_missing_attribute -->
 										<div class="SettingButton__Dropdown Dropdown--left">
-											{#if mutedHashTags.includes(hashtag)}
+											{#if mutedHashtags.includes(hashtag)}
 												<a
 													title={$_('Page.main.unmute-it').replace('{idView}', `#${hashtag}`)}
 													onclick={() => {
-														unmuteHashTag(hashtag, loginPubkey);
+														rc?.unmuteHashtag(hashtag, loginPubkey, eventMuteList);
 													}}
 													><i class="fa-fw fas fa-eye"></i>
 													{$_('Page.main.unmute-it').replace('{idView}', `#${hashtag}`)}</a
@@ -897,7 +770,7 @@
 												<a
 													title={$_('Page.main.mute-it').replace('{idView}', `#${hashtag}`)}
 													onclick={() => {
-														muteHashTag(hashtag, loginPubkey);
+														rc?.muteHashtag(hashtag, loginPubkey, eventMuteList);
 													}}
 													><i class="fa-fw fas fa-eye-slash"></i>
 													{$_('Page.main.mute-it').replace('{idView}', `#${hashtag}`)}</a
@@ -913,7 +786,7 @@
 								{$_('Page.main.feed-subtitle-keyword').replace('{idView}', `#${category}`)}
 							</h3>
 							{#if loginPubkey !== undefined}
-								{#if mutedHashTags.includes(category)}
+								{#if mutedHashtags.includes(category)}
 									<span class="Feed__muted"
 										><i class="fa-fw fas fa-eye-slash"></i>
 										{$_('Page.main.muted-keywords-category')}
@@ -921,7 +794,7 @@
 										<!-- svelte-ignore a11y_no_static_element_interactions -->
 										<span
 											onclick={() => {
-												unmuteHashTag(category, loginPubkey);
+												rc?.unmuteHashtag(category, loginPubkey, eventMuteList);
 											}}>{$_('Page.main.unmute')}</span
 										></span
 									>
@@ -941,11 +814,11 @@
 										</div>
 										<!-- svelte-ignore a11y_missing_attribute -->
 										<div class="SettingButton__Dropdown Dropdown--left">
-											{#if mutedHashTags.includes(category)}
+											{#if mutedHashtags.includes(category)}
 												<a
 													title={$_('Page.main.unmute-it').replace('{idView}', `#${category}`)}
 													onclick={() => {
-														unmuteHashTag(category, loginPubkey);
+														rc?.unmuteHashtag(category, loginPubkey, eventMuteList);
 													}}
 													><i class="fa-fw fas fa-eye"></i>
 													{$_('Page.main.unmute-it').replace('{idView}', `#${category}`)}</a
@@ -954,7 +827,7 @@
 												<a
 													title={$_('Page.main.mute-it').replace('{idView}', `#${category}`)}
 													onclick={() => {
-														muteHashTag(category, loginPubkey);
+														rc?.muteHashtag(category, loginPubkey, eventMuteList);
 													}}
 													><i class="fa-fw fas fa-eye-slash"></i>
 													{$_('Page.main.mute-it').replace('{idView}', `#${category}`)}</a
@@ -985,13 +858,18 @@
 						</div>
 					{/if}
 					<CreateEntry
+						{rc}
 						{loginPubkey}
 						currentChannelId={currentChannelPointer?.id}
 						eventToReply={undefined}
 						{isTopPage}
+						{channelMap}
 						{profileMap}
+						{isEnabledEventProtection}
+						clientTag={isEnabledUseClientTag ? clientTag : undefined}
 						{uploaderSelected}
 						{eventsEmojiSet}
+						{eventFollowList}
 						preInput={urlSearchParams.get('content')}
 						bind:channelToPost
 						showForm={true}
@@ -1004,21 +882,30 @@
 					{#if previewEvent !== undefined}
 						<Entry
 							event={{ ...previewEvent, id: getEventHash(previewEvent), sig: '' }}
+							{rc}
 							{channelMap}
 							{profileMap}
 							{loginPubkey}
 							{mutedPubkeys}
 							{mutedChannelIds}
 							{mutedWords}
-							{mutedHashTags}
+							{mutedHashtags}
 							{followingPubkeys}
+							{eventFollowList}
+							{eventEmojiSetList}
+							{eventMuteList}
 							{eventsTimeline}
+							{eventsQuoted}
 							{eventsReaction}
 							{eventsEmojiSet}
+							{eventsChannelBookmark}
+							{getSeenOn}
 							{uploaderSelected}
 							bind:channelToPost
 							currentChannelId={currentChannelPointer?.id}
 							{isEnabledRelativeTime}
+							{isEnabledEventProtection}
+							clientTag={isEnabledUseClientTag ? clientTag : undefined}
 							{nowRealtime}
 							level={0}
 							{isFullDisplayMode}
@@ -1030,21 +917,30 @@
 					{#if pinnedNotesEvent !== undefined && pinnedNotesEvent.tags.filter((tag) => tag.length >= 2 && tag[0] === 'e').length > 0}
 						<Entry
 							event={pinnedNotesEvent}
+							{rc}
 							{channelMap}
 							{profileMap}
 							{loginPubkey}
 							{mutedPubkeys}
 							{mutedChannelIds}
 							{mutedWords}
-							{mutedHashTags}
+							{mutedHashtags}
 							{followingPubkeys}
+							{eventFollowList}
+							{eventEmojiSetList}
+							{eventMuteList}
 							{eventsTimeline}
+							{eventsQuoted}
 							{eventsReaction}
 							{eventsEmojiSet}
+							{eventsChannelBookmark}
+							{getSeenOn}
 							{uploaderSelected}
 							bind:channelToPost
 							currentChannelId={currentChannelPointer?.id}
 							{isEnabledRelativeTime}
+							{isEnabledEventProtection}
+							clientTag={isEnabledUseClientTag ? clientTag : undefined}
 							{nowRealtime}
 							level={0}
 							{isFullDisplayMode}
@@ -1053,24 +949,33 @@
 							bind:baseEventToEdit
 						/>
 					{/if}
-					{#each timelineToShow as event (event.id)}
+					{#each eventsTimeline as event (event.id)}
 						<Entry
 							{event}
+							{rc}
 							{channelMap}
 							{profileMap}
 							{loginPubkey}
 							{mutedPubkeys}
 							{mutedChannelIds}
 							{mutedWords}
-							{mutedHashTags}
+							{mutedHashtags}
 							{followingPubkeys}
+							{eventEmojiSetList}
+							{eventFollowList}
+							{eventMuteList}
 							{eventsTimeline}
+							{eventsQuoted}
 							{eventsReaction}
 							{eventsEmojiSet}
+							{eventsChannelBookmark}
+							{getSeenOn}
 							{uploaderSelected}
 							bind:channelToPost
 							currentChannelId={currentChannelPointer?.id}
 							{isEnabledRelativeTime}
+							{isEnabledEventProtection}
+							clientTag={isEnabledUseClientTag ? clientTag : undefined}
 							{nowRealtime}
 							level={0}
 							{isFullDisplayMode}

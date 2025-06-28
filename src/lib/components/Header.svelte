@@ -2,18 +2,13 @@
 	import { faviconImageUri, getRoboHashURL, gitHubUrl, titleLogoImageUri } from '$lib/config';
 	import {
 		getAbsoluteTime,
+		getAddressPointerFromAId,
 		getEvent9734,
-		getTargetEvent,
+		getName,
 		getRelativeTime,
 		type ProfileContentEvent
 	} from '$lib/utils';
-	import {
-		fetchEventsMention,
-		getEventsMention,
-		getProfileName,
-		getReadTimeOfNotification,
-		sendReadTime
-	} from '$lib/resource.svelte';
+	import type { RelayConnector } from '$lib/resource';
 	import Reaction from '$lib/components/kinds/Reaction.svelte';
 	import Content from '$lib/components/Content.svelte';
 	import { afterNavigate, beforeNavigate, goto } from '$app/navigation';
@@ -26,37 +21,74 @@
 	import { _ } from 'svelte-i18n';
 
 	let {
+		rc,
 		loginPubkey,
+		eventsMention,
+		eventFollowList,
+		readTimeOfNotification,
 		currentProfilePointer,
 		query,
 		urlSearchParams,
 		profileMap,
 		mutedPubkeys,
 		mutedWords,
-		mutedHashTags,
+		mutedHashtags,
 		isEnabledRelativeTime,
 		nowRealtime,
 		isEnabledScrollInfinitely = $bindable()
 	}: {
+		rc: RelayConnector | undefined;
 		loginPubkey: string | undefined;
+		eventsMention: NostrEvent[];
+		eventFollowList: NostrEvent | undefined;
+		readTimeOfNotification: number;
 		currentProfilePointer: nip19.ProfilePointer | undefined;
 		query: string | undefined;
 		urlSearchParams: URLSearchParams;
 		profileMap: Map<string, ProfileContentEvent>;
 		mutedPubkeys: string[];
 		mutedWords: string[];
-		mutedHashTags: string[];
+		mutedHashtags: string[];
 		isEnabledRelativeTime: boolean;
 		nowRealtime: number;
 		isEnabledScrollInfinitely: boolean;
 	} = $props();
+
+	const getTargetEvent = (ev: NostrEvent): NostrEvent | undefined => {
+		if (rc === undefined) {
+			return undefined;
+		}
+		const eId = (
+			ev.tags.find(
+				(tag) =>
+					tag.length >= 4 && tag[0] === 'e' && tag[3] === 'reply' && [1, 42].includes(ev.kind)
+			) ??
+			ev.tags.find(
+				(tag) => tag.length >= 4 && tag[0] === 'e' && tag[3] === 'root' && ev.kind === 1
+			) ??
+			ev.tags.find(
+				(tag) => tag.length >= 2 && tag[0] === 'e' && [6, 16, 1111, 9735].includes(ev.kind)
+			) ??
+			ev.tags.findLast((tag) => tag.length >= 2 && tag[0] === 'e' && ev.kind === 7)
+		)?.at(1);
+		const aId = ev.tags.findLast((tag) => tag.length >= 2 && tag[0] === 'a')?.at(1);
+		let targetEvent: NostrEvent | undefined;
+		if (eId !== undefined) {
+			targetEvent = rc.getEventsByFilter({ ids: [eId] }).at(0);
+		} else if (aId !== undefined && [7, 8, 16, 1111].includes(ev.kind)) {
+			const ap: nip19.AddressPointer | null = getAddressPointerFromAId(aId);
+			targetEvent =
+				ap === null ? undefined : rc.getReplaceableEvent(ap.kind, ap.pubkey, ap.identifier);
+		}
+		return targetEvent;
+	};
 
 	const removeMutedEvent = (events: NostrEvent[]): NostrEvent[] => {
 		return events.filter(
 			(event) =>
 				!mutedPubkeys.includes(event.pubkey) &&
 				!mutedWords.some((word) => event.content.toLowerCase().includes(word)) &&
-				!mutedHashTags.some((t) =>
+				!mutedHashtags.some((t) =>
 					event.tags
 						.filter((tag) => tag.length >= 2 && tag[0] === 't')
 						.map((tag) => tag[1].toLowerCase())
@@ -68,8 +100,6 @@
 		);
 	};
 
-	const eventsMention: NostrEvent[] = $derived(getEventsMention());
-	const readTimeOfNotification: number = $derived(getReadTimeOfNotification());
 	const countUnread: number = $derived.by(() => {
 		const created_at = eventsMention.at(-1)?.created_at;
 		if (created_at === undefined) {
@@ -147,7 +177,7 @@
 	const updateReadTime = () => {
 		const created_at = eventsMention.at(0)?.created_at ?? 0;
 		if (readTimeOfNotification < created_at) {
-			sendReadTime(created_at);
+			rc?.sendReadTime(created_at);
 		}
 	};
 
@@ -161,16 +191,16 @@
 		const scrollTop = noticeListBody.scrollTop;
 		if (scrollTop > pageMostBottom - scrollThreshold) {
 			if (!isScrolledBottom && !isLoading) {
-				console.log('[Loading Start]');
+				console.info('[Loading Start]');
 				isScrolledBottom = true;
 				isLoading = true;
 				const until: number = timelineSliced.at(-1)?.created_at ?? unixNow();
-				const correctionCount: number = $state.snapshot(
-					timelineSliced.filter((event) => event.created_at === until).length
-				);
-				fetchEventsMention(until, () => {
-					console.log('[Loading Complete]');
-					countToShow += 10 - correctionCount; //unitlと同時刻のイベントは被って取得されるので補正
+				const correctionCount: number = timelineSliced.filter(
+					(event) => event.created_at === until
+				).length;
+				rc?.fetchEventsMention(loginPubkey, until, 11, () => {
+					console.info('[Loading Complete]');
+					countToShow += 11 - correctionCount; //unitlと同時刻のイベントは被って取得されるので補正
 					isLoading = false;
 				});
 			}
@@ -186,10 +216,9 @@
 	afterNavigate(() => {
 		noticeListBody.addEventListener('scroll', handlerNoticeListBody);
 		document.addEventListener('click', handlerNoticeList);
-		const correctionCount: number = $state.snapshot(
-			timelineSliced.filter((event) => event.created_at === timelineSliced.at(-1)?.created_at)
-				.length
-		);
+		const correctionCount: number = timelineSliced.filter(
+			(event) => event.created_at === timelineSliced.at(-1)?.created_at
+		).length;
 		countToShow = 10 - correctionCount;
 	});
 	$effect(() => {
@@ -422,7 +451,7 @@
 									alt=""
 									loading="lazy"
 									src={prof?.picture ?? getRoboHashURL(nip19.npubEncode(evFrom.pubkey))}
-									title={getProfileName(evFrom.pubkey)}
+									title={getName(evFrom.pubkey, profileMap, eventFollowList)}
 									class="Avatar Avatar--md"
 								/>
 							</div>
@@ -430,7 +459,7 @@
 								<p>
 									<a href="/{nip19.npubEncode(evFrom.pubkey)}" class="">
 										<Content
-											content={getProfileName(evFrom.pubkey)}
+											content={getName(evFrom.pubkey, profileMap, eventFollowList)}
 											tags={prof?.event.tags ?? []}
 											isAbout={true}
 										/>
@@ -440,7 +469,14 @@
 										>
 									{:else if ev.kind === 7}
 										added a <a href="/entry/{nip19.neventEncode({ ...ev, author: ev.pubkey })}"
-											><Reaction reactionEvent={ev} profile={undefined} isAuthor={false} /></a
+											><Reaction
+												sendDeletion={async (targetEvent: NostrEvent) => {
+													await rc?.sendDeletion(targetEvent);
+												}}
+												reactionEvent={ev}
+												profile={undefined}
+												isAuthor={false}
+											/></a
 										>
 									{:else if ev.kind === 8}
 										<a href="/entry/{nip19.neventEncode({ ...ev, author: ev.pubkey })}">📛awarded</a
@@ -488,7 +524,14 @@
 													<img alt={title} {title} class="badge" src={image} />
 												{/if}
 											{:else if evTo.kind === 7}
-												<Reaction reactionEvent={evTo} profile={undefined} isAuthor={false} />
+												<Reaction
+													sendDeletion={async (targetEvent: NostrEvent) => {
+														await rc?.sendDeletion(targetEvent);
+													}}
+													reactionEvent={evTo}
+													profile={undefined}
+													isAuthor={false}
+												/>
 											{:else}
 												{@const sp = evTo.content.split('\n')}
 												<Content

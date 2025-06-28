@@ -88,7 +88,6 @@
 	},
 	"Entry": {
 		"kind42-event-without-valid-channel-id": "チャンネルIDが不正な kind:42 イベント",
-		"kind42-event-of-unknown-channel": "チャンネルが不明な kind:42 イベント",
 		"kind42-event-with-unnamed-channel": "チャンネル名が未定義の kind:42 イベント",
 		"invalid-repost": "⚠️kind:{event-kind} イベントで kind:{repostedEvent-kind} イベントをリポストすることは認められていません。",
 		"remove-from-favorites": "お気に入りから削除",

@@ -1,18 +1,25 @@
 <script lang="ts">
-	import { getEventsByFilter, sendPollResponse } from '$lib/resource.svelte';
 	import { getTimeRemaining } from '$lib/utils';
+	import type { RelayConnector } from '$lib/resource';
 	import Content from '$lib/components/Content.svelte';
 	import type { NostrEvent } from 'nostr-tools/pure';
 	import { normalizeURL } from 'nostr-tools/utils';
 	import { _ } from 'svelte-i18n';
+	import { clientTag } from '$lib/config';
 
 	const {
+		rc,
 		event,
+		events1018,
 		loginPubkey,
+		isEnabledEventProtection,
 		nowRealtime
 	}: {
+		rc: RelayConnector | undefined;
 		event: NostrEvent;
+		events1018: NostrEvent[];
 		loginPubkey: string | undefined;
+		isEnabledEventProtection: boolean;
 		nowRealtime: number;
 	} = $props();
 
@@ -22,13 +29,14 @@
 				.find((tag) => tag.length >= 2 && tag[0] === 'endsAt' && /^\d+$/.test(tag[1]))
 				?.at(1) ?? '0'
 		);
-	const oneVotePerPubkey = (event: NostrEvent): NostrEvent[] => {
-		const events1018 = getEventsByFilter(new Set<number>([1018]), new Set<string>()).filter((ev) =>
-			ev.tags.some((tag) => tag.length >= 2 && tag[0] === 'e' && tag[1] === event.id)
-		);
+	const oneVotePerPubkey = (event: NostrEvent, events1018: NostrEvent[]): NostrEvent[] => {
+		const eventsVote =
+			events1018.filter((ev) =>
+				ev.tags.some((tag) => tag.length >= 2 && tag[0] === 'e' && tag[1] === event.id)
+			) ?? [];
 		const eventMap: Map<string, NostrEvent> = new Map<string, NostrEvent>();
 		const endsAt: number = getEndsAt(event);
-		for (const ev of events1018) {
+		for (const ev of eventsVote) {
 			if (!eventMap.has(ev.pubkey) || ev.created_at > eventMap.get(ev.pubkey)!.created_at) {
 				if (ev.created_at <= endsAt) {
 					eventMap.set(ev.pubkey, ev);
@@ -37,13 +45,16 @@
 		}
 		return Array.from(eventMap.values());
 	};
-	const getPollResult = (event: NostrEvent): Map<string, [string, number]> => {
-		const events1018: NostrEvent[] = oneVotePerPubkey(event);
+	const getPollResult = (
+		event: NostrEvent,
+		events1018: NostrEvent[]
+	): Map<string, [string, number]> => {
+		const eventsVote: NostrEvent[] = oneVotePerPubkey(event, events1018);
 		const isSingleChoice: boolean = !event.tags.some(
 			(tag) => tag.length >= 2 && tag[0] === 'polltype' && tag[1] === 'multiplechoice'
 		);
 		const rMap = new Map<string, number>();
-		for (const ev of events1018) {
+		for (const ev of eventsVote) {
 			const responses = ev.tags
 				.filter((tag) => tag.length >= 2 && tag[0] === 'response')
 				.map((tag) => tag[1]);
@@ -62,7 +73,7 @@
 		return nameMap;
 	};
 
-	const pollResultMap: Map<string, [string, number]> = $derived(getPollResult(event));
+	const pollResultMap: Map<string, [string, number]> = $derived(getPollResult(event, events1018));
 	const endsAt: number = $derived(getEndsAt(event));
 	const pollType: string | undefined = $derived(
 		event.tags.find((tag) => tag.length >= 2 && tag[0] === 'polltype')?.at(1)
@@ -99,7 +110,13 @@
 					.map((tag) => normalizeURL(tag[1]))
 			)
 		);
-		await sendPollResponse(event, responses, relaysToWrite.length > 0 ? relaysToWrite : undefined);
+		await rc?.sendPollResponse(
+			event,
+			responses,
+			isEnabledEventProtection,
+			clientTag,
+			relaysToWrite.length > 0 ? relaysToWrite : undefined
+		);
 		responseRadio = undefined;
 		responseCheckbox = [];
 	};

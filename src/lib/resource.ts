@@ -1412,14 +1412,13 @@ export class RelayConnector {
 			.map((tag) => tag[1])
 			.filter((id) => !this.#eventStore.hasEvent(id));
 		if (ids.length > 0) {
-			this.#getEventsByIdWithRelayHint(event, tagName, [], onlyLastOne);
 			const lastOne: string | undefined = ids.at(-1);
 			if (onlyLastOne && lastOne !== undefined) {
 				ids = [lastOne];
 			}
 			for (const id of ids) {
 				const eTag: string[] | undefined = event.tags.findLast(
-					(tag) => tag.length >= 4 && tag[0] === 'e' && tag[1] === id
+					(tag) => tag.length >= 2 && tag[0] === 'e' && tag[1] === id
 				);
 				if (eTag === undefined) {
 					continue;

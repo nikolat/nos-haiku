@@ -542,10 +542,11 @@ export const getTagsForContent = (
 		const qTag: string[] = ['q', id];
 		const ev: NostrEvent | undefined = getEventsByFilter({ ids: [id] }).at(0);
 		const recommendedRelayForQuote: string | undefined =
-			getSeenOn(id, true).at(0) ?? ep.relays?.filter((relay) => relay.startsWith('wss://')).at(0);
+			getSeenOn(id, true).at(0) ??
+			ep.relays?.filter((relay) => URL.canParse(relay) && relay.startsWith('wss://')).at(0);
 		const pubkey: string | undefined = ev?.pubkey ?? ep.author;
 		if (recommendedRelayForQuote !== undefined) {
-			qTag.push(recommendedRelayForQuote);
+			qTag.push(normalizeURL(recommendedRelayForQuote));
 			if (pubkey !== undefined) {
 				qTag.push(pubkey);
 			}
@@ -560,9 +561,9 @@ export const getTagsForContent = (
 		const ev: NostrEvent | undefined = getReplaceableEvent(ap.kind, ap.pubkey, ap.identifier);
 		const recommendedRelayForQuote: string | undefined =
 			getSeenOn(ev?.id ?? '', true).at(0) ??
-			ap.relays?.filter((relay) => relay.startsWith('wss://')).at(0);
+			ap.relays?.filter((relay) => URL.canParse(relay) && relay.startsWith('wss://')).at(0);
 		if (recommendedRelayForQuote !== undefined) {
-			qTag.push(recommendedRelayForQuote);
+			qTag.push(normalizeURL(recommendedRelayForQuote));
 		}
 		tags.push(qTag);
 		if (!ppMap.has(ap.pubkey)) {
@@ -574,9 +575,9 @@ export const getTagsForContent = (
 		const kind0: NostrEvent | undefined = getReplaceableEvent(0, p);
 		const recommendedRelayForPubkey: string | undefined =
 			getSeenOn(kind0?.id ?? '', true).at(0) ??
-			pp.relays?.filter((relay) => relay.startsWith('wss://')).at(0);
+			pp.relays?.filter((relay) => URL.canParse(relay) && relay.startsWith('wss://')).at(0);
 		if (recommendedRelayForPubkey !== undefined) {
-			pTag.push(recommendedRelayForPubkey);
+			pTag.push(normalizeURL(recommendedRelayForPubkey));
 		}
 		tags.push(pTag);
 	}

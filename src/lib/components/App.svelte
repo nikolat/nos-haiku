@@ -352,11 +352,14 @@
 						eventsTimeline = rc.getEventsByFilter({ ids: [up.currentEventPointer.id] });
 					} else if (up.currentAddressPointer !== undefined) {
 						const ap = up.currentAddressPointer;
-						eventsTimeline = rc.getEventsByFilter({
+						const filter: Filter = {
 							kinds: [ap.kind],
-							authors: [ap.pubkey],
-							'#d': [ap.identifier]
-						});
+							authors: [ap.pubkey]
+						};
+						if (isAddressableKind(ap.kind)) {
+							filter['#d'] = [ap.identifier];
+						}
+						eventsTimeline = rc.getEventsByFilter(filter);
 					}
 				}
 				break;

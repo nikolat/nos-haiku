@@ -9,7 +9,9 @@
 	import type { RelayConnector } from '$lib/resource';
 	import Entry from '$lib/components/Entry.svelte';
 	import type { NostrEvent } from 'nostr-tools/pure';
+	import { normalizeURL } from 'nostr-tools/utils';
 	import * as nip19 from 'nostr-tools/nip19';
+	import { getTagValue } from 'applesauce-core/helpers';
 
 	let {
 		rc,
@@ -81,10 +83,39 @@
 		nowRealtime?: number;
 	} = $props();
 
-	const getExpandTagsList = (
-		content: string,
-		tags: string[][]
-	): [IterableIterator<RegExpMatchArray>, string[], { [key: string]: string }] => {
+	type Token =
+		| {
+				type: 'text';
+				value: string;
+		  }
+		| {
+				type: 'link';
+				href: string;
+				value: string;
+		  }
+		| {
+				type: 'relay';
+				href: string;
+				value: string;
+		  }
+		| {
+				type: 'mention';
+				decoded: nip19.DecodedResult;
+				encoded: string;
+				value: string;
+		  }
+		| {
+				type: 'hashtag';
+				hashtag: string;
+				value: string;
+		  }
+		| {
+				type: 'emoji';
+				code: string;
+				url: string;
+		  };
+
+	const getExpandTagsList = (content: string, tags: string[][]) => {
 		const regMatchArray = [
 			'https?://[\\w!?/=+\\-_~:;.,*&@#$%()[\\]]+',
 			'wss?://[\\w!?/=+\\-_~:;.,*&@#$%()[\\]]+',
@@ -95,25 +126,92 @@
 			'nostr:naddr1\\w+',
 			'#[^\\s#]+'
 		];
-		const emojiUrls: { [key: string]: string } = {};
-		const emojiRegs = [];
+		const emojiUrlMap: Map<string, string> = new Map<string, string>();
 		for (const tag of tags) {
 			if (tag.length >= 3 && tag[0] === 'emoji' && /\w+/.test(tag[1]) && URL.canParse(tag[2])) {
-				emojiRegs.push(`:${tag[1]}:`);
-				emojiUrls[`:${tag[1]}:`] = tag[2];
+				emojiUrlMap.set(`:${tag[1]}:`, tag[2]);
 			}
 		}
-		if (emojiRegs.length > 0) {
-			regMatchArray.push(emojiRegs.join('|'));
+		if (emojiUrlMap.size > 0) {
+			regMatchArray.push(Array.from(emojiUrlMap.keys()).join('|'));
 		}
-		const regMatch = new RegExp(regMatchArray.map((v) => '(' + v + ')').join('|'), 'g');
+		const regMatch = new RegExp(regMatchArray.map((v) => `(${v})`).join('|'), 'g');
 		const regSplit = new RegExp(regMatchArray.join('|'));
+
 		const plainTexts = content.split(regSplit);
 		const matchesIterator = content.matchAll(regMatch);
-		return [matchesIterator, plainTexts, emojiUrls];
+		const children: [Token] = [
+			{
+				type: 'text',
+				value: plainTexts[0]
+			}
+		];
+		let i = 1;
+		for (const m of matchesIterator) {
+			const mLink = m.at(1);
+			const mRelay = m.at(2);
+			const mMention = m.at(3) ?? m.at(4) ?? m.at(5) ?? m.at(6) ?? m.at(7);
+			const mHashTag = m.at(8);
+			const mShortcode = m.at(9);
+			const mMentionDecoded: nip19.DecodedResult | null =
+				mMention === undefined ? null : nip19decode(mMention.replace(/nostr:/, ''));
+			if (mLink !== undefined && /^https?:\/\/\S+/.test(mLink) && URL.canParse(mLink)) {
+				children.push({
+					type: 'link',
+					href: new URL(mLink).toString(),
+					value: mLink
+				});
+			} else if (mRelay !== undefined && /^wss?:\/\/\S+/.test(mRelay) && URL.canParse(mRelay)) {
+				children.push({
+					type: 'relay',
+					href: normalizeURL(mRelay),
+					value: mRelay
+				});
+			} else if (mMention !== undefined && mMentionDecoded !== null) {
+				children.push({
+					type: 'mention',
+					decoded: mMentionDecoded,
+					encoded: mMention.replace(/nostr:/, ''),
+					value: mMention
+				});
+			} else if (mHashTag !== undefined) {
+				children.push({
+					type: 'hashtag',
+					hashtag: mHashTag.replace('#', '').toLowerCase(),
+					value: mHashTag
+				});
+			} else if (mShortcode !== undefined) {
+				children.push({
+					type: 'emoji',
+					code: mShortcode,
+					url: emojiUrlMap.get(mShortcode)!
+				});
+			} else {
+				children.push({
+					type: 'text',
+					value: mLink ?? mMention ?? ''
+				});
+			}
+			children.push({
+				type: 'text',
+				value: plainTexts[i]
+			});
+			i++;
+		}
+		return {
+			type: 'root',
+			event: undefined,
+			children
+		};
 	};
 
-	const [matchesIterator, plainTexts, emojiUrls] = $derived(getExpandTagsList(content, tags));
+	const eventsAll: NostrEvent[] = $derived.by(() => {
+		const eventMap = new Map<string, NostrEvent>();
+		for (const ev of [...eventsTimeline, ...eventsQuoted]) {
+			eventMap.set(ev.id, ev);
+		}
+		return Array.from(eventMap.values());
+	});
 
 	const nip19decode = (text: string): nip19.DecodedResult | null => {
 		try {
@@ -123,6 +221,8 @@
 		}
 	};
 
+	const ats = $derived(getExpandTagsList(content, tags));
+
 	const appendRelay = (baseUrl: string, relayUrl: string): string => {
 		const url = new URL(baseUrl);
 		if (!url.searchParams.getAll('relay').includes(relayUrl)) {
@@ -130,36 +230,11 @@
 		}
 		return url.href;
 	};
-
-	const eventsAll: NostrEvent[] = $derived([...eventsTimeline, ...eventsQuoted]);
-	const getEventById = (id: string, eventsAll: NostrEvent[]): NostrEvent | undefined => {
-		return eventsAll.find((ev) => ev.id === id);
-	};
-	const getEventByAddressPointer = (
-		data: nip19.AddressPointer,
-		eventsAll: NostrEvent[]
-	): NostrEvent | undefined => {
-		return eventsAll.find(
-			(ev) =>
-				ev.pubkey === data.pubkey &&
-				ev.kind === data.kind &&
-				(ev.tags.find((tag) => tag.length >= 2 && tag[0] === 'd')?.at(1) ?? '') === data.identifier
-		);
-	};
 </script>
 
-{plainTexts[0]}{#each Array.from(matchesIterator) as match, i (i)}
-	{@const urlHttp = match[1]}
-	{@const urlWs = match[2]}
-	{@const nostr_npub1 = match[3]}
-	{@const nostr_nprofile1 = match[4]}
-	{@const nostr_note1 = match[5]}
-	{@const nostr_nevent1 = match[6]}
-	{@const nostr_naddr1 = match[7]}
-	{@const sharp = match[8]}
-	{@const shortcode = match[9]}
-	{#if /^https?:\/\/\S+/.test(urlHttp) && URL.canParse(urlHttp)}
-		{@const [url, rest] = urlLinkString(urlHttp)}
+{#each ats.children as ct, i (i)}
+	{#if ct.type === 'link'}
+		{@const [url, rest] = urlLinkString(ct.value)}
 		{@const ytb1 = url.match(/^https?:\/\/(www|m)\.youtube\.com\/watch\?v=([\w-]+)/i)}
 		{@const ytb2 = url.match(/^https?:\/\/youtu\.be\/([\w-]+)(\?\w+)?/i)}
 		{@const ytb3 = url.match(/^https?:\/\/(www\.)?youtube\.com\/(shorts|live)\/([\w-]+)(\?\w+)?/i)}
@@ -196,52 +271,36 @@
 		{:else}
 			<a href={url} target="_blank" rel="noopener noreferrer">{url}</a>
 		{/if}{rest}
-	{:else if /^wss?:\/\/\S+/.test(urlWs)}
-		{@const [url, rest] = urlLinkString(urlWs)}
-		{#if URL.canParse(url)}
-			<a href={appendRelay(location.href, url)}>{url}</a>
-		{:else}
-			{url}
-		{/if}{rest}
-	{:else if /nostr:npub1\w{58}/.test(nostr_npub1)}
-		{@const matchedText = nostr_npub1}
-		{@const npubText = matchedText.replace(/nostr:/, '')}
-		{@const d = nip19decode(npubText)}
-		{#if d?.type === 'npub'}
-			{@const prof = profileMap.get(d.data)}
-			<a href="/{npubText}"
+	{:else if ct.type === 'relay'}
+		<a href={appendRelay(location.href, ct.href)}>{ct.value}</a>
+	{:else if ct.type === 'mention'}
+		{@const d = ct.decoded}
+		{#if ['npub', 'nprofile'].includes(d.type)}
+			{@const hex = d.type === 'npub' ? d.data : d.type === 'nprofile' ? d.data.pubkey : ''}
+			{@const enc = ct.encoded}
+			{@const prof = profileMap.get(hex)}
+			{@const nameToShow = getName(hex, profileMap, eventFollowList, false, true)}
+			<a href="/{enc}"
 				><img
-					src={prof?.picture ?? getRoboHashURL(nip19.npubEncode(d.data))}
-					alt={getName(d.data, profileMap, eventFollowList)}
-					title={getName(d.data, profileMap, eventFollowList)}
+					src={prof?.picture ?? getRoboHashURL(hex)}
+					alt={nameToShow}
+					title={nameToShow}
 					class="Avatar"
-				/>{getName(d.data, profileMap, eventFollowList)}</a
+				/>{nameToShow}</a
 			>
-		{:else}{matchedText}
-		{/if}
-	{:else if /nostr:nprofile1\w+/.test(nostr_nprofile1)}
-		{@const matchedText = nostr_nprofile1}
-		{@const nprofileText = matchedText.replace(/nostr:/, '')}
-		{@const d = nip19decode(nprofileText)}
-		{#if d?.type === 'nprofile'}
-			{@const prof = profileMap.get(d.data.pubkey)}
-			<a href="/{nprofileText}"
-				><img
-					src={prof?.picture ?? getRoboHashURL(nip19.npubEncode(d.data.pubkey))}
-					alt={getName(d.data.pubkey, profileMap, eventFollowList)}
-					title={getName(d.data.pubkey, profileMap, eventFollowList)}
-					class="Avatar"
-				/>{getName(d.data.pubkey, profileMap, eventFollowList)}</a
-			>
-		{:else}{matchedText}
-		{/if}
-	{:else if /nostr:note1\w{58}/.test(nostr_note1)}
-		{@const matchedText = nostr_note1}
-		{@const d = nip19decode(matchedText.replace(/nostr:/, ''))}
-		{#if d?.type === 'note'}
-			{@const eventId = d.data}
-			{@const event = getEventById(eventId, eventsAll)}
-			{#if event !== undefined}
+		{:else if ['note', 'nevent', 'naddr'].includes(d.type)}
+			{@const event =
+				d.type === 'naddr'
+					? eventsAll.find(
+							(ev) =>
+								ev.kind === d.data.kind &&
+								ev.pubkey === d.data.pubkey &&
+								(getTagValue(ev, 'd') ?? '') === d.data.identifier
+						)
+					: eventsAll.find(
+							(ev) => ev.id === (d.type === 'note' ? d.data : d.type === 'nevent' ? d.data.id : '')
+						)}
+			{#if event !== undefined && level < 10}
 				<Entry
 					{event}
 					{rc}
@@ -275,121 +334,25 @@
 					callInsertText={callInsertText ?? (() => {})}
 					bind:baseEventToEdit
 				/>
-			{:else}{matchedText}
+			{:else}
+				{@const enc = ct.encoded}
+				<a href={`/entry/${enc}`}>{`nostr:${enc}`}</a>
 			{/if}
-		{:else}{matchedText}
 		{/if}
-	{:else if /nostr:nevent1\w+/.test(nostr_nevent1)}
-		{@const matchedText = nostr_nevent1}
-		{@const d = nip19decode(matchedText.replace(/nostr:/, ''))}
-		{#if d?.type === 'nevent'}
-			{@const eventId = d.data.id}
-			{@const event = getEventById(eventId, eventsAll)}
-			{#if event !== undefined}
-				<Entry
-					{event}
-					{rc}
-					{channelMap}
-					{profileMap}
-					{loginPubkey}
-					{mutedPubkeys}
-					{mutedChannelIds}
-					{mutedWords}
-					{mutedHashtags}
-					{followingPubkeys}
-					{eventFollowList}
-					{eventEmojiSetList}
-					{eventMuteList}
-					{eventsTimeline}
-					{eventsQuoted}
-					{eventsReaction}
-					{eventsEmojiSet}
-					{eventsChannelBookmark}
-					{getSeenOn}
-					{uploaderSelected}
-					bind:channelToPost
-					{currentChannelId}
-					{isEnabledRelativeTime}
-					{isEnabledEventProtection}
-					{clientTag}
-					{nowRealtime}
-					level={level + 1}
-					isFullDisplayMode={false}
-					isPreview={isPreview ?? false}
-					callInsertText={callInsertText ?? (() => {})}
-					bind:baseEventToEdit
-				/>
-			{:else}{matchedText}
-			{/if}
-		{:else}{matchedText}
-		{/if}
-	{:else if /nostr:naddr1\w+/.test(nostr_naddr1)}
-		{@const matchedText = nostr_naddr1}
-		{@const d = nip19decode(matchedText.replace(/nostr:/, ''))}
-		{#if d?.type === 'naddr'}
-			{@const event = getEventByAddressPointer(d.data, eventsAll)}
-			{#if event !== undefined}
-				{#if level >= 10}
-					{matchedText}
-				{:else}
-					<Entry
-						{event}
-						{rc}
-						{channelMap}
-						{profileMap}
-						{loginPubkey}
-						{mutedPubkeys}
-						{mutedChannelIds}
-						{mutedWords}
-						{mutedHashtags}
-						{followingPubkeys}
-						{eventFollowList}
-						{eventEmojiSetList}
-						{eventMuteList}
-						{eventsTimeline}
-						{eventsQuoted}
-						{eventsReaction}
-						{eventsEmojiSet}
-						{eventsChannelBookmark}
-						{getSeenOn}
-						{uploaderSelected}
-						bind:channelToPost
-						{currentChannelId}
-						{isEnabledRelativeTime}
-						{isEnabledEventProtection}
-						{clientTag}
-						{nowRealtime}
-						level={level + 1}
-						isFullDisplayMode={false}
-						isPreview={isPreview ?? false}
-						callInsertText={callInsertText ?? (() => {})}
-						bind:baseEventToEdit
-					/>
-				{/if}
-			{:else}{matchedText}
-			{/if}
-		{:else}{matchedText}
-		{/if}
-	{:else if /#\S+/.test(sharp)}
-		{@const matchedText = sharp}
-		{@const hashTagText = matchedText.replace('#', '').toLowerCase()}
+	{:else if ct.type === 'hashtag'}
 		{@const tTags = tags
 			.filter((tag) => tag.length >= 2 && tag[0] === 't')
 			.map((tag) => tag[1].toLowerCase())}
-		{#if tTags.includes(hashTagText)}
-			<a href="/hashtag/{encodeURI(hashTagText)}">{matchedText}</a>
+		{#if tTags.includes(ct.hashtag)}
+			<a href="/hashtag/{encodeURI(ct.hashtag)}">{ct.value}</a>
 		{:else}
-			{matchedText}
+			{ct.value}
 		{/if}
-	{:else if shortcode}
-		{@const matchedText = shortcode}
-		<img
-			src={emojiUrls[matchedText]}
-			alt={matchedText}
-			title={matchedText}
-			class={isAbout ? 'Avatar' : 'emoji'}
-		/>
-	{/if}{plainTexts[i + 1]}
+	{:else if ct.type === 'emoji'}
+		<img src={ct.url} alt={ct.code} title={ct.code} class={isAbout ? 'Avatar' : 'emoji'} />
+	{:else if ct.type === 'text'}
+		{ct.value}
+	{/if}
 {/each}
 
 <style>

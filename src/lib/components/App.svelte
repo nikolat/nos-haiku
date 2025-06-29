@@ -36,7 +36,6 @@
 	import {
 		getAddressPointerFromATag,
 		getInboxes,
-		getOutboxes,
 		getProfileContent,
 		isValidProfile,
 		unixNow
@@ -409,24 +408,9 @@
 			eventsQuoted.push(event);
 			setEventsQuoted(eventsQuoted);
 			if (rc !== undefined) {
-				fetchQuotedUserData(rc, event);
+				rc.fetchQuotedUserData(event);
 			}
 		}
-	};
-	const fetchQuotedUserData = (rc: RelayConnector, event: NostrEvent): void => {
-		const isForwardReq: boolean = rc.since < event.created_at;
-		rc.setFetchListAfter10002([event.pubkey], () => {
-			if (rc.getReplaceableEvent(0, event.pubkey) === undefined) {
-				rc.fetchProfile(event.pubkey);
-			}
-			if (!isForwardReq) {
-				rc.fetchDeletion(event);
-				rc.fetchReaction(event);
-			}
-			if (event.kind === 1) {
-				rc.fetchEventsQuoted(event);
-			}
-		});
 	};
 
 	const callbackConnectionState = (packet: ConnectionStatePacket) => {
@@ -505,7 +489,7 @@
 				if (loginPubkey !== undefined && eventFollowList === undefined) {
 					rc.fetchUserSettings(loginPubkey, () => {
 						//ミュートリスト対象情報を取得
-						getMutedInfo(rc, loginPubkey);
+						rc.fetchMutedInfo(mutedChannelIds, mutedPubkeys, loginPubkey);
 						//被メンションを取得
 						rc.fetchEventsMention(loginPubkey, unixNow(), 10);
 						//フォローイーのkind:10002を全取得
@@ -527,26 +511,6 @@
 			});
 		} else {
 			rc.fetchTimeline(up, urlSearchParams, loginPubkey, followingPubkeys);
-		}
-	};
-
-	const getMutedInfo = (rc: RelayConnector, loginPubkey: string) => {
-		const ev10002 = rc.getReplaceableEvent(10002, loginPubkey);
-		if (ev10002 !== undefined) {
-			const relays = getOutboxes(ev10002);
-			const idsExist: string[] = rc.getEventsByFilter({ ids: mutedChannelIds }).map((ev) => ev.id);
-			const idsToFetch: string[] = mutedChannelIds.filter((id) => !idsExist.includes(id));
-			if (idsToFetch.length > 0) {
-				rc.fetchEventsByIds(idsToFetch, relays);
-			}
-			for (const pubkey of mutedPubkeys) {
-				if (rc.getReplaceableEvent(0, pubkey) !== undefined) {
-					continue;
-				}
-				rc.setFetchListAfter10002([pubkey], () => {
-					rc.fetchProfile(pubkey);
-				});
-			}
 		}
 	};
 

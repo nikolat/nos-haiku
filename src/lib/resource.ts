@@ -100,17 +100,13 @@ export class RelayConnector {
 	#rxReqB7: ReqB;
 	#rxReqB1111: ReqB;
 	#rxReqBId: ReqB;
-	#rxReqBIdQ: ReqB;
 	#rxReqBRg: ReqB;
 	#rxReqBRp: ReqB;
-	#rxReqBRpQ: ReqB;
 	#rxReqBAd: ReqB;
-	#rxReqBAdQ: ReqB;
 	#rxReqF: ReqF;
 	#deadRelays: string[];
 	#blockedRelays: string[];
 	#eventsDeletion: NostrEvent[];
-	#callbackQuote: (event: NostrEvent) => void;
 	#tie: OperatorFunction<
 		EventPacket,
 		EventPacket & {
@@ -128,11 +124,7 @@ export class RelayConnector {
 	#limitComment = 100;
 	#limitRelay = 5;
 
-	constructor(
-		useAuth: boolean,
-		callbackConnectionState: (packet: ConnectionStatePacket) => void,
-		callbackQuote: (event: NostrEvent) => void
-	) {
+	constructor(useAuth: boolean, callbackConnectionState: (packet: ConnectionStatePacket) => void) {
 		this.#since = unixNow();
 		const retry: RetryConfig = {
 			strategy: 'exponential',
@@ -151,17 +143,13 @@ export class RelayConnector {
 		this.#rxReqB7 = createRxBackwardReq();
 		this.#rxReqB1111 = createRxBackwardReq();
 		this.#rxReqBId = createRxBackwardReq();
-		this.#rxReqBIdQ = createRxBackwardReq();
 		this.#rxReqBRg = createRxBackwardReq();
 		this.#rxReqBRp = createRxBackwardReq();
-		this.#rxReqBRpQ = createRxBackwardReq();
 		this.#rxReqBAd = createRxBackwardReq();
-		this.#rxReqBAdQ = createRxBackwardReq();
 		this.#rxReqF = createRxForwardReq();
 		this.#deadRelays = [];
 		this.#blockedRelays = [];
 		this.#eventsDeletion = [];
-		this.#callbackQuote = callbackQuote;
 		[this.#tie, this.#seenOn] = createTie();
 		[this.#uniq, this.#eventIds] = createUniq((packet: EventPacket): string => packet.event.id);
 
@@ -209,7 +197,6 @@ export class RelayConnector {
 		const batchedReq7 = this.#rxReqB7.pipe(bt, batch(this.#mergeFilterRg));
 		const batchedReq1111 = this.#rxReqB1111.pipe(bt, batch(this.#mergeFilter1111));
 		const batchedReqId = this.#rxReqBId.pipe(bt, batch(this.#mergeFilterId));
-		const batchedReqIdQ = this.#rxReqBIdQ.pipe(bt, batch(this.#mergeFilterId));
 		this.#rxNostr.use(batchedReq0).pipe(this.#tie, latestEach(getRpId)).subscribe({
 			next,
 			complete
@@ -230,10 +217,6 @@ export class RelayConnector {
 			next,
 			complete
 		});
-		this.#rxNostr.use(batchedReqIdQ).pipe(this.#tie, this.#uniq).subscribe({
-			next: this.#nextCallbackQuote,
-			complete
-		});
 		this.#rxNostr.use(this.#rxReqBRg).pipe(this.#tie, this.#uniq).subscribe({
 			next,
 			complete
@@ -242,16 +225,8 @@ export class RelayConnector {
 			next,
 			complete
 		});
-		this.#rxNostr.use(this.#rxReqBRpQ).pipe(this.#tie, latestEach(getRpId)).subscribe({
-			next: this.#nextCallbackQuote,
-			complete
-		});
 		this.#rxNostr.use(this.#rxReqBAd).pipe(this.#tie, latestEach(getAdId)).subscribe({
 			next,
-			complete
-		});
-		this.#rxNostr.use(this.#rxReqBAdQ).pipe(this.#tie, latestEach(getAdId)).subscribe({
-			next: this.#nextCallbackQuote,
 			complete
 		});
 		this.#rxNostr.use(this.#rxReqF).pipe(this.#tie, this.#uniq).subscribe({
@@ -368,11 +343,6 @@ export class RelayConnector {
 		this.#eventStore.add(event);
 	};
 
-	#nextCallbackQuote = (packet: EventPacket): void => {
-		this.#callbackQuote(packet.event);
-		this.#next(packet);
-	};
-
 	#complete = () => {};
 
 	#getDeletedEventIdSet = (eventsDeletion: NostrEvent[]): Set<string> => {
@@ -466,27 +436,10 @@ export class RelayConnector {
 						if (!isForwardReq) {
 							this.#fetchDeletion(event);
 						}
-						const eventTarget = this.#eventStore.getEvent(eTag?.at(1) ?? '');
-						if (eventTarget !== undefined) {
-							this.#callbackQuote(eventTarget);
-						} else {
+						if (!this.#eventStore.hasEvent(eTag?.at(1) ?? '')) {
 							this.#fetchEventsByETags(event, 'e', true, pHint);
 						}
-						const aid = getTagValue(event, 'a');
-						if (aid !== undefined) {
-							const ap = getAddressPointerFromAId(aid);
-							if (ap !== null) {
-								const eventTarget = this.#eventStore.getReplaceable(
-									ap.kind,
-									ap.pubkey,
-									ap.identifier
-								);
-								if (eventTarget !== undefined) {
-									this.#callbackQuote(eventTarget);
-								}
-								this.#fetchEventsByATags(event, 'a');
-							}
-						}
+						this.#fetchEventsByATags(event, 'a');
 					};
 					const pubkeySet = new Set<string>(event.pubkey);
 					if (pHint !== undefined) {
@@ -593,7 +546,7 @@ export class RelayConnector {
 						.map((tag) => tag[1])
 						.filter((id) => !this.#eventStore.hasEvent(id));
 					if (ids.length > 0) {
-						this.#rxReqBIdQ.emit({ kinds: [40], ids: ids, until: unixNow() });
+						this.#rxReqBId.emit({ kinds: [40], ids: ids, until: unixNow() });
 					}
 					break;
 				}
@@ -849,7 +802,7 @@ export class RelayConnector {
 				const options: { relays: string[] } = {
 					relays: [relay]
 				};
-				this.#rxReqBIdQ.emit({ ids: [id], until }, options);
+				this.#rxReqBId.emit({ ids: [id], until }, options);
 			}
 		}
 		if (['a', 'q'].includes(tagNameToGet)) {
@@ -899,7 +852,7 @@ export class RelayConnector {
 				const options: { relays: string[] } = {
 					relays: [relay]
 				};
-				this.#rxReqBAdQ.emit(filter, options);
+				this.#rxReqBAd.emit(filter, options);
 			}
 		}
 	};
@@ -907,18 +860,6 @@ export class RelayConnector {
 	#fetchEventsQuoted = (event: NostrEvent) => {
 		const oId = getIdsForFilter([event]);
 		const { ids, aps } = oId;
-		for (const id of ids) {
-			const event = this.#eventStore.getEvent(id);
-			if (event !== undefined) {
-				this.#callbackQuote(event);
-			}
-		}
-		for (const ap of aps) {
-			const event = this.#eventStore.getReplaceable(ap.kind, ap.pubkey, ap.identifier);
-			if (event !== undefined) {
-				this.#callbackQuote(event);
-			}
-		}
 		const idsFiltered = ids.filter((id) => !this.#eventStore.hasEvent(id));
 		const apsFiltered = aps.filter(
 			(ap) =>
@@ -943,7 +884,7 @@ export class RelayConnector {
 		const options = relays.length > 0 ? { relays } : undefined;
 		const until = unixNow();
 		if (idsFiltered.length > 0) {
-			this.#rxReqBIdQ.emit({ ids: idsFiltered, until }, options);
+			this.#rxReqBId.emit({ ids: idsFiltered, until }, options);
 		}
 		if (apsFiltered.length > 0) {
 			for (const ap of apsFiltered) {
@@ -955,7 +896,7 @@ export class RelayConnector {
 				if (isAddressableKind(ap.kind)) {
 					f['#d'] = [ap.identifier];
 				}
-				this.#rxReqBAdQ.emit(f, options);
+				this.#rxReqBAd.emit(f, options);
 			}
 		}
 		const pubkeysFilterd = pubkeys.filter((pubkey) => !this.#eventStore.hasReplaceable(0, pubkey));
@@ -1019,7 +960,7 @@ export class RelayConnector {
 				completeOnTimeout(this.#secOnCompleteTimeout)
 			)
 			.subscribe({
-				next: this.#nextCallbackQuote,
+				next: this.#next,
 				complete: completeCustom
 			});
 		rxReqBRpCustom.emit(filter);
@@ -1340,13 +1281,13 @@ export class RelayConnector {
 							});
 						}
 					} else {
-						this.#rxReqBAdQ.emit(filterB, options);
+						this.#rxReqBAd.emit(filterB, options);
 						if (!this.#eventStore.hasReplaceable(0, currentAddressPointer.pubkey)) {
 							this.#fetchProfile(currentAddressPointer.pubkey);
 						}
 					}
 				} else if (filterB.kinds?.every((kind) => isReplaceableKind(kind))) {
-					this.#rxReqBRpQ.emit(filterB, options);
+					this.#rxReqBRp.emit(filterB, options);
 					if (
 						currentAddressPointer !== undefined &&
 						!this.#eventStore.hasReplaceable(0, currentAddressPointer.pubkey)
@@ -1354,7 +1295,7 @@ export class RelayConnector {
 						this.#fetchProfile(currentAddressPointer.pubkey);
 					}
 				} else if (filterB.ids !== undefined) {
-					this.#rxReqBIdQ.emit(filterB, options);
+					this.#rxReqBId.emit(filterB, options);
 					if (
 						currentEventPointer?.author !== undefined &&
 						!this.#eventStore.hasReplaceable(0, currentEventPointer.author)
@@ -1367,8 +1308,8 @@ export class RelayConnector {
 			}
 			if (currentProfilePointer !== undefined) {
 				const authors = [currentProfilePointer.pubkey];
-				this.#rxReqBRpQ.emit({ kinds: [10001, 10005], authors, until: now }, options);
-				this.#rxReqBAdQ.emit(
+				this.#rxReqBRp.emit({ kinds: [10001, 10005], authors, until: now }, options);
+				this.#rxReqBAd.emit(
 					{ kinds: [30008], authors, '#d': ['profile_badges'], until: now },
 					options
 				);
@@ -1448,12 +1389,7 @@ export class RelayConnector {
 		merge(this.#rxNostr.use(reqTL, options), this.#rxNostr.use(reqMention, optionsMention))
 			.pipe(this.#tie, this.#uniq)
 			.subscribe({
-				next: (value: EventPacket) =>
-					value.event.tags.some(
-						(tag) => tag.length >= 2 && tag[0] === 'p' && tag[1] === loginPubkey
-					) || [8, 1018].includes(value.event.kind)
-						? this.#nextCallbackQuote(value)
-						: this.#next(value),
+				next: this.#next,
 				complete: this.#complete
 			});
 		this.#rxNostr.setDefaultRelays(relays);
@@ -1504,7 +1440,7 @@ export class RelayConnector {
 				const relays = Array.from(relaySet).filter(this.#relayFilter);
 				if (relays.length > 0) {
 					const options = { relays };
-					this.#rxReqBIdQ.emit({ ids, until: unixNow() }, options);
+					this.#rxReqBId.emit({ ids, until: unixNow() }, options);
 				}
 			}
 		}
@@ -1570,7 +1506,7 @@ export class RelayConnector {
 		const relays = Array.from(relaySet).filter(this.#relayFilter);
 		const options = relays.length > 0 ? { relays } : undefined;
 		for (const filters of sliceByNumber(mergedFilters, 10)) {
-			this.#rxReqBAdQ.emit(filters, options);
+			this.#rxReqBAd.emit(filters, options);
 		}
 	};
 

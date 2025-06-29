@@ -1,5 +1,6 @@
 <script lang="ts">
 	import {
+		getAddressPointerFromAId,
 		getChannelMap,
 		getEventsAddressableLatest,
 		getEventsFilteredByMute,
@@ -12,11 +13,9 @@
 	import { initialLocale, uploaderURLs } from '$lib/config';
 	import {
 		getDeadRelays,
-		getEventsQuoted,
 		getLoginPubkey,
 		getRelayConnector,
 		setDeadRelays,
-		setEventsQuoted,
 		setLoginPubkey,
 		setRelayConnector
 	} from '$lib/resource.svelte';
@@ -92,7 +91,6 @@
 		});
 	});
 	let eventsEmojiSet: NostrEvent[] = $state([]);
-	let eventsQuoted: NostrEvent[] = $derived(getEventsQuoted());
 	let eventsMention: NostrEvent[] = $state([]);
 	const _getEventsFiltered = (events: NostrEvent[]) => {
 		return getEventsFilteredByMute(
@@ -276,12 +274,6 @@
 				eventsChannelEdit = rc.getEventsByFilter({ kinds: [kind] });
 				break;
 			}
-			case 1018: {
-				if (event !== undefined) {
-					callbackQuote(event);
-				}
-				break;
-			}
 			case 10000: {
 				if (loginPubkey !== undefined && (event?.pubkey === loginPubkey || event === undefined)) {
 					eventMuteList = rc.getReplaceableEvent(kind, loginPubkey);
@@ -394,25 +386,6 @@
 		}
 	};
 
-	const callbackQuote = (event: NostrEvent): void => {
-		if (!eventsQuoted.map((ev) => ev.id).includes(event.id)) {
-			switch (event.kind) {
-				case 0:
-					if (!isValidProfile(event)) {
-						return;
-					}
-					break;
-				default:
-					break;
-			}
-			eventsQuoted.push(event);
-			setEventsQuoted(eventsQuoted);
-			if (rc !== undefined) {
-				rc.fetchQuotedUserData(event);
-			}
-		}
-	};
-
 	const callbackConnectionState = (packet: ConnectionStatePacket) => {
 		const relay: string = normalizeURL(packet.from);
 		if (['error', 'rejected'].includes(packet.state)) {
@@ -440,7 +413,6 @@
 		eventEmojiSetList = undefined;
 		eventRead = undefined;
 		eventsEmojiSet = [];
-		eventsQuoted = [];
 		eventsMention = [];
 	};
 
@@ -457,7 +429,7 @@
 		const pubkeySet = new Set<string>();
 		if (rc === undefined) {
 			clearCache();
-			rc = new RelayConnector(loginPubkey !== undefined, callbackConnectionState, callbackQuote);
+			rc = new RelayConnector(loginPubkey !== undefined, callbackConnectionState);
 			setRelayConnector(rc);
 			sub = rc.subscribeEventStore(callback);
 			if (loginPubkey !== undefined) {
@@ -584,6 +556,41 @@
 	});
 	let countToShow: number = $state(10);
 	const timelineSliced = $derived(eventsTimeline.slice(0, countToShow));
+	const eventsQuoted: NostrEvent[] = $derived.by(() => {
+		if (rc === undefined) {
+			return [];
+		}
+		const ids: string[] = Array.from(
+			new Set<string>(
+				timelineSliced
+					.filter((ev) => ev.tags.some((tag) => tag.length >= 2 && ['e', 'q'].includes(tag[0])))
+					.map((ev) => ev.tags.map((tag) => tag[1]))
+					.flat()
+			)
+		);
+		const eventsFromId: NostrEvent[] = rc.getEventsByFilter({ ids });
+		const aids: string[] = Array.from(
+			new Set<string>(
+				timelineSliced
+					.filter((ev) => ev.tags.some((tag) => tag.length >= 2 && ['a'].includes(tag[0])))
+					.map((ev) => ev.tags.map((tag) => tag[1]))
+					.flat()
+			)
+		);
+		const aps: nip19.AddressPointer[] = aids
+			.map((aid) => getAddressPointerFromAId(aid))
+			.filter((aid) => aid !== null);
+		const eventsFromAId: NostrEvent[] = aps
+			.map((ap) => rc!.getReplaceableEvent(ap.kind, ap.pubkey, ap.identifier))
+			.filter((ev) => ev !== undefined) as NostrEvent[];
+		const res: NostrEvent[] = [];
+		for (const event of [...eventsFromId, ...eventsFromAId]) {
+			if (!res.map((ev) => ev.id).includes(event.id)) {
+				res.push(event);
+			}
+		}
+		return res;
+	});
 	const isFullDisplayMode: boolean = $derived(
 		up.currentAddressPointer !== undefined || up.currentEventPointer !== undefined
 	);

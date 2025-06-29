@@ -1451,8 +1451,8 @@ export class RelayConnector {
 					continue;
 				}
 				const relaySet: Set<string> = new Set<string>();
-				const relayHint: string = eTag[2];
-				if (URL.canParse(relayHint)) {
+				const relayHint: string | undefined = eTag.at(2);
+				if (relayHint !== undefined && URL.canParse(relayHint)) {
 					relaySet.add(normalizeURL(relayHint));
 				}
 				const pubkeyToUse: string =

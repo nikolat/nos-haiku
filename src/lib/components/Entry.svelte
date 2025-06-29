@@ -784,9 +784,15 @@
 											getPubkeyIfValid(eTag?.at(3)) ??
 											getPubkeyIfValid(eTag?.at(4)) ??
 											getPubkeyIfValid(pTag?.at(1))}
+										{@const relayHint = eTag?.at(2)}
+										{@const relays =
+											relayHint !== undefined && URL.canParse(relayHint)
+												? [normalizeURL(relayHint)]
+												: undefined}
 										{@const encoded = nip19.neventEncode({
 											id: repostedEventId,
-											author: repostedPubkey
+											author: repostedPubkey,
+											relays
 										})}
 										<a href={`/entry/${encoded}`}>{`nostr:${encoded}`}</a>
 									{/if}
@@ -878,9 +884,15 @@
 											getPubkeyIfValid(eTag?.at(3)) ??
 											getPubkeyIfValid(eTag?.at(4)) ??
 											getPubkeyIfValid(pTag?.at(1))}
+										{@const relayHint = eTag?.at(2)}
+										{@const relays =
+											relayHint !== undefined && URL.canParse(relayHint)
+												? [normalizeURL(relayHint)]
+												: undefined}
 										{@const encoded = nip19.neventEncode({
 											id: repostedEventId,
-											author: repostedPubkey
+											author: repostedPubkey,
+											relays
 										})}
 										<a href={`/entry/${encoded}`}>{`nostr:${encoded}`}</a>
 									{/if}

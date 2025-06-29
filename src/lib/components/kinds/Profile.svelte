@@ -237,7 +237,7 @@
 									class="fa-fw fas fa-heart"
 									onclick={() => {
 										if (rc !== undefined && eventFollowList !== undefined) {
-											rc.unfollowPubkey(currentPubkey, eventFollowList);
+											rc.unfollowPubkey(currentPubkey, $state.snapshot(eventFollowList));
 										}
 									}}
 								></span>
@@ -249,7 +249,7 @@
 								<span
 									class="fa-fw fas fa-heart"
 									onclick={() => {
-										rc?.followPubkey(currentPubkey, eventFollowList);
+										rc?.followPubkey(currentPubkey, $state.snapshot(eventFollowList));
 									}}
 								></span>
 							</div>

@@ -428,7 +428,10 @@
 													if (rc === undefined || eventFollowList === undefined) {
 														return;
 													}
-													rc.unfollowPubkey(currentProfilePointer.pubkey, eventFollowList);
+													rc.unfollowPubkey(
+														currentProfilePointer.pubkey,
+														$state.snapshot(eventFollowList)
+													);
 												}}
 											></span>
 										</div>
@@ -442,7 +445,10 @@
 													if (rc === undefined || eventFollowList === undefined) {
 														return;
 													}
-													rc.followPubkey(currentProfilePointer.pubkey, eventFollowList);
+													rc.followPubkey(
+														currentProfilePointer.pubkey,
+														$state.snapshot(eventFollowList)
+													);
 												}}
 											></span>
 										</div>

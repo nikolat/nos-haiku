@@ -613,10 +613,10 @@ export class RelayConnector {
 					const aTags: string[][] = event.tags.filter((tag) => tag.length >= 2 && tag[0] === 'a');
 					const pubkeysE: string[] = eTags
 						.map((eTag) => getPubkeyIfValid(eTag[3]) ?? getPubkeyIfValid(eTag[4]))
-						.filter((pubkey) => pubkey !== undefined);
+						.filter((pubkey) => pubkey !== undefined) as string[];
 					const pubkeysA: string[] = aTags
 						.map((aTag) => aTag[1].split(':').at(1))
-						.filter((pubkey) => pubkey !== undefined);
+						.filter((pubkey) => pubkey !== undefined) as string[];
 					const pubkeys: string[] = Array.from(new Set<string>([...pubkeysE, ...pubkeysA]));
 					this.#setFetchListAfter10002(pubkeys, fetchAfter10002);
 					break;

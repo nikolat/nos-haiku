@@ -35,6 +35,7 @@
 		eventRelayList,
 		uploaderSelected,
 		setUploaderSelected,
+		eventsBadge,
 		eventsQuoted,
 		profileMap,
 		channelMap,
@@ -66,6 +67,7 @@
 		eventRelayList: NostrEvent | undefined;
 		uploaderSelected: string;
 		setUploaderSelected: (value: string) => void;
+		eventsBadge: NostrEvent[];
 		eventsQuoted: NostrEvent[];
 		profileMap: Map<string, ProfileContentEvent>;
 		channelMap: Map<string, ChannelContent>;
@@ -152,6 +154,7 @@
 										{profileMap}
 										channelMap={new Map<string, ChannelContent>()}
 										eventsTimeline={[]}
+										{eventsBadge}
 										{eventsQuoted}
 										eventsReaction={[]}
 										eventsEmojiSet={[]}

@@ -26,6 +26,7 @@
 		eventsTimeline,
 		eventsQuoted,
 		eventsReaction,
+		eventsBadge,
 		eventsEmojiSet,
 		eventsChannelBookmark,
 		mutedPubkeys,
@@ -45,6 +46,7 @@
 		eventsTimeline: NostrEvent[];
 		eventsQuoted: NostrEvent[];
 		eventsReaction: NostrEvent[];
+		eventsBadge: NostrEvent[];
 		eventsEmojiSet: NostrEvent[];
 		eventsChannelBookmark: NostrEvent[];
 		mutedPubkeys: string[];
@@ -61,13 +63,6 @@
 	const prof = $derived(profileMap.get(currentPubkey));
 	const nip05string: string | undefined = $derived(prof?.nip05);
 
-	const eventsAll: NostrEvent[] = $derived.by(() => {
-		const eventMap = new Map<string, NostrEvent>();
-		for (const ev of [...eventsTimeline, ...eventsQuoted]) {
-			eventMap.set(ev.id, ev);
-		}
-		return Array.from(eventMap.values());
-	});
 	const getEventById = (id: string, eventsAll: NostrEvent[]): NostrEvent | undefined => {
 		return eventsAll.find((ev) => ev.id === id);
 	};
@@ -86,7 +81,7 @@
 	const badgeEvent: NostrEvent | undefined = $derived(
 		getEventByAddressPointer(
 			{ kind: 30008, pubkey: currentPubkey, identifier: 'profile_badges' },
-			eventsAll
+			eventsBadge
 		)
 	);
 
@@ -259,7 +254,13 @@
 			{/if}
 		</div>
 		<div class="ProfileBox__content">
-			<Badges {currentPubkey} {badgeEvent} {eventsAll} {getEventById} {getEventByAddressPointer} />
+			<Badges
+				{currentPubkey}
+				{badgeEvent}
+				{eventsBadge}
+				{getEventById}
+				{getEventByAddressPointer}
+			/>
 			<h3 class="router-link-exact-active router-link-active">
 				<a href={`/${nip19.npubEncode(currentPubkey)}`}>
 					<Content content={name} tags={prof?.event.tags ?? []} isAbout={true} />
@@ -310,6 +311,7 @@
 					{eventsTimeline}
 					{eventsQuoted}
 					{eventsReaction}
+					{eventsBadge}
 					{eventsEmojiSet}
 					{eventsChannelBookmark}
 					getSeenOn={() => {

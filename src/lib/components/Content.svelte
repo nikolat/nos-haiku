@@ -31,6 +31,7 @@
 		eventsTimeline = [],
 		eventsQuoted = [],
 		eventsReaction = [],
+		eventsBadge = [],
 		eventsEmojiSet = [],
 		eventsChannelBookmark = [],
 		getSeenOn = () => [],
@@ -65,6 +66,7 @@
 		eventsTimeline?: NostrEvent[];
 		eventsQuoted?: NostrEvent[];
 		eventsReaction?: NostrEvent[];
+		eventsBadge?: NostrEvent[];
 		eventsEmojiSet?: NostrEvent[];
 		eventsChannelBookmark?: NostrEvent[];
 		getSeenOn?: (id: string, excludeWs: boolean) => string[];
@@ -318,6 +320,7 @@
 					{eventsTimeline}
 					{eventsQuoted}
 					{eventsReaction}
+					{eventsBadge}
 					{eventsEmojiSet}
 					{eventsChannelBookmark}
 					{getSeenOn}

@@ -90,6 +90,7 @@
 			[mutedPubkeys, mutedChannelIds, mutedWords, mutedHashtags] = v;
 		});
 	});
+	let eventsBadge: NostrEvent[] = $state([]);
 	let eventsEmojiSet: NostrEvent[] = $state([]);
 	let eventsMention: NostrEvent[] = $state([]);
 	const _getEventsFiltered = (events: NostrEvent[]) => {
@@ -266,6 +267,12 @@
 				eventsReaction = sortEvents(rc.getEventsByFilter({ kinds: [kind] }));
 				break;
 			}
+			case 8:
+			case 30008:
+			case 30009: {
+				eventsBadge = sortEvents(rc.getEventsByFilter({ kinds: [8, 30008, 30009] }));
+				break;
+			}
 			case 40: {
 				eventsChannel = rc.getEventsByFilter({ kinds: [kind] });
 				break;
@@ -412,6 +419,7 @@
 		eventMyPublicChatsList = undefined;
 		eventEmojiSetList = undefined;
 		eventRead = undefined;
+		eventsBadge = [];
 		eventsEmojiSet = [];
 		eventsMention = [];
 	};
@@ -800,6 +808,7 @@
 			{eventRelayList}
 			{uploaderSelected}
 			{setUploaderSelected}
+			{eventsBadge}
 			{eventsQuoted}
 			{profileMap}
 			{channelMap}
@@ -838,6 +847,7 @@
 			{eventsQuoted}
 			{eventsReaction}
 			{eventsChannelBookmark}
+			{eventsBadge}
 			{eventsEmojiSet}
 			{eventFollowList}
 			{eventMuteList}

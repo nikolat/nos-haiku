@@ -38,6 +38,7 @@
 		eventsQuoted,
 		eventsReaction,
 		eventsChannelBookmark,
+		eventsBadge,
 		eventsEmojiSet,
 		eventFollowList,
 		eventMuteList,
@@ -74,6 +75,7 @@
 		eventsQuoted: NostrEvent[];
 		eventsReaction: NostrEvent[];
 		eventsChannelBookmark: NostrEvent[];
+		eventsBadge: NostrEvent[];
 		eventsEmojiSet: NostrEvent[];
 		eventFollowList: NostrEvent | undefined;
 		eventMuteList: NostrEvent | undefined;
@@ -359,6 +361,7 @@
 							{eventsTimeline}
 							{eventsQuoted}
 							{eventsReaction}
+							{eventsBadge}
 							{eventsEmojiSet}
 							{eventsChannelBookmark}
 							{mutedPubkeys}
@@ -903,6 +906,7 @@
 							{eventsTimeline}
 							{eventsQuoted}
 							{eventsReaction}
+							{eventsBadge}
 							{eventsEmojiSet}
 							{eventsChannelBookmark}
 							{getSeenOn}
@@ -938,6 +942,7 @@
 							{eventsTimeline}
 							{eventsQuoted}
 							{eventsReaction}
+							{eventsBadge}
 							{eventsEmojiSet}
 							{eventsChannelBookmark}
 							{getSeenOn}
@@ -973,6 +978,7 @@
 							{eventsTimeline}
 							{eventsQuoted}
 							{eventsReaction}
+							{eventsBadge}
 							{eventsEmojiSet}
 							{eventsChannelBookmark}
 							{getSeenOn}

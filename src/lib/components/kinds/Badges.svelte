@@ -5,13 +5,13 @@
 	const {
 		currentPubkey,
 		badgeEvent,
-		eventsAll,
+		eventsBadge,
 		getEventById,
 		getEventByAddressPointer
 	}: {
 		currentPubkey: string;
 		badgeEvent: NostrEvent | undefined;
-		eventsAll: NostrEvent[];
+		eventsBadge: NostrEvent[];
 		getEventById: (id: string, eventsAll: NostrEvent[]) => NostrEvent | undefined;
 		getEventByAddressPointer: (
 			data: nip19.AddressPointer,
@@ -19,7 +19,11 @@
 		) => NostrEvent | undefined;
 	} = $props();
 
-	const validBadgeAwards: [NostrEvent, NostrEvent][] = $derived.by(() => {
+	const getvalidBadgeAwards = (
+		currentPubkey: string,
+		badgeEvent: NostrEvent | undefined,
+		eventsBadge: NostrEvent[]
+	): [NostrEvent, NostrEvent][] => {
 		if (badgeEvent === undefined) {
 			return [];
 		}
@@ -30,7 +34,7 @@
 			.filter((tag) => tag.length >= 2 && tag[0] === 'e')
 			.map((tag) => tag[1]);
 		const kind8Events: NostrEvent[] = eIds
-			.map((id) => getEventById(id, eventsAll))
+			.map((id) => getEventById(id, eventsBadge))
 			.filter((ev) => ev !== undefined)
 			.filter((ev) => ev.kind === 8);
 		const validEventSets: [NostrEvent, NostrEvent][] = [];
@@ -38,7 +42,7 @@
 			let kind8Event: NostrEvent | undefined;
 			const sp = aId30008.split(':');
 			const ap: nip19.AddressPointer = { identifier: sp[2], pubkey: sp[1], kind: parseInt(sp[0]) };
-			const kind30009Event = getEventByAddressPointer(ap, eventsAll);
+			const kind30009Event = getEventByAddressPointer(ap, eventsBadge);
 			if (kind30009Event === undefined) {
 				continue;
 			}
@@ -63,7 +67,11 @@
 			}
 		}
 		return validEventSets;
-	});
+	};
+
+	const validBadgeAwards: [NostrEvent, NostrEvent][] = $derived(
+		getvalidBadgeAwards(currentPubkey, badgeEvent, eventsBadge)
+	);
 </script>
 
 <div class="badges">

@@ -580,7 +580,7 @@
 		const aids: string[] = Array.from(
 			new Set<string>(
 				timelineSliced
-					.filter((ev) => ev.tags.some((tag) => tag.length >= 2 && ['a'].includes(tag[0])))
+					.filter((ev) => ev.tags.some((tag) => tag.length >= 2 && ['a', 'q'].includes(tag[0])))
 					.map((ev) => ev.tags.map((tag) => tag[1]))
 					.flat()
 			)

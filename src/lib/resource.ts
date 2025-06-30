@@ -384,12 +384,12 @@ export class RelayConnector {
 						if (!isForwardReq) {
 							this.#fetchDeletion(event);
 							this.#fetchReaction(event);
+							if (event.kind === 1) {
+								this.#fetchReply(event);
+							}
 						}
 						this.#fetchEventsByETags(event, 'e', false);
 						this.#fetchEventsQuoted(event);
-						if (event.kind === 1) {
-							this.#fetchReply(event);
-						}
 					};
 					this.#setFetchListAfter10002([event.pubkey], fetchAfter10002);
 					break;

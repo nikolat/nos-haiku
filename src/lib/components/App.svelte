@@ -390,9 +390,17 @@
 			} else if (up.isAntenna) {
 				filter.authors = followingPubkeys;
 			}
-			eventsTimeline = sortEvents(rc.getEventsByFilter(filter));
+			let tl = sortEvents(rc.getEventsByFilter(filter));
+			if (relaySet.size > 0) {
+				tl = tl.filter((ev) => rc?.getSeenOn(ev.id, false).some((r) => relaySet.has(r)));
+			}
+			eventsTimeline = tl;
 		} else if (isTopPage && followingPubkeys.length > 0) {
-			eventsTimeline = eventsTimeline.filter((ev) => followingPubkeys.includes(ev.pubkey));
+			let tl = eventsTimeline.filter((ev) => followingPubkeys.includes(ev.pubkey));
+			if (relaySet.size > 0) {
+				tl = tl.filter((ev) => rc?.getSeenOn(ev.id, false).some((r) => relaySet.has(r)));
+			}
+			eventsTimeline = tl;
 		}
 		const kinds: number[] = [1, 4, 6, 7, 8, 16, 42, 1111, 9735, 39701];
 		if (

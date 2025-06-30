@@ -995,7 +995,7 @@ export const getName = (
 	const petname: string | undefined = eventFollowList?.tags
 		.find((tag) => tag.length >= 4 && tag[0] === 'p' && tag[1] === pubkey)
 		?.at(3);
-	const namePrefix: string = excludeIcon ? '' : '@';
+	const namePrefix: string = excludeIcon ? '' : 'id:';
 	const petnamePrefix: string = excludeIcon ? '' : '📛';
 	let nameToShow: string | undefined;
 	if (isNameDisabled) {

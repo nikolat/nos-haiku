@@ -61,6 +61,11 @@
 
 	const name = $derived(getName(currentPubkey, profileMap, eventFollowList));
 	const prof = $derived(profileMap.get(currentPubkey));
+	const display_name = $derived(
+		prof?.display_name === undefined
+			? getName(currentPubkey, profileMap, eventFollowList, false, true)
+			: prof.display_name
+	);
 	const nip05string: string | undefined = $derived(prof?.nip05);
 
 	const getEventById = (id: string, eventsAll: NostrEvent[]): NostrEvent | undefined => {
@@ -263,7 +268,7 @@
 			/>
 			<h3 class="router-link-exact-active router-link-active">
 				<a href={`/${nip19.npubEncode(currentPubkey)}`}>
-					<Content content={name} tags={prof?.event.tags ?? []} isAbout={true} />
+					<Content content={display_name} tags={prof?.event.tags ?? []} isAbout={true} />
 				</a>
 			</h3>
 			<div class="HatenaID">

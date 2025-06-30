@@ -364,6 +364,8 @@
 				filter['#d'] = [ap.identifier];
 			}
 			eventsTimeline = rc.getEventsByFilter(filter);
+		} else if (kindSet.size > 0) {
+			eventsTimeline = rc.getEventsByFilter({ kinds: Array.from(kindSet) });
 		}
 		const kinds: number[] = [1, 4, 6, 7, 8, 16, 42, 1111, 9735, 39701];
 		if (

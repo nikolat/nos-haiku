@@ -56,13 +56,7 @@ import type { RelayRecord } from 'nostr-tools/relay';
 import type { Filter } from 'nostr-tools/filter';
 import { normalizeURL } from 'nostr-tools/utils';
 import * as nip19 from 'nostr-tools/nip19';
-import {
-	defaultRelays,
-	indexerRelays,
-	initialFetchDelay,
-	profileRelays,
-	searchRelays
-} from '$lib/config';
+import { defaultRelays, indexerRelays, profileRelays, searchRelays } from '$lib/config';
 import type { FileUploadResponse } from '$lib/nip96';
 import {
 	getAddressPointerFromAId,
@@ -930,20 +924,13 @@ export class RelayConnector {
 			authors: [pubkey],
 			until: unixNow()
 		};
-		const filter1: LazyFilter = {
+		const filter: LazyFilter = {
 			...filterBase,
-			kinds: [0, 3, 10000, 10002, 10005, 10006]
-		};
-		const filter2: LazyFilter = {
-			...filterBase,
-			kinds: [10030, 30008]
+			kinds: [0, 3, 10000, 10002, 10005, 10006, 10030, 30008]
 		};
 		const relays = this.#getRelays('write').filter(this.#relayFilter).slice(0, this.#limitRelay);
 		const options = relays.length > 0 ? { relays } : undefined;
-		this.#fetchRpCustom(filter1, completeCustom, options);
-		setTimeout(() => {
-			this.#fetchRpCustom(filter2, () => {}, options);
-		}, initialFetchDelay);
+		this.#fetchRpCustom(filter, completeCustom, options);
 	};
 
 	#fetchRpCustom = (

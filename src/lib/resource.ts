@@ -1177,7 +1177,11 @@ export class RelayConnector {
 				f1.authors = followingPubkeys;
 				f2.authors = followingPubkeys;
 			}
-			filtersB.push(f1, f2);
+			if (kindSetQ.size > 0) {
+				filtersB.push(f1);
+			} else {
+				filtersB.push(f1, f2);
+			}
 		}
 		for (const f of filtersB) {
 			if (f.authors === undefined) {

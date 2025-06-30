@@ -1173,7 +1173,7 @@ export class RelayConnector {
 		} else if (isTopPage) {
 			const f1: LazyFilter = { ...filterBase, kinds: [42] };
 			const f2: LazyFilter = { ...filterBase, kinds: [16], '#k': ['42'] };
-			if (followingPubkeys.length > 0) {
+			if (followingPubkeys.length > 0 && kindSetQ.size === 0 && pSetQ.size === 0) {
 				f1.authors = followingPubkeys;
 				f2.authors = followingPubkeys;
 			}

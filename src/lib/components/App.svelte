@@ -369,7 +369,7 @@
 				filter['#d'] = [ap.identifier];
 			}
 			eventsTimeline = rc.getEventsByFilter(filter);
-		} else if (kindSet.size > 0) {
+		} else if (kindSet.size > 0 || pSet.size > 0) {
 			const filter: Filter = { kinds: Array.from(kindSet) };
 			if (up.currentProfilePointer !== undefined) {
 				filter.authors = [up.currentProfilePointer.pubkey];

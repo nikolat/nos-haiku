@@ -40,6 +40,7 @@
 		eventsChannelBookmark,
 		eventsBadge,
 		eventsPoll,
+		eventsPinList,
 		eventsEmojiSet,
 		eventFollowList,
 		eventMuteList,
@@ -78,6 +79,7 @@
 		eventsChannelBookmark: NostrEvent[];
 		eventsBadge: NostrEvent[];
 		eventsPoll: NostrEvent[];
+		eventsPinList: NostrEvent[];
 		eventsEmojiSet: NostrEvent[];
 		eventFollowList: NostrEvent | undefined;
 		eventMuteList: NostrEvent | undefined;
@@ -231,7 +233,6 @@
 			)
 		).filter((pubkey) => !mutedPubkeys.includes(pubkey))
 	);
-	const eventsAll: NostrEvent[] = $derived([...eventsTimeline, ...eventsQuoted]);
 	const getEventByAddressPointer = (
 		data: nip19.AddressPointer,
 		eventsAll: NostrEvent[]
@@ -248,7 +249,7 @@
 			? undefined
 			: getEventByAddressPointer(
 					{ kind: 10001, pubkey: currentProfilePointer.pubkey, identifier: '' },
-					eventsAll
+					eventsPinList
 				)
 	);
 	let showSetting: boolean = $state(false);

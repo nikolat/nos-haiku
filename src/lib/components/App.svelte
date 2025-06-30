@@ -91,6 +91,7 @@
 		});
 	});
 	let eventsBadge: NostrEvent[] = $state([]);
+	let eventsPinList: NostrEvent[] = $state([]);
 	let eventsPoll: NostrEvent[] = $state([]);
 	let eventsEmojiSet: NostrEvent[] = $state([]);
 	let eventsMention: NostrEvent[] = $state([]);
@@ -292,6 +293,10 @@
 				}
 				break;
 			}
+			case 10001: {
+				eventsPinList = sortEvents(rc.getEventsByFilter({ kinds: [kind] }));
+				break;
+			}
 			case 10002: {
 				if (loginPubkey !== undefined && (event?.pubkey === loginPubkey || event === undefined)) {
 					eventRelayList = rc.getReplaceableEvent(kind, loginPubkey);
@@ -365,7 +370,13 @@
 			}
 			eventsTimeline = rc.getEventsByFilter(filter);
 		} else if (kindSet.size > 0) {
-			eventsTimeline = rc.getEventsByFilter({ kinds: Array.from(kindSet) });
+			const filter: Filter = { kinds: Array.from(kindSet) };
+			if (up.currentProfilePointer !== undefined) {
+				filter.authors = [up.currentProfilePointer.pubkey];
+			} else if (up.isAntenna) {
+				filter.authors = followingPubkeys;
+			}
+			eventsTimeline = sortEvents(rc.getEventsByFilter(filter));
 		}
 		const kinds: number[] = [1, 4, 6, 7, 8, 16, 42, 1111, 9735, 39701];
 		if (
@@ -428,6 +439,7 @@
 		eventRead = undefined;
 		eventsBadge = [];
 		eventsPoll = [];
+		eventsPinList = [];
 		eventsEmojiSet = [];
 		eventsMention = [];
 	};
@@ -453,7 +465,9 @@
 			}
 		} else {
 			sub = rc.subscribeEventStore(callback);
-			for (const k of [0, 1, 3, 7, 8, 40, 41, 10000, 10002, 10005, 10006, 10030, 30078]) {
+			for (const k of [
+				0, 1, 3, 7, 8, 40, 41, 1068, 10000, 10001, 10002, 10005, 10006, 10030, 30078
+			]) {
 				callback(k);
 			}
 		}
@@ -576,9 +590,10 @@
 		if (rc === undefined) {
 			return [];
 		}
+		const eventsAll: NostrEvent[] = [...timelineSliced, ...eventsPinList];
 		const ids: string[] = Array.from(
 			new Set<string>(
-				timelineSliced
+				eventsAll
 					.filter((ev) => ev.tags.some((tag) => tag.length >= 2 && ['e', 'q'].includes(tag[0])))
 					.map((ev) => ev.tags.map((tag) => tag[1]))
 					.flat()
@@ -587,7 +602,7 @@
 		const eventsFromId: NostrEvent[] = rc.getEventsByFilter({ ids });
 		const aids: string[] = Array.from(
 			new Set<string>(
-				timelineSliced
+				eventsAll
 					.filter((ev) => ev.tags.some((tag) => tag.length >= 2 && ['a', 'q'].includes(tag[0])))
 					.map((ev) => ev.tags.map((tag) => tag[1]))
 					.flat()
@@ -858,6 +873,7 @@
 			{eventsChannelBookmark}
 			{eventsBadge}
 			{eventsPoll}
+			{eventsPinList}
 			{eventsEmojiSet}
 			{eventFollowList}
 			{eventMuteList}

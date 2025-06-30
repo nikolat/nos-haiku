@@ -10,14 +10,14 @@
 	const {
 		rc,
 		event,
-		events1018,
+		eventsPoll,
 		loginPubkey,
 		isEnabledEventProtection,
 		nowRealtime
 	}: {
 		rc: RelayConnector | undefined;
 		event: NostrEvent;
-		events1018: NostrEvent[];
+		eventsPoll: NostrEvent[];
 		loginPubkey: string | undefined;
 		isEnabledEventProtection: boolean;
 		nowRealtime: number;
@@ -73,7 +73,7 @@
 		return nameMap;
 	};
 
-	const pollResultMap: Map<string, [string, number]> = $derived(getPollResult(event, events1018));
+	const pollResultMap: Map<string, [string, number]> = $derived(getPollResult(event, eventsPoll));
 	const endsAt: number = $derived(getEndsAt(event));
 	const pollType: string | undefined = $derived(
 		event.tags.find((tag) => tag.length >= 2 && tag[0] === 'polltype')?.at(1)

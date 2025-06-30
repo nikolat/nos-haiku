@@ -27,6 +27,7 @@
 		eventsQuoted,
 		eventsReaction,
 		eventsBadge,
+		eventsPoll,
 		eventsEmojiSet,
 		eventsChannelBookmark,
 		mutedPubkeys,
@@ -47,6 +48,7 @@
 		eventsQuoted: NostrEvent[];
 		eventsReaction: NostrEvent[];
 		eventsBadge: NostrEvent[];
+		eventsPoll: NostrEvent[];
 		eventsEmojiSet: NostrEvent[];
 		eventsChannelBookmark: NostrEvent[];
 		mutedPubkeys: string[];
@@ -317,6 +319,7 @@
 					{eventsQuoted}
 					{eventsReaction}
 					{eventsBadge}
+					{eventsPoll}
 					{eventsEmojiSet}
 					{eventsChannelBookmark}
 					getSeenOn={() => {

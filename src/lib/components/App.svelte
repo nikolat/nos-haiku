@@ -91,6 +91,7 @@
 		});
 	});
 	let eventsBadge: NostrEvent[] = $state([]);
+	let eventsPoll: NostrEvent[] = $state([]);
 	let eventsEmojiSet: NostrEvent[] = $state([]);
 	let eventsMention: NostrEvent[] = $state([]);
 	const _getEventsFiltered = (events: NostrEvent[]) => {
@@ -281,6 +282,10 @@
 				eventsChannelEdit = rc.getEventsByFilter({ kinds: [kind] });
 				break;
 			}
+			case 1018: {
+				eventsPoll = sortEvents(rc.getEventsByFilter({ kinds: [kind] }));
+				break;
+			}
 			case 10000: {
 				if (loginPubkey !== undefined && (event?.pubkey === loginPubkey || event === undefined)) {
 					eventMuteList = rc.getReplaceableEvent(kind, loginPubkey);
@@ -420,6 +425,7 @@
 		eventEmojiSetList = undefined;
 		eventRead = undefined;
 		eventsBadge = [];
+		eventsPoll = [];
 		eventsEmojiSet = [];
 		eventsMention = [];
 	};
@@ -809,6 +815,7 @@
 			{uploaderSelected}
 			{setUploaderSelected}
 			{eventsBadge}
+			{eventsPoll}
 			{eventsQuoted}
 			{profileMap}
 			{channelMap}
@@ -848,6 +855,7 @@
 			{eventsReaction}
 			{eventsChannelBookmark}
 			{eventsBadge}
+			{eventsPoll}
 			{eventsEmojiSet}
 			{eventFollowList}
 			{eventMuteList}

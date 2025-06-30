@@ -56,6 +56,7 @@
 		eventsQuoted,
 		eventsReaction,
 		eventsBadge,
+		eventsPoll,
 		eventsEmojiSet,
 		eventsChannelBookmark,
 		getSeenOn,
@@ -89,6 +90,7 @@
 		eventsQuoted: NostrEvent[];
 		eventsReaction: NostrEvent[];
 		eventsBadge: NostrEvent[];
+		eventsPoll: NostrEvent[];
 		eventsEmojiSet: NostrEvent[];
 		eventsChannelBookmark: NostrEvent[];
 		getSeenOn: (id: string, excludeWs: boolean) => string[];
@@ -751,6 +753,7 @@
 												{eventsQuoted}
 												{eventsReaction}
 												{eventsBadge}
+												{eventsPoll}
 												{eventsEmojiSet}
 												{eventsChannelBookmark}
 												{getSeenOn}
@@ -810,6 +813,7 @@
 										{eventsQuoted}
 										{eventsReaction}
 										{eventsBadge}
+										{eventsPoll}
 										{eventsEmojiSet}
 										{eventsChannelBookmark}
 										{mutedPubkeys}
@@ -860,6 +864,7 @@
 											{eventsQuoted}
 											{eventsReaction}
 											{eventsBadge}
+											{eventsPoll}
 											{eventsEmojiSet}
 											{eventsChannelBookmark}
 											{getSeenOn}
@@ -991,6 +996,7 @@
 												{eventsQuoted}
 												{eventsReaction}
 												{eventsBadge}
+												{eventsPoll}
 												{eventsEmojiSet}
 												{eventsChannelBookmark}
 												{getSeenOn}
@@ -1054,6 +1060,7 @@
 											{eventsQuoted}
 											{eventsReaction}
 											{eventsBadge}
+											{eventsPoll}
 											{eventsEmojiSet}
 											{eventsChannelBookmark}
 											{getSeenOn}
@@ -1107,6 +1114,7 @@
 											{eventsQuoted}
 											{eventsReaction}
 											{eventsBadge}
+											{eventsPoll}
 											{eventsEmojiSet}
 											{eventsChannelBookmark}
 											{getSeenOn}
@@ -1144,6 +1152,7 @@
 											{eventsQuoted}
 											{eventsReaction}
 											{eventsBadge}
+											{eventsPoll}
 											{eventsEmojiSet}
 											{eventsChannelBookmark}
 											{getSeenOn}
@@ -1163,7 +1172,7 @@
 									<Poll
 										{rc}
 										{event}
-										events1018={eventsQuoted.filter((ev) => ev.kind === 1018)}
+										{eventsPoll}
 										{loginPubkey}
 										{isEnabledEventProtection}
 										{nowRealtime}
@@ -1196,6 +1205,7 @@
 											{eventsQuoted}
 											{eventsReaction}
 											{eventsBadge}
+											{eventsPoll}
 											{eventsEmojiSet}
 											{eventsChannelBookmark}
 											{getSeenOn}
@@ -1242,6 +1252,7 @@
 											{eventsQuoted}
 											{eventsReaction}
 											{eventsBadge}
+											{eventsPoll}
 											{eventsEmojiSet}
 											{eventsChannelBookmark}
 											{getSeenOn}
@@ -1280,6 +1291,7 @@
 											{eventsQuoted}
 											{eventsReaction}
 											{eventsBadge}
+											{eventsPoll}
 											{eventsEmojiSet}
 											{eventsChannelBookmark}
 											{getSeenOn}
@@ -1333,6 +1345,7 @@
 												{eventsQuoted}
 												{eventsReaction}
 												{eventsBadge}
+												{eventsPoll}
 												{eventsEmojiSet}
 												{eventsChannelBookmark}
 												{getSeenOn}
@@ -1370,6 +1383,7 @@
 												{eventsQuoted}
 												{eventsReaction}
 												{eventsBadge}
+												{eventsPoll}
 												{eventsEmojiSet}
 												{eventsChannelBookmark}
 												{getSeenOn}
@@ -1408,6 +1422,7 @@
 													{eventsQuoted}
 													{eventsReaction}
 													{eventsBadge}
+													{eventsPoll}
 													{eventsEmojiSet}
 													{eventsChannelBookmark}
 													{getSeenOn}
@@ -1467,6 +1482,7 @@
 											{eventsQuoted}
 											{eventsReaction}
 											{eventsBadge}
+											{eventsPoll}
 											{eventsEmojiSet}
 											{eventsChannelBookmark}
 											{getSeenOn}
@@ -1517,6 +1533,7 @@
 															{eventsQuoted}
 															{eventsReaction}
 															{eventsBadge}
+															{eventsPoll}
 															{eventsEmojiSet}
 															{eventsChannelBookmark}
 															{getSeenOn}
@@ -1564,6 +1581,7 @@
 															{eventsQuoted}
 															{eventsReaction}
 															{eventsBadge}
+															{eventsPoll}
 															{eventsEmojiSet}
 															{eventsChannelBookmark}
 															{getSeenOn}
@@ -1636,6 +1654,7 @@
 												{eventsQuoted}
 												{eventsReaction}
 												{eventsBadge}
+												{eventsPoll}
 												{eventsEmojiSet}
 												{eventsChannelBookmark}
 												{getSeenOn}
@@ -1716,6 +1735,7 @@
 											{eventsQuoted}
 											{eventsReaction}
 											{eventsBadge}
+											{eventsPoll}
 											{eventsEmojiSet}
 											{eventsChannelBookmark}
 											{getSeenOn}
@@ -1861,6 +1881,7 @@
 											{eventsQuoted}
 											{eventsReaction}
 											{eventsBadge}
+											{eventsPoll}
 											{eventsEmojiSet}
 											{eventsChannelBookmark}
 											{getSeenOn}
@@ -1897,6 +1918,7 @@
 											{eventsQuoted}
 											{eventsReaction}
 											{eventsBadge}
+											{eventsPoll}
 											{eventsEmojiSet}
 											{eventsChannelBookmark}
 											{getSeenOn}
@@ -2404,6 +2426,7 @@
 								{eventsQuoted}
 								{eventsReaction}
 								{eventsBadge}
+								{eventsPoll}
 								{eventsEmojiSet}
 								{eventsChannelBookmark}
 								{getSeenOn}
@@ -2439,6 +2462,7 @@
 									{eventMuteList}
 									{eventsTimeline}
 									{eventsBadge}
+									{eventsPoll}
 									{eventsQuoted}
 									{eventsReaction}
 									{eventsEmojiSet}

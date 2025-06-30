@@ -445,7 +445,7 @@
 			}
 		} else {
 			sub = rc.subscribeEventStore(callback);
-			for (const k of [0, 1, 3, 7, 40, 41, 10000, 10002, 10005, 10006, 10030, 30078]) {
+			for (const k of [0, 1, 3, 7, 8, 40, 41, 10000, 10002, 10005, 10006, 10030, 30078]) {
 				callback(k);
 			}
 		}

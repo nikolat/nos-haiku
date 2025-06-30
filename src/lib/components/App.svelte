@@ -52,6 +52,20 @@
 		up: UrlParams;
 	} = $props();
 
+	const isTopPage = $derived(
+		[
+			up.currentEventPointer,
+			up.currentProfilePointer,
+			up.currentChannelPointer,
+			up.currentAddressPointer,
+			up.hashtag,
+			up.category,
+			up.query
+		].every((q) => q === undefined) &&
+			!up.isAntenna &&
+			!up.isSettings
+	);
+
 	let loginPubkey: string | undefined = $state(getLoginPubkey());
 	let isEnabledUseClientTag: boolean = $state(false);
 	let deadRelays: string[] = $derived(getDeadRelays());
@@ -377,6 +391,8 @@
 				filter.authors = followingPubkeys;
 			}
 			eventsTimeline = sortEvents(rc.getEventsByFilter(filter));
+		} else if (isTopPage && followingPubkeys.length > 0) {
+			eventsTimeline = eventsTimeline.filter((ev) => followingPubkeys.includes(ev.pubkey));
 		}
 		const kinds: number[] = [1, 4, 6, 7, 8, 16, 42, 1111, 9735, 39701];
 		if (

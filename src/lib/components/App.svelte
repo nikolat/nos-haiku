@@ -257,6 +257,10 @@
 				if (relaySet.size > 0) {
 					tl = tl.filter((ev) => rc?.getSeenOn(ev.id, false).some((r) => relaySet.has(r)));
 				}
+				const query = up.query;
+				if (query !== undefined && query.length > 0) {
+					tl = tl.filter((ev) => ev.content.includes(query));
+				}
 				eventsTimeline = sortEvents(tl);
 				break;
 			}
@@ -383,7 +387,7 @@
 				filter['#d'] = [ap.identifier];
 			}
 			eventsTimeline = rc.getEventsByFilter(filter);
-		} else if (kindSet.size > 0 || pSet.size > 0) {
+		} else if ((kindSet.size > 0 || pSet.size > 0) && up.query === undefined) {
 			const filter: Filter = { kinds: Array.from(kindSet) };
 			if (up.currentProfilePointer !== undefined) {
 				filter.authors = [up.currentProfilePointer.pubkey];

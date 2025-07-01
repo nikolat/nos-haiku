@@ -926,9 +926,9 @@
 													pubkey: loginPubkey,
 													kind: 30008
 												},
-												eventsAll
+												eventsBadge
 											)}
-											{@const badgeDefinitionEvent = getEventByAddressPointer(ap, eventsAll)}
+											{@const badgeDefinitionEvent = getEventByAddressPointer(ap, eventsBadge)}
 											{@const aIds =
 												profileBadgesEvent?.tags
 													.filter((tag) => tag.length >= 2 && tag[0] === 'a')
@@ -994,7 +994,7 @@
 												{eventEmojiSetList}
 												{eventMuteList}
 												{eventsTimeline}
-												{eventsQuoted}
+												eventsQuoted={eventsBadge}
 												{eventsReaction}
 												{eventsBadge}
 												{eventsPoll}
@@ -1090,7 +1090,7 @@
 										.filter((tag) => tag.length >= 2 && tag[0] === 'response')
 										.map((tag) => tag[1])}
 									{@const eId = event.tags.find((tag) => tag.length >= 2 && tag[0] === 'e')?.at(1)}
-									{@const event1068 = getEventById(eId ?? '', eventsAll)}
+									{@const event1068 = getEventById(eId ?? '', eventsPoll)}
 									<ul>
 										{#each new Set<string>(responses) as response (response)}
 											<li>{response}</li>
@@ -1688,7 +1688,7 @@
 											pubkey: event.pubkey,
 											kind: event.kind
 										},
-										eventsAll
+										eventsBadge
 									)}
 									<Badges
 										currentPubkey={event.pubkey}

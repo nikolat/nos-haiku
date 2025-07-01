@@ -1420,12 +1420,21 @@ export class RelayConnector {
 				if (relayHint !== undefined && URL.canParse(relayHint)) {
 					relaySet.add(normalizeURL(relayHint));
 				}
-				const pubkeyToUse: string =
-					getPubkeyIfValid(eTag[3]) ?? getPubkeyIfValid(eTag[4]) ?? pubkeyHint ?? event.pubkey;
-				const event10002 = this.getReplaceableEvent(10002, pubkeyToUse);
+				const pubkeyToUse1: string | undefined =
+					getPubkeyIfValid(eTag[3]) ?? getPubkeyIfValid(eTag[4]) ?? pubkeyHint;
+				const pubkeyToUse2: string = event.pubkey;
+				const event10002 =
+					pubkeyToUse1 === undefined ? undefined : this.getReplaceableEvent(10002, pubkeyToUse1);
 				if (event10002 !== undefined) {
 					for (const relay of getOutboxes(event10002)) {
 						relaySet.add(relay);
+					}
+				} else {
+					const event10002 = this.getReplaceableEvent(10002, pubkeyToUse2);
+					if (event10002 !== undefined) {
+						for (const relay of getOutboxes(event10002)) {
+							relaySet.add(relay);
+						}
 					}
 				}
 				const relays = Array.from(relaySet).filter(this.#relayFilter);

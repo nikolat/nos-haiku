@@ -988,6 +988,7 @@
 												{mutedPubkeys}
 												{mutedChannelIds}
 												{mutedWords}
+												{mutedHashtags}
 												{followingPubkeys}
 												{eventFollowList}
 												{eventEmojiSetList}
@@ -1144,6 +1145,7 @@
 											{mutedPubkeys}
 											{mutedChannelIds}
 											{mutedWords}
+											{mutedHashtags}
 											{followingPubkeys}
 											{eventFollowList}
 											{eventEmojiSetList}
@@ -1197,6 +1199,7 @@
 											{mutedPubkeys}
 											{mutedChannelIds}
 											{mutedWords}
+											{mutedHashtags}
 											{followingPubkeys}
 											{eventFollowList}
 											{eventEmojiSetList}
@@ -1337,6 +1340,7 @@
 												{mutedPubkeys}
 												{mutedChannelIds}
 												{mutedWords}
+												{mutedHashtags}
 												{followingPubkeys}
 												{eventFollowList}
 												{eventEmojiSetList}
@@ -1414,6 +1418,7 @@
 													{mutedPubkeys}
 													{mutedChannelIds}
 													{mutedWords}
+													{mutedHashtags}
 													{followingPubkeys}
 													{eventFollowList}
 													{eventEmojiSetList}
@@ -1474,6 +1479,7 @@
 											{mutedPubkeys}
 											{mutedChannelIds}
 											{mutedWords}
+											{mutedHashtags}
 											{followingPubkeys}
 											{eventFollowList}
 											{eventEmojiSetList}
@@ -1525,6 +1531,7 @@
 															{mutedPubkeys}
 															{mutedChannelIds}
 															{mutedWords}
+															{mutedHashtags}
 															{followingPubkeys}
 															{eventFollowList}
 															{eventEmojiSetList}
@@ -1573,6 +1580,7 @@
 															{mutedPubkeys}
 															{mutedChannelIds}
 															{mutedWords}
+															{mutedHashtags}
 															{followingPubkeys}
 															{eventFollowList}
 															{eventEmojiSetList}
@@ -1727,6 +1735,7 @@
 											{mutedPubkeys}
 											{mutedChannelIds}
 											{mutedWords}
+											{mutedHashtags}
 											{followingPubkeys}
 											{eventFollowList}
 											{eventEmojiSetList}
@@ -1873,6 +1882,7 @@
 											{mutedPubkeys}
 											{mutedChannelIds}
 											{mutedWords}
+											{mutedHashtags}
 											{followingPubkeys}
 											{eventFollowList}
 											{eventEmojiSetList}
@@ -1910,6 +1920,7 @@
 											{mutedPubkeys}
 											{mutedChannelIds}
 											{mutedWords}
+											{mutedHashtags}
 											{followingPubkeys}
 											{eventFollowList}
 											{eventEmojiSetList}

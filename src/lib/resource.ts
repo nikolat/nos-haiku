@@ -439,7 +439,7 @@ export class RelayConnector {
 						}
 						this.#fetchEventsByATags(event, 'a');
 					};
-					const pubkeySet = new Set<string>(event.pubkey);
+					const pubkeySet = new Set<string>([event.pubkey]);
 					if (pHint !== undefined) {
 						pubkeySet.add(pHint);
 					}

@@ -35,7 +35,7 @@
 	import { normalizeURL } from 'nostr-tools/utils';
 	import * as nip19 from 'nostr-tools/nip19';
 	import { getSatoshisAmountFromBolt11 } from 'nostr-tools/nip57';
-	import { getInboxes, getOutboxes } from 'applesauce-core/helpers';
+	import { getInboxes } from 'applesauce-core/helpers';
 	import { _ } from 'svelte-i18n';
 
 	let {
@@ -2205,7 +2205,7 @@
 														loginPubkey
 													);
 													if (event10002From !== undefined) {
-														const relays: string[] = getOutboxes(event10002From);
+														const relays: string[] = getInboxes(event10002From);
 														for (const relay of relays) {
 															relaysToAdd.add(relay);
 														}

@@ -618,8 +618,11 @@
 		const eventsFromAId: NostrEvent[] = aps
 			.map((ap) => rc!.getReplaceableEvent(ap.kind, ap.pubkey, ap.identifier))
 			.filter((ev) => ev !== undefined) as NostrEvent[];
+		const eventsReplied: NostrEvent[] = rc.getEventsByFilter({
+			'#e': eventsAll.map((ev) => ev.id)
+		});
 		const res: NostrEvent[] = [];
-		for (const event of [...eventsFromId, ...eventsFromAId]) {
+		for (const event of [...eventsFromId, ...eventsFromAId, ...eventsReplied]) {
 			if (!res.map((ev) => ev.id).includes(event.id)) {
 				res.push(event);
 			}

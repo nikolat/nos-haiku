@@ -13,6 +13,7 @@ import {
 	type ProfileContent
 } from 'applesauce-core/helpers';
 import data from '@emoji-mart/data';
+import type { FileUploadResponse } from '$lib/nip96';
 // @ts-expect-error なんもわからんかも
 import type { BaseEmoji } from '@types/emoji-mart';
 import { _ } from 'svelte-i18n';
@@ -467,9 +468,11 @@ export const getIdsForFilter = (
 export const getTagsForContent = (
 	content: string,
 	eventsEmojiSet: NostrEvent[],
-	getSeenOn: (id: string, excludeWs: boolean) => string[],
+	getRelayHintEvent: (targetEvent: NostrEvent, relays?: string[]) => string | undefined,
+	getRelayHintAuhor: (pubkey: string, relays?: string[]) => string | undefined,
 	getEventsByFilter: (filters: Filter | Filter[]) => NostrEvent[],
-	getReplaceableEvent: (kind: number, pubkey: string, d?: string) => NostrEvent | undefined
+	getReplaceableEvent: (kind: number, pubkey: string, d?: string) => NostrEvent | undefined,
+	imetaMap?: Map<string, FileUploadResponse>
 ): string[][] => {
 	const tags: string[][] = [];
 	const ppMap: Map<string, nip19.ProfilePointer> = new Map<string, nip19.ProfilePointer>();
@@ -522,10 +525,29 @@ export const getTagsForContent = (
 			}
 		}
 	}
+	const matchesIteratorHashTag = content.matchAll(/(^|\s)#([^\s#]+)/g);
+	const hashtags: Set<string> = new Set();
+	for (const match of matchesIteratorHashTag) {
+		hashtags.add(match[2].toLowerCase());
+	}
 	const matchesIteratorLink = content.matchAll(/https?:\/\/[\w!?/=+\-_~:;.,*&@#$%()[\]]+/g);
 	const links: Set<string> = new Set<string>();
 	for (const match of matchesIteratorLink) {
 		links.add(urlLinkString(match[0])[0]);
+	}
+	const imetaTags: string[][] = [];
+	if (imetaMap !== undefined) {
+		for (const [url, fr] of imetaMap) {
+			if (!links.has(url) || fr.nip94_event === undefined) {
+				continue;
+			}
+			imetaTags.push([
+				'imeta',
+				...fr.nip94_event.tags
+					.filter((tag) => tag.length >= 2 && tag[0].length > 0 && tag[1].length > 0)
+					.map((tag) => `${tag[0]} ${tag[1]}`)
+			]);
+		}
 	}
 	const emojiMapToAdd: Map<string, string> = new Map<string, string>();
 	const emojiMap: Map<string, string> = getEmojiMap(eventsEmojiSet);
@@ -542,8 +564,7 @@ export const getTagsForContent = (
 		const qTag: string[] = ['q', id];
 		const ev: NostrEvent | undefined = getEventsByFilter({ ids: [id] }).at(0);
 		const recommendedRelayForQuote: string | undefined =
-			getSeenOn(id, true).at(0) ??
-			ep.relays?.filter((relay) => URL.canParse(relay) && relay.startsWith('wss://')).at(0);
+			ev === undefined ? undefined : getRelayHintEvent(ev, ep.relays);
 		const pubkey: string | undefined = ev?.pubkey ?? ep.author;
 		if (recommendedRelayForQuote !== undefined) {
 			qTag.push(normalizeURL(recommendedRelayForQuote));
@@ -560,8 +581,7 @@ export const getTagsForContent = (
 		const qTag: string[] = ['q', a];
 		const ev: NostrEvent | undefined = getReplaceableEvent(ap.kind, ap.pubkey, ap.identifier);
 		const recommendedRelayForQuote: string | undefined =
-			getSeenOn(ev?.id ?? '', true).at(0) ??
-			ap.relays?.filter((relay) => URL.canParse(relay) && relay.startsWith('wss://')).at(0);
+			ev === undefined ? undefined : getRelayHintEvent(ev, ap.relays);
 		if (recommendedRelayForQuote !== undefined) {
 			qTag.push(normalizeURL(recommendedRelayForQuote));
 		}
@@ -572,17 +592,20 @@ export const getTagsForContent = (
 	}
 	for (const [p, pp] of ppMap) {
 		const pTag: string[] = ['p', p];
-		const kind0: NostrEvent | undefined = getReplaceableEvent(0, p);
-		const recommendedRelayForPubkey: string | undefined =
-			getSeenOn(kind0?.id ?? '', true).at(0) ??
-			pp.relays?.filter((relay) => URL.canParse(relay) && relay.startsWith('wss://')).at(0);
+		const recommendedRelayForPubkey: string | undefined = getRelayHintAuhor(p, pp.relays);
 		if (recommendedRelayForPubkey !== undefined) {
 			pTag.push(normalizeURL(recommendedRelayForPubkey));
 		}
 		tags.push(pTag);
 	}
+	for (const t of hashtags) {
+		tags.push(['t', t]);
+	}
 	for (const r of links) {
 		tags.push(['r', r]);
+	}
+	for (const imetaTag of imetaTags) {
+		tags.push(imetaTag);
 	}
 	for (const [shortcode, url] of emojiMapToAdd) {
 		tags.push(['emoji', shortcode, url]);

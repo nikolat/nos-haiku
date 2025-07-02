@@ -64,8 +64,6 @@
 	let inputFile: HTMLInputElement;
 	let textArea: HTMLTextAreaElement;
 
-	const emojiMap: Map<string, string> = $derived(getEmojiMap(eventsEmojiSet));
-
 	let emojiPickerContainer: HTMLElement | undefined = $state();
 	const callGetEmoji = () => {
 		if (emojiPickerContainer === undefined) {
@@ -73,7 +71,7 @@
 		}
 		getEmoji(
 			emojiPickerContainer,
-			$state.snapshot(emojiMap),
+			getEmojiMap(eventsEmojiSet),
 			false,
 			({ emojiStr }: { emojiStr: string }) => {
 				insertText(emojiStr, false);
@@ -226,8 +224,8 @@
 			isEnabledEventProtection,
 			clientTag,
 			channelMap,
+			eventsEmojiSet,
 			addPoll ? undefined : targetEventToReply,
-			emojiMap,
 			imetaMap,
 			contentWarningReason,
 			addPoll ? pollItems.filter((item) => item.length > 0) : undefined,
@@ -273,8 +271,8 @@
 			isEnabledEventProtection,
 			clientTag,
 			channelMap,
+			eventsEmojiSet,
 			addPoll ? undefined : targetEventToReply,
-			emojiMap,
 			imetaMap,
 			contentWarningReason,
 			addPoll ? pollItems.filter((item) => item.length > 0) : undefined,

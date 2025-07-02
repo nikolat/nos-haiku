@@ -179,6 +179,10 @@ export class RelayConnector {
 		!this.#deadRelays.includes(relay) &&
 		!this.#blockedRelays.includes(relay);
 
+	getRelayFilter = (): ((relay: string) => boolean) => {
+		return this.#relayFilter;
+	};
+
 	#defineSubscription = () => {
 		const getRpId = ({ event }: { event: NostrEvent }) => `${event.kind}:${event.pubkey}`;
 		const getAdId = ({ event }: { event: NostrEvent }) =>

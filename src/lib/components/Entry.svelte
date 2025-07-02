@@ -31,11 +31,11 @@
 	import { onMount } from 'svelte';
 	import { afterNavigate, beforeNavigate } from '$app/navigation';
 	import { getEventHash, type NostrEvent, type UnsignedEvent } from 'nostr-tools/pure';
-	import type { RelayRecord } from 'nostr-tools/relay';
 	import { isAddressableKind, isReplaceableKind } from 'nostr-tools/kinds';
 	import { normalizeURL } from 'nostr-tools/utils';
 	import * as nip19 from 'nostr-tools/nip19';
 	import { getSatoshisAmountFromBolt11 } from 'nostr-tools/nip57';
+	import { getInboxes, getOutboxes } from 'applesauce-core/helpers';
 	import { _ } from 'svelte-i18n';
 
 	let {
@@ -2186,22 +2186,33 @@
 												class="zap"
 												title="Zap"
 												onclick={() => {
-													const relaysToAdd: Set<string> = new Set<string>();
-													const relayRecord: RelayRecord = getRelaysToUseFromKind10002Event(
-														getEventByAddressPointer(
-															{
-																kind: 10002,
-																pubkey: event.pubkey,
-																identifier: ''
-															},
-															eventsAll
-														)
-													);
-													for (const [relayUrl, _] of Object.entries(relayRecord).filter(
-														([_, obj]) => obj.read
-													)) {
-														relaysToAdd.add(relayUrl);
+													if (rc === undefined) {
+														return;
 													}
+													const relaysToAdd: Set<string> = new Set<string>();
+													const event10002To: NostrEvent | undefined = rc.getReplaceableEvent(
+														10002,
+														event.pubkey
+													);
+													if (event10002To !== undefined) {
+														const relays: string[] = getInboxes(event10002To);
+														for (const relay of relays) {
+															relaysToAdd.add(relay);
+														}
+													}
+													const event10002From: NostrEvent | undefined = rc.getReplaceableEvent(
+														10002,
+														loginPubkey
+													);
+													if (event10002From !== undefined) {
+														const relays: string[] = getOutboxes(event10002From);
+														for (const relay of relays) {
+															relaysToAdd.add(relay);
+														}
+													}
+													const relays: string[] = Array.from(relaysToAdd).filter(
+														rc.getRelayFilter()
+													);
 													zap(
 														nip19.npubEncode(event.pubkey),
 														isAddressableKind(event.kind) || isReplaceableKind(event.kind)
@@ -2210,7 +2221,7 @@
 														isAddressableKind(event.kind) || isReplaceableKind(event.kind)
 															? getEncode(event)
 															: undefined,
-														Array.from(relaysToAdd),
+														relays,
 														zapWindowContainer
 													);
 												}}

@@ -16,7 +16,7 @@
 	import type { NostrEvent } from 'nostr-tools/pure';
 	import { isAddressableKind, isReplaceableKind } from 'nostr-tools/kinds';
 	import * as nip19 from 'nostr-tools/nip19';
-	import { unixNow } from 'applesauce-core/helpers';
+	import { getInboxes, unixNow } from 'applesauce-core/helpers';
 	import { decode } from 'light-bolt11-decoder';
 	import { _ } from 'svelte-i18n';
 
@@ -247,8 +247,29 @@
 		}
 	});
 
+	const isSeenOnInboxRelays = (ev: NostrEvent): boolean => {
+		if (rc === undefined || loginPubkey === undefined) {
+			return false;
+		}
+		const event10002 = rc.getReplaceableEvent(10002, loginPubkey);
+		if (event10002 === undefined) {
+			return false;
+		}
+		const relays = getInboxes(event10002);
+		return rc.getSeenOn(ev.id, false).some((r) => relays.includes(r));
+	};
 	const timelineSliced = $derived(eventsMention.slice(0, countToShow));
-	const mentionToShow = $derived(removeMutedEvent(timelineSliced));
+	const mentionToShow = $derived(
+		removeMutedEvent(timelineSliced)
+			.filter(
+				(ev) =>
+					!(
+						ev.kind === 7 &&
+						ev.tags.findLast((tag) => tag.length >= 2 && tag[0] === 'p')?.at(1) !== loginPubkey
+					)
+			)
+			.filter(isSeenOnInboxRelays)
+	);
 </script>
 
 <header class="GlobalHeader">

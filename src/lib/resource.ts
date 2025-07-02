@@ -965,7 +965,7 @@ export class RelayConnector {
 		limit: number | undefined
 	): [LazyFilter, { relays: string[] } | undefined] | null => {
 		const filter: LazyFilter = {
-			kinds: [1, 4, 6, 7, 16, 42, 1111, 9735, 39701],
+			kinds: [1, 4, 6, 7, 8, 16, 42, 1111, 9735, 39701],
 			'#p': [loginPubkey],
 			until,
 			since,

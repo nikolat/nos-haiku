@@ -34,7 +34,6 @@
 	import * as nip19 from 'nostr-tools/nip19';
 	import {
 		getAddressPointerFromATag,
-		getInboxes,
 		getProfileContent,
 		isValidProfile,
 		unixNow
@@ -413,29 +412,7 @@
 			(event?.tags.some((tag) => tag.length >= 2 && tag[0] === 'p' && tag[1] === loginPubkey) ||
 				event === undefined)
 		) {
-			const isSeenOnInboxRelays = (ev: NostrEvent): boolean => {
-				if (rc === undefined || loginPubkey === undefined) {
-					return false;
-				}
-				const event10002 = rc.getReplaceableEvent(10002, loginPubkey);
-				if (event10002 === undefined) {
-					return false;
-				}
-				const relays = getInboxes(event10002);
-				return rc.getSeenOn(ev.id, false).some((r) => relays.includes(r));
-			};
-			eventsMention = sortEvents(
-				rc
-					.getEventsByFilter({ kinds, '#p': [loginPubkey] })
-					.filter(
-						(ev) =>
-							!(
-								ev.kind === 7 &&
-								ev.tags.findLast((tag) => tag.length >= 2 && tag[0] === 'p')?.at(1) !== loginPubkey
-							)
-					)
-					.filter(isSeenOnInboxRelays)
-			);
+			eventsMention = sortEvents(rc.getEventsByFilter({ kinds, '#p': [loginPubkey] }));
 		}
 	};
 

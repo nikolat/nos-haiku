@@ -1676,15 +1676,20 @@ export class RelayConnector {
 		const kind = 10000;
 		let tags: string[][];
 		let content: string;
+		const pTag: string[] = ['p', pubkey];
+		const recommendedRelay: string | undefined = this.#getRelayHintAuhor(pubkey);
+		if (recommendedRelay !== undefined) {
+			pTag.push(recommendedRelay);
+		}
 		if (eventMuteList === undefined) {
 			tags = [];
-			content = await window.nostr.nip04.encrypt(loginPubkey, JSON.stringify([['p', pubkey]]));
+			content = await window.nostr.nip04.encrypt(loginPubkey, JSON.stringify([pTag]));
 		} else {
 			const { tagList, contentList } = await splitNip51List(eventMuteList, loginPubkey);
 			tags = tagList;
 			content = await window.nostr.nip04.encrypt(
 				loginPubkey,
-				JSON.stringify([...contentList, ['p', pubkey]])
+				JSON.stringify([...contentList, pTag])
 			);
 		}
 		const eventTemplate: EventTemplate = {
@@ -1743,15 +1748,20 @@ export class RelayConnector {
 		const kind = 10000;
 		let tags: string[][];
 		let content: string;
+		const eTag: string[] = ['e', channelId];
+		const recommendedRelay: string | undefined = this.getSeenOn(channelId, true).at(0);
+		if (recommendedRelay !== undefined) {
+			eTag.push(recommendedRelay);
+		}
 		if (eventMuteList === undefined) {
 			tags = [];
-			content = await window.nostr.nip04.encrypt(loginPubkey, JSON.stringify([['e', channelId]]));
+			content = await window.nostr.nip04.encrypt(loginPubkey, JSON.stringify([eTag]));
 		} else {
 			const { tagList, contentList } = await splitNip51List(eventMuteList, loginPubkey);
 			tags = tagList;
 			content = await window.nostr.nip04.encrypt(
 				loginPubkey,
-				JSON.stringify([...contentList, ['e', channelId]])
+				JSON.stringify([...contentList, eTag])
 			);
 		}
 		const eventTemplate: EventTemplate = {
@@ -1915,14 +1925,16 @@ export class RelayConnector {
 		const kind = 10005;
 		let tags: string[][];
 		let content: string;
+		const eTag: string[] = ['e', channelId];
+		const recommendedRelay: string | undefined = this.getSeenOn(channelId, true).at(0);
+		if (recommendedRelay !== undefined) {
+			eTag.push(recommendedRelay);
+		}
 		if (eventMyPublicChatsList === undefined) {
-			tags = [['e', channelId]];
+			tags = [eTag];
 			content = '';
 		} else {
-			const getList = (tags: string[][], tagName: string): string[] =>
-				tags.filter((tag) => tag.length >= 2 && tag[0] === tagName).map((tag) => tag[1]);
-			const ePub = getList(eventMyPublicChatsList.tags, 'e');
-			tags = [...ePub.map((id) => ['e', id]), ['e', channelId]];
+			tags = [...eventMyPublicChatsList.tags, eTag];
 			content = eventMyPublicChatsList.content;
 		}
 		const eventTemplate: EventTemplate = {
@@ -2008,7 +2020,7 @@ export class RelayConnector {
 					ap.identifier
 				);
 				if (event30030 !== undefined) {
-					const relayHint = this.getSeenOn(event30030.id, true).at(0);
+					const relayHint = this.#getRelayHintEvent(event30030);
 					if (relayHint !== undefined) {
 						tag[2] = relayHint;
 					} else {
@@ -2266,18 +2278,30 @@ export class RelayConnector {
 		let kind: number = 6;
 		const content: string = ''; //魚拓リポストはしない
 		const tags: string[][] = [];
-		const recommendedRelay: string = this.getSeenOn(targetEvent.id, true).at(0) ?? '';
+		const relayHintEvent: string | undefined = this.#getRelayHintEvent(targetEvent);
+		const relayHintAuthor: string | undefined = this.#getRelayHintAuhor(targetEvent.pubkey);
 		if (isReplaceableKind(targetEvent.kind) || isAddressableKind(targetEvent.kind)) {
-			const d = targetEvent.tags.find((tag) => tag.length >= 2 && tag[0] === 'd')?.at(1) ?? '';
-			tags.push(['a', `${targetEvent.kind}:${targetEvent.pubkey}:${d}`, recommendedRelay]);
+			const ap: nip19.AddressPointer = {
+				...targetEvent,
+				identifier: isAddressableKind(targetEvent.kind) ? (getTagValue(targetEvent, 'd') ?? '') : ''
+			};
+			const a: string = getCoordinateFromAddressPointer(ap);
+			const aTag: string[] = ['a', a];
+			if (relayHintEvent !== undefined) {
+				aTag.push(relayHintEvent);
+			}
+			tags.push(aTag);
 		}
-		tags.push(
-			['e', targetEvent.id, recommendedRelay, '', targetEvent.pubkey],
-			['p', targetEvent.pubkey]
-		);
+		const eTag: string[] = ['e', targetEvent.id, relayHintEvent ?? '', targetEvent.pubkey];
+		const pTag: string[] = ['p', targetEvent.pubkey];
+		if (relayHintAuthor !== undefined) {
+			pTag.push(relayHintAuthor);
+		}
+		tags.push(eTag, pTag);
 		if (targetEvent.kind !== 1) {
 			kind = 16;
-			tags.push(['k', String(targetEvent.kind)]);
+			const kTag: string[] = ['k', String(targetEvent.kind)];
+			tags.push(kTag);
 		}
 		if (isEnabledEventProtection) {
 			tags.push(['-']);

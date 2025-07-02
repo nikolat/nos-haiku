@@ -591,11 +591,10 @@
 	});
 	let countToShow: number = $state(10);
 	const timelineSliced = $derived(eventsTimeline.slice(0, countToShow));
-	const eventsQuoted: NostrEvent[] = $derived.by(() => {
+	const getQuotedEvents = (eventsAll: NostrEvent[], depth: number): NostrEvent[] => {
 		if (rc === undefined) {
 			return [];
 		}
-		const eventsAll: NostrEvent[] = [...timelineSliced, ...eventsPinList];
 		const ids: string[] = Array.from(
 			new Set<string>(
 				eventsAll
@@ -625,8 +624,16 @@
 				res.push(event);
 			}
 		}
-		return res;
-	});
+		const depthNext = depth - 1;
+		if (depthNext > 0) {
+			return [...res, ...getQuotedEvents(res, depthNext)];
+		} else {
+			return res;
+		}
+	};
+	const eventsQuoted: NostrEvent[] = $derived(
+		getQuotedEvents([...timelineSliced, ...eventsPinList], 5)
+	);
 	const isFullDisplayMode: boolean = $derived(
 		up.currentAddressPointer !== undefined || up.currentEventPointer !== undefined
 	);

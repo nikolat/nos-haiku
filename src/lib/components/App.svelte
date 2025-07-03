@@ -612,7 +612,7 @@
 					.map((ev) => ev.tags.map((tag) => tag[1]))
 					.flat()
 			)
-		);
+		).filter((aid) => aid !== undefined);
 		const aps: nip19.AddressPointer[] = aids
 			.map((aid) => getAddressPointerFromAId(aid))
 			.filter((aid) => aid !== null);

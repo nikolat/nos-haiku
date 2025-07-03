@@ -1076,6 +1076,7 @@ export class RelayConnector {
 	) => {
 		const {
 			currentAddressPointer,
+			date,
 			currentProfilePointer,
 			currentEventPointer,
 			currentChannelPointer,
@@ -1134,6 +1135,11 @@ export class RelayConnector {
 				kinds: kindsBase,
 				authors: [currentProfilePointer.pubkey]
 			};
+			if (date !== undefined) {
+				const since = Math.floor(date.getTime() / 1000);
+				f.since = since;
+				f.until = until ?? since + 24 * 60 * 60;
+			}
 			filtersB.push(f);
 			for (const relay of currentProfilePointer.relays ?? []) {
 				relaySet.add(normalizeURL(relay));

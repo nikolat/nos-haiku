@@ -261,6 +261,11 @@
 				if (query !== undefined && query.length > 0) {
 					tl = tl.filter((ev) => ev.content.includes(query));
 				}
+				if (up.date !== undefined) {
+					const since = Math.floor(up.date.getTime() / 1000);
+					const until = since + 24 * 60 * 60;
+					tl = tl.filter((ev) => since <= ev.created_at && ev.created_at < until);
+				}
 				eventsTimeline = sortEvents(tl);
 				break;
 			}

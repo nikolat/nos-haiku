@@ -61,6 +61,7 @@ import type { FileUploadResponse } from '$lib/nip96';
 import {
 	getAddressPointerFromAId,
 	getChannelContent,
+	getEvent9734,
 	getIdsForFilter,
 	getPubkeyIfValid,
 	getPubkeysForFilter,
@@ -532,6 +533,25 @@ export class RelayConnector {
 						this.#fetchEventsByETags(event, 'E', false);
 						this.#fetchEventsByATags(event, 'A');
 						this.#fetchEventsQuoted(event);
+					};
+					this.#setFetchListAfter10002([event.pubkey], fetchAfter10002);
+					break;
+				}
+				case 9735: {
+					const fetchAfter10002 = () => {
+						if (!this.#eventStore.hasReplaceable(0, event.pubkey)) {
+							this.#fetchProfile(event.pubkey);
+						}
+						const event9734 = getEvent9734(event);
+						if (event9734 === null) {
+							return;
+						}
+						const fetchAfter10002next = () => {
+							if (!this.#eventStore.hasReplaceable(0, event9734.pubkey)) {
+								this.#fetchProfile(event9734.pubkey);
+							}
+						};
+						this.#setFetchListAfter10002([event9734.pubkey], fetchAfter10002next);
 					};
 					this.#setFetchListAfter10002([event.pubkey], fetchAfter10002);
 					break;

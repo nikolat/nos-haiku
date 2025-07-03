@@ -2537,7 +2537,7 @@ export class RelayConnector {
 				]);
 			}
 			for (const pTag of targetEventToReply.tags.filter(
-				(tag) => tag.length >= 2 && tag[0] === 'p' && tag[1] !== targetEventToReply.pubkey
+				(tag) => tag.length >= 2 && tag[0] === 'p' && tag[1] !== targetEventToReply?.pubkey
 			)) {
 				tags.push(pTag);
 			}

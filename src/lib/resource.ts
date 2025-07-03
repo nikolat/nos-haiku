@@ -379,7 +379,8 @@ export class RelayConnector {
 			const isForwardReq: boolean = this.#since < event.created_at;
 			switch (event.kind) {
 				case 1:
-				case 42: {
+				case 42:
+				case 30023: {
 					const fetchAfter10002 = () => {
 						if (!this.#eventStore.hasReplaceable(0, event.pubkey)) {
 							this.#fetchProfile(event.pubkey);
@@ -391,7 +392,9 @@ export class RelayConnector {
 								this.#fetchReply(event);
 							}
 						}
-						this.#fetchEventsByETags(event, 'e', false);
+						if ([1, 42].includes(event.kind)) {
+							this.#fetchEventsByETags(event, 'e', false);
+						}
 						this.#fetchEventsQuoted(event);
 					};
 					this.#setFetchListAfter10002([event.pubkey], fetchAfter10002);

@@ -4,6 +4,7 @@
 		getAbsoluteTime,
 		getAddressPointerFromAId,
 		getEvent9734,
+		getEventsFilteredByMute,
 		getName,
 		getProfileId,
 		getPubkeyIfValid,
@@ -709,22 +710,26 @@
 								<a href="/entry/{link}">
 									<i class="fa-fw fas fa-arrow-alt-from-right"></i>
 									<span class="Mention">
-										{#if pubkeyReplyTo !== undefined}
-											<img
-												src={profReplyTo?.picture ??
-													getRoboHashURL(nip19.npubEncode(pubkeyReplyTo))}
-												alt={getName(pubkeyReplyTo, profileMap, eventFollowList)}
-												class="Avatar Avatar--sm"
-											/>
-										{/if}
-										{#if eventReplyTo !== undefined}
-											{@const content = eventReplyTo.content.split('\n')[0]}
-											<Content
-												content={content.length > 100 ? `${content.slice(0, 100)}...` : content}
-												tags={eventReplyTo.tags}
-												{profileMap}
-												enableAutoLink={false}
-											/>
+										{#if !(eventReplyTo !== undefined && getEventsFilteredByMute([eventReplyTo], mutedPubkeys, mutedChannelIds, mutedWords, mutedHashtags).length === 0)}
+											{#if pubkeyReplyTo !== undefined}
+												<img
+													src={profReplyTo?.picture ??
+														getRoboHashURL(nip19.npubEncode(pubkeyReplyTo))}
+													alt={getName(pubkeyReplyTo, profileMap, eventFollowList)}
+													class="Avatar Avatar--sm"
+												/>
+											{/if}
+											{#if eventReplyTo !== undefined}
+												{@const content = eventReplyTo.content.split('\n')[0]}
+												<Content
+													content={content.length > 100 ? `${content.slice(0, 100)}...` : content}
+													tags={eventReplyTo.tags}
+													{profileMap}
+													enableAutoLink={false}
+												/>
+											{/if}
+										{:else}
+											{$_('Entry.muted-event')}
 										{/if}
 									</span>
 								</a>

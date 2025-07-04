@@ -624,31 +624,6 @@ export class RelayConnector {
 		});
 	};
 
-	#getRelaysToUseFromKind10002Event = (event: NostrEvent): RelayRecord => {
-		const newRelays: RelayRecord = {};
-		for (const tag of event.tags.filter(
-			(tag) => tag.length >= 2 && tag[0] === 'r' && URL.canParse(tag[1])
-		)) {
-			const url: string = normalizeURL(tag[1]);
-			const isRead: boolean = tag.length === 2 || tag[2] === 'read';
-			const isWrite: boolean = tag.length === 2 || tag[2] === 'write';
-			if (newRelays[url] === undefined) {
-				newRelays[url] = {
-					read: isRead,
-					write: isWrite
-				};
-			} else {
-				if (isRead) {
-					newRelays[url].read = true;
-				}
-				if (isWrite) {
-					newRelays[url].write = true;
-				}
-			}
-		}
-		return newRelays;
-	};
-
 	#getRelays = (relayType: 'read' | 'write'): string[] => {
 		const relaySet = new Set<string>();
 		if (this.#relayRecord !== undefined) {
@@ -666,7 +641,7 @@ export class RelayConnector {
 			this.#relayRecord = undefined;
 			this.#rxNostr.setDefaultRelays(defaultRelays);
 		} else {
-			this.#relayRecord = this.#getRelaysToUseFromKind10002Event(event);
+			this.#relayRecord = getRelaysToUseFromKind10002Event(event);
 			this.#rxNostr.setDefaultRelays(this.#relayRecord);
 		}
 	};

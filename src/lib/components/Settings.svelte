@@ -11,7 +11,6 @@
 	import RelayList from '$lib/components/kinds/RelayList.svelte';
 	import Header from '$lib/components/Header.svelte';
 	import type { NostrEvent } from 'nostr-tools/pure';
-	import { getInboxes, getOutboxes } from 'applesauce-core/helpers';
 	import { _ } from 'svelte-i18n';
 
 	let {
@@ -81,6 +80,22 @@
 		followingPubkeys: string[];
 		nowRealtime: number;
 	} = $props();
+
+	const isTooManyRelays = (eventRelayList: NostrEvent | undefined): boolean => {
+		const limit: number = 4;
+		let readCount: number = 0;
+		let writeCount: number = 0;
+		const relayRecord = getRelaysToUseFromKind10002Event(eventRelayList);
+		for (const r of Object.entries(relayRecord)) {
+			if (r[1].read) {
+				readCount++;
+			}
+			if (r[1].write) {
+				writeCount++;
+			}
+		}
+		return readCount > limit || writeCount > limit;
+	};
 </script>
 
 <Header
@@ -280,7 +295,7 @@
 								>
 							</div>
 							<div class="Control">
-								{#if eventRelayList !== undefined && (getOutboxes(eventRelayList).length > 4 || getInboxes(eventRelayList).length > 4)}
+								{#if isTooManyRelays(eventRelayList)}
 									<span class="relays-warning">⚠️{$_('Settings.account.too-many-relays')}</span>
 								{/if}
 								<RelayList

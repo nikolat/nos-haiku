@@ -157,6 +157,7 @@
 			"event-protection": "Event protection(NIP-70)",
 			"relays": "Relays",
 			"relays-edit": "Edit your relays",
+			"too-many-relays": "Too many relays. Keep relay lists small (2-4 relays of each category).",
 			"uploader": "Uploader",
 			"select-uploader": "Select uploader"
 		}

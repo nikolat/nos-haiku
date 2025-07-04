@@ -11,6 +11,7 @@
 	import RelayList from '$lib/components/kinds/RelayList.svelte';
 	import Header from '$lib/components/Header.svelte';
 	import type { NostrEvent } from 'nostr-tools/pure';
+	import { getInboxes, getOutboxes } from 'applesauce-core/helpers';
 	import { _ } from 'svelte-i18n';
 
 	let {
@@ -279,6 +280,9 @@
 								>
 							</div>
 							<div class="Control">
+								{#if eventRelayList !== undefined && (getOutboxes(eventRelayList).length > 4 || getInboxes(eventRelayList).length > 4)}
+									<span class="relays-warning">⚠️{$_('Settings.account.too-many-relays')}</span>
+								{/if}
 								<RelayList
 									relaysToUse={getRelaysToUseFromKind10002Event(eventRelayList)}
 									showIcon={true}

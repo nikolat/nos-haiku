@@ -157,6 +157,7 @@
 			"event-protection": "イベント保護(NIP-70)",
 			"relays": "接続リレー",
 			"relays-edit": "接続リレーを編集する",
+			"too-many-relays": "リレーが多すぎます。リレーリストは少なめにしてください(各カテゴリー2～4リレー)。",
 			"uploader": "アップローダー",
 			"select-uploader": "アップローダー選択"
 		}

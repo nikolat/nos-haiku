@@ -678,11 +678,11 @@
 		if (scrollTop > pageMostBottom - scrollThreshold) {
 			if (!isScrolledBottom && !isLoading) {
 				isScrolledBottom = true;
-				isLoading = true;
 				const lastUntilNext: number | undefined = timelineSliced.at(-1)?.created_at;
 				if (lastUntilNext === undefined || lastUntil === lastUntilNext) {
 					return;
 				}
+				isLoading = true;
 				lastUntil = lastUntilNext;
 				console.info('[Loading Start]');
 				rc.fetchTimeline(

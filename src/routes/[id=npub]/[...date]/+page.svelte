@@ -23,7 +23,7 @@
 
 	afterNavigate(() => {
 		currentProfilePointer = getProfilePointer(page.params.id);
-		date = new Date(encodeURI(page.params.date));
+		date = new Date(page.params.date);
 	});
 </script>
 

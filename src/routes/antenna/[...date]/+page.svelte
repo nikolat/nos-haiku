@@ -7,7 +7,7 @@
 	let date: Date | undefined = $state();
 
 	afterNavigate(() => {
-		date = new Date(encodeURI(page.params.date));
+		date = new Date(page.params.date);
 	});
 </script>
 

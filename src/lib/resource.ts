@@ -375,12 +375,19 @@ export class RelayConnector {
 		}
 	};
 
-	fetchNext = (event: NostrEvent, callback: (kind: number, event?: NostrEvent) => void) => {
+	fetchNext = (
+		event: NostrEvent,
+		callback: (kind: number, event?: NostrEvent) => void,
+		isInTimeline: boolean
+	) => {
 		const isForwardReq: boolean = this.#since < event.created_at;
 		switch (event.kind) {
 			case 1:
 			case 42:
 			case 30023: {
+				if ([1, 42].includes(event.kind) && !isInTimeline) {
+					break;
+				}
 				const fetchAfter10002 = () => {
 					if (!this.#eventStore.hasReplaceable(0, event.pubkey)) {
 						this.#fetchProfile(event.pubkey);
@@ -423,6 +430,9 @@ export class RelayConnector {
 			case 16:
 			case 41:
 			case 9802: {
+				if ([6, 16].includes(event.kind) && !isInTimeline) {
+					break;
+				}
 				const pTag = event.tags.findLast((tag) => tag[0] === 'p');
 				const pHint = getPubkeyIfValid(pTag?.at(1));
 				const eTag = event.tags.findLast((tag) => tag[0] === 'e');
@@ -625,7 +635,7 @@ export class RelayConnector {
 	subscribeEventStore = (callback: (kind: number, event?: NostrEvent) => void): Subscription => {
 		return this.#eventStore
 			.filters({ since: 0 }, true)
-			.subscribe((event: NostrEvent) => this.fetchNext(event, callback));
+			.subscribe((event: NostrEvent) => this.fetchNext(event, callback, false));
 	};
 
 	#getRelays = (relayType: 'read' | 'write'): string[] => {

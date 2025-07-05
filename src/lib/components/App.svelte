@@ -267,6 +267,13 @@
 					tl = tl.filter((ev) => since <= ev.created_at && ev.created_at < until);
 				}
 				eventsTimeline = sortEvents(tl);
+				//TLに含まれるイベントのみ深くfetchする
+				const idsInTimeline: Set<string> = new Set<string>(
+					[...timelineSliced, ...eventsQuoted].map((ev) => ev.id)
+				);
+				if (event !== undefined && idsInTimeline.has(event.id)) {
+					rc.fetchNext(event, () => {}, true);
+				}
 				break;
 			}
 			case 3: {
@@ -657,8 +664,13 @@
 	const completeCustom = (): void => {
 		console.info('[Loading Complete]');
 		const correctionCount = timelineSliced.filter((ev) => ev.created_at === lastUntil).length;
-		countToShow += 11 - correctionCount; //unitlと同時刻のイベントは被って取得されるので補正
+		const diff = 11 - correctionCount;
+		countToShow += diff; //unitlと同時刻のイベントは被って取得されるので補正
 		isLoading = false;
+		//新規にTLに表示されるイベントのみ深くfetchする
+		for (const event of timelineSliced.slice(-1 * diff, -1)) {
+			rc?.fetchNext(event, () => {}, true);
+		}
 	};
 
 	const handlerScroll = (): void => {

@@ -375,253 +375,257 @@ export class RelayConnector {
 		}
 	};
 
-	subscribeEventStore = (callback: (kind: number, event?: NostrEvent) => void): Subscription => {
-		return this.#eventStore.filters({ since: 0 }, true).subscribe((event: NostrEvent) => {
-			const isForwardReq: boolean = this.#since < event.created_at;
-			switch (event.kind) {
-				case 1:
-				case 42:
-				case 30023: {
-					const fetchAfter10002 = () => {
-						if (!this.#eventStore.hasReplaceable(0, event.pubkey)) {
-							this.#fetchProfile(event.pubkey);
-						}
-						if (!isForwardReq) {
-							this.#fetchDeletion(event);
-							this.#fetchReaction(event);
-							if (event.kind === 1) {
-								this.#fetchReply(event);
-							}
-						}
-						if ([1, 42].includes(event.kind)) {
-							this.#fetchEventsByETags(event, 'e', false);
-						}
-						this.#fetchEventsQuoted(event);
-					};
-					this.#setFetchListAfter10002([event.pubkey], fetchAfter10002);
-					break;
-				}
-				case 4: {
-					const fetchAfter10002 = () => {
-						if (!this.#eventStore.hasReplaceable(0, event.pubkey)) {
-							this.#fetchProfile(event.pubkey);
-						}
-						if (!isForwardReq) {
-							this.#fetchDeletion(event);
-						}
-					};
-					this.#setFetchListAfter10002([event.pubkey], fetchAfter10002);
-					break;
-				}
-				case 5: {
-					this.#eventsDeletion = sortEvents(
-						Array.from(this.#eventStore.getByFilters([{ kinds: [5] }]))
-					);
-					break;
-				}
-				case 6:
-				case 7:
-				case 16:
-				case 41:
-				case 9802: {
-					const pTag = event.tags.findLast((tag) => tag[0] === 'p');
-					const pHint = getPubkeyIfValid(pTag?.at(1));
-					const eTag = event.tags.findLast((tag) => tag[0] === 'e');
-					const eHint = getPubkeyIfValid(eTag?.at(3)) ?? getPubkeyIfValid(eTag?.at(4));
-					const fetchAfter10002 = () => {
-						for (const pubkey of pubkeySet) {
-							if (!this.#eventStore.hasReplaceable(0, pubkey)) {
-								this.#fetchProfile(pubkey);
-							}
-						}
-						if (!isForwardReq) {
-							this.#fetchDeletion(event);
-						}
-						if (!this.#eventStore.hasEvent(eTag?.at(1) ?? '')) {
-							this.#fetchEventsByETags(event, 'e', true, pHint);
-						}
-						this.#fetchEventsByATags(event, 'a');
-					};
-					const pubkeySet = new Set<string>([event.pubkey]);
-					if (pHint !== undefined) {
-						pubkeySet.add(pHint);
+	fetchNext = (event: NostrEvent, callback: (kind: number, event?: NostrEvent) => void) => {
+		const isForwardReq: boolean = this.#since < event.created_at;
+		switch (event.kind) {
+			case 1:
+			case 42:
+			case 30023: {
+				const fetchAfter10002 = () => {
+					if (!this.#eventStore.hasReplaceable(0, event.pubkey)) {
+						this.#fetchProfile(event.pubkey);
 					}
-					if (eHint !== undefined) {
-						pubkeySet.add(eHint);
+					if (!isForwardReq) {
+						this.#fetchDeletion(event);
+						this.#fetchReaction(event);
+						if (event.kind === 1) {
+							this.#fetchReply(event);
+						}
 					}
-					this.#setFetchListAfter10002(Array.from(pubkeySet), fetchAfter10002);
-					break;
-				}
-				case 8: {
-					const fetchAfter10002 = () => {
-						if (!this.#eventStore.hasReplaceable(0, event.pubkey)) {
-							this.#fetchProfile(event.pubkey);
-						}
-						if (!isForwardReq) {
-							this.#fetchDeletion(event);
-						}
-						this.#fetchEventsByATags(event, 'a');
-					};
-					this.#setFetchListAfter10002([event.pubkey], fetchAfter10002);
-					break;
-				}
-				case 40: {
-					const fetchAfter10002 = () => {
-						if (!this.#eventStore.hasReplaceable(0, event.pubkey)) {
-							this.#fetchProfile(event.pubkey);
-						}
-						if (!isForwardReq) {
-							this.#fetchChannelMetadata(event);
-						}
-					};
-					this.#setFetchListAfter10002([event.pubkey], fetchAfter10002);
-					break;
-				}
-				case 1018: {
-					const fetchAfter10002 = () => {
-						if (!this.#eventStore.hasReplaceable(0, event.pubkey)) {
-							this.#fetchProfile(event.pubkey);
-						}
-						if (!isForwardReq) {
-							this.#fetchDeletion(event);
-						}
-						this.#fetchEventsByETags(event, 'e');
-					};
-					this.#setFetchListAfter10002([event.pubkey], fetchAfter10002);
-					break;
-				}
-				case 1068: {
-					const fetchAfter10002 = () => {
-						if (!this.#eventStore.hasReplaceable(0, event.pubkey)) {
-							this.#fetchProfile(event.pubkey);
-						}
-						if (!isForwardReq) {
-							this.#fetchDeletion(event);
-							this.#fetchReaction(event);
-						}
-						const pollExpiration: number = parseInt(
-							event.tags
-								.find((tag) => tag.length >= 2 && tag[0] === 'endsAt' && /^\d+$/.test(tag[1]))
-								?.at(1) ?? '0'
-						);
-						const filters: Filter[] = [
-							{
-								kinds: [1018],
-								'#e': [event.id],
-								until: pollExpiration
-							},
-							{
-								kinds: [1111],
-								'#E': [event.id],
-								until: unixNow()
-							}
-						];
-						this.#rxReqBRg.emit(filters);
-					};
-					this.#setFetchListAfter10002([event.pubkey], fetchAfter10002);
-					break;
-				}
-				case 1111: {
-					const fetchAfter10002 = () => {
-						if (!this.#eventStore.hasReplaceable(0, event.pubkey)) {
-							this.#fetchProfile(event.pubkey);
-						}
-						if (!isForwardReq) {
-							this.#fetchDeletion(event);
-							this.#fetchReaction(event);
-						}
-						this.#fetchEventsByETags(event, 'E', false);
-						this.#fetchEventsByATags(event, 'A');
-						this.#fetchEventsQuoted(event);
-					};
-					this.#setFetchListAfter10002([event.pubkey], fetchAfter10002);
-					break;
-				}
-				case 9735: {
-					const pTag = event.tags.findLast((tag) => tag[0] === 'p');
-					const pHint = getPubkeyIfValid(pTag?.at(1));
-					const fetchAfter10002 = () => {
-						for (const pubkey of pubkeySet) {
-							if (!this.#eventStore.hasReplaceable(0, pubkey)) {
-								this.#fetchProfile(pubkey);
-							}
-						}
-						const event9734 = getEvent9734(event);
-						if (event9734 === null) {
-							return;
-						}
-						const fetchAfter10002next = () => {
-							if (!this.#eventStore.hasReplaceable(0, event9734.pubkey)) {
-								this.#fetchProfile(event9734.pubkey);
-							}
-						};
-						this.#setFetchListAfter10002([event9734.pubkey], fetchAfter10002next);
-					};
-					const pubkeySet = new Set<string>([event.pubkey]);
-					if (pHint !== undefined) {
-						pubkeySet.add(pHint);
-					}
-					this.#setFetchListAfter10002(Array.from(pubkeySet), fetchAfter10002);
-					break;
-				}
-				case 10001: {
-					this.#fetchEventsByETags(event, 'e', false);
-					break;
-				}
-				case 10005: {
-					const ids = event.tags
-						.filter((tag) => tag.length >= 2 && tag[0] === 'e')
-						.map((tag) => tag[1])
-						.filter((id) => !this.#eventStore.hasEvent(id));
-					if (ids.length > 0) {
-						this.#rxReqBId.emit({ kinds: [40], ids: ids, until: unixNow() });
-					}
-					break;
-				}
-				case 10030: {
-					this.#fetchEventsByATags(event, 'a');
-					break;
-				}
-				case 30008: {
-					const fetchAfter10002 = () => {
-						if (!this.#eventStore.hasReplaceable(0, event.pubkey)) {
-							this.#fetchProfile(event.pubkey);
-						}
+					if ([1, 42].includes(event.kind)) {
 						this.#fetchEventsByETags(event, 'e', false);
-						this.#fetchEventsByATags(event, 'a');
-					};
-					const eTags: string[][] = event.tags.filter((tag) => tag.length >= 4 && tag[0] === 'e');
-					const aTags: string[][] = event.tags.filter((tag) => tag.length >= 2 && tag[0] === 'a');
-					const pubkeysE: string[] = eTags
-						.map((eTag) => getPubkeyIfValid(eTag[3]) ?? getPubkeyIfValid(eTag[4]))
-						.filter((pubkey) => pubkey !== undefined) as string[];
-					const pubkeysA: string[] = aTags
-						.map((aTag) => aTag[1].split(':').at(1))
-						.filter((pubkey) => pubkey !== undefined) as string[];
-					const pubkeys: string[] = Array.from(new Set<string>([...pubkeysE, ...pubkeysA]));
-					this.#setFetchListAfter10002(pubkeys, fetchAfter10002);
-					break;
-				}
-				case 39701: {
-					const fetchAfter10002 = () => {
-						if (!this.#eventStore.hasReplaceable(0, event.pubkey)) {
-							this.#fetchProfile(event.pubkey);
-						}
-						if (!isForwardReq) {
-							this.#fetchDeletion(event);
-							this.#fetchReaction(event);
-							this.#fetchComment(event);
-						}
-						this.#fetchEventsQuoted(event);
-					};
-					this.#setFetchListAfter10002([event.pubkey], fetchAfter10002);
-					break;
-				}
-				default:
-					break;
+					}
+					this.#fetchEventsQuoted(event);
+				};
+				this.#setFetchListAfter10002([event.pubkey], fetchAfter10002);
+				break;
 			}
-			callback(event.kind, event);
-		});
+			case 4: {
+				const fetchAfter10002 = () => {
+					if (!this.#eventStore.hasReplaceable(0, event.pubkey)) {
+						this.#fetchProfile(event.pubkey);
+					}
+					if (!isForwardReq) {
+						this.#fetchDeletion(event);
+					}
+				};
+				this.#setFetchListAfter10002([event.pubkey], fetchAfter10002);
+				break;
+			}
+			case 5: {
+				this.#eventsDeletion = sortEvents(
+					Array.from(this.#eventStore.getByFilters([{ kinds: [5] }]))
+				);
+				break;
+			}
+			case 6:
+			case 7:
+			case 16:
+			case 41:
+			case 9802: {
+				const pTag = event.tags.findLast((tag) => tag[0] === 'p');
+				const pHint = getPubkeyIfValid(pTag?.at(1));
+				const eTag = event.tags.findLast((tag) => tag[0] === 'e');
+				const eHint = getPubkeyIfValid(eTag?.at(3)) ?? getPubkeyIfValid(eTag?.at(4));
+				const fetchAfter10002 = () => {
+					for (const pubkey of pubkeySet) {
+						if (!this.#eventStore.hasReplaceable(0, pubkey)) {
+							this.#fetchProfile(pubkey);
+						}
+					}
+					if (!isForwardReq) {
+						this.#fetchDeletion(event);
+					}
+					if (!this.#eventStore.hasEvent(eTag?.at(1) ?? '')) {
+						this.#fetchEventsByETags(event, 'e', true, pHint);
+					}
+					this.#fetchEventsByATags(event, 'a');
+				};
+				const pubkeySet = new Set<string>([event.pubkey]);
+				if (pHint !== undefined) {
+					pubkeySet.add(pHint);
+				}
+				if (eHint !== undefined) {
+					pubkeySet.add(eHint);
+				}
+				this.#setFetchListAfter10002(Array.from(pubkeySet), fetchAfter10002);
+				break;
+			}
+			case 8: {
+				const fetchAfter10002 = () => {
+					if (!this.#eventStore.hasReplaceable(0, event.pubkey)) {
+						this.#fetchProfile(event.pubkey);
+					}
+					if (!isForwardReq) {
+						this.#fetchDeletion(event);
+					}
+					this.#fetchEventsByATags(event, 'a');
+				};
+				this.#setFetchListAfter10002([event.pubkey], fetchAfter10002);
+				break;
+			}
+			case 40: {
+				const fetchAfter10002 = () => {
+					if (!this.#eventStore.hasReplaceable(0, event.pubkey)) {
+						this.#fetchProfile(event.pubkey);
+					}
+					if (!isForwardReq) {
+						this.#fetchChannelMetadata(event);
+					}
+				};
+				this.#setFetchListAfter10002([event.pubkey], fetchAfter10002);
+				break;
+			}
+			case 1018: {
+				const fetchAfter10002 = () => {
+					if (!this.#eventStore.hasReplaceable(0, event.pubkey)) {
+						this.#fetchProfile(event.pubkey);
+					}
+					if (!isForwardReq) {
+						this.#fetchDeletion(event);
+					}
+					this.#fetchEventsByETags(event, 'e');
+				};
+				this.#setFetchListAfter10002([event.pubkey], fetchAfter10002);
+				break;
+			}
+			case 1068: {
+				const fetchAfter10002 = () => {
+					if (!this.#eventStore.hasReplaceable(0, event.pubkey)) {
+						this.#fetchProfile(event.pubkey);
+					}
+					if (!isForwardReq) {
+						this.#fetchDeletion(event);
+						this.#fetchReaction(event);
+					}
+					const pollExpiration: number = parseInt(
+						event.tags
+							.find((tag) => tag.length >= 2 && tag[0] === 'endsAt' && /^\d+$/.test(tag[1]))
+							?.at(1) ?? '0'
+					);
+					const filters: Filter[] = [
+						{
+							kinds: [1018],
+							'#e': [event.id],
+							until: pollExpiration
+						},
+						{
+							kinds: [1111],
+							'#E': [event.id],
+							until: unixNow()
+						}
+					];
+					this.#rxReqBRg.emit(filters);
+				};
+				this.#setFetchListAfter10002([event.pubkey], fetchAfter10002);
+				break;
+			}
+			case 1111: {
+				const fetchAfter10002 = () => {
+					if (!this.#eventStore.hasReplaceable(0, event.pubkey)) {
+						this.#fetchProfile(event.pubkey);
+					}
+					if (!isForwardReq) {
+						this.#fetchDeletion(event);
+						this.#fetchReaction(event);
+					}
+					this.#fetchEventsByETags(event, 'E', false);
+					this.#fetchEventsByATags(event, 'A');
+					this.#fetchEventsQuoted(event);
+				};
+				this.#setFetchListAfter10002([event.pubkey], fetchAfter10002);
+				break;
+			}
+			case 9735: {
+				const pTag = event.tags.findLast((tag) => tag[0] === 'p');
+				const pHint = getPubkeyIfValid(pTag?.at(1));
+				const fetchAfter10002 = () => {
+					for (const pubkey of pubkeySet) {
+						if (!this.#eventStore.hasReplaceable(0, pubkey)) {
+							this.#fetchProfile(pubkey);
+						}
+					}
+					const event9734 = getEvent9734(event);
+					if (event9734 === null) {
+						return;
+					}
+					const fetchAfter10002next = () => {
+						if (!this.#eventStore.hasReplaceable(0, event9734.pubkey)) {
+							this.#fetchProfile(event9734.pubkey);
+						}
+					};
+					this.#setFetchListAfter10002([event9734.pubkey], fetchAfter10002next);
+				};
+				const pubkeySet = new Set<string>([event.pubkey]);
+				if (pHint !== undefined) {
+					pubkeySet.add(pHint);
+				}
+				this.#setFetchListAfter10002(Array.from(pubkeySet), fetchAfter10002);
+				break;
+			}
+			case 10001: {
+				this.#fetchEventsByETags(event, 'e', false);
+				break;
+			}
+			case 10005: {
+				const ids = event.tags
+					.filter((tag) => tag.length >= 2 && tag[0] === 'e')
+					.map((tag) => tag[1])
+					.filter((id) => !this.#eventStore.hasEvent(id));
+				if (ids.length > 0) {
+					this.#rxReqBId.emit({ kinds: [40], ids: ids, until: unixNow() });
+				}
+				break;
+			}
+			case 10030: {
+				this.#fetchEventsByATags(event, 'a');
+				break;
+			}
+			case 30008: {
+				const fetchAfter10002 = () => {
+					if (!this.#eventStore.hasReplaceable(0, event.pubkey)) {
+						this.#fetchProfile(event.pubkey);
+					}
+					this.#fetchEventsByETags(event, 'e', false);
+					this.#fetchEventsByATags(event, 'a');
+				};
+				const eTags: string[][] = event.tags.filter((tag) => tag.length >= 4 && tag[0] === 'e');
+				const aTags: string[][] = event.tags.filter((tag) => tag.length >= 2 && tag[0] === 'a');
+				const pubkeysE: string[] = eTags
+					.map((eTag) => getPubkeyIfValid(eTag[3]) ?? getPubkeyIfValid(eTag[4]))
+					.filter((pubkey) => pubkey !== undefined) as string[];
+				const pubkeysA: string[] = aTags
+					.map((aTag) => aTag[1].split(':').at(1))
+					.filter((pubkey) => pubkey !== undefined) as string[];
+				const pubkeys: string[] = Array.from(new Set<string>([...pubkeysE, ...pubkeysA]));
+				this.#setFetchListAfter10002(pubkeys, fetchAfter10002);
+				break;
+			}
+			case 39701: {
+				const fetchAfter10002 = () => {
+					if (!this.#eventStore.hasReplaceable(0, event.pubkey)) {
+						this.#fetchProfile(event.pubkey);
+					}
+					if (!isForwardReq) {
+						this.#fetchDeletion(event);
+						this.#fetchReaction(event);
+						this.#fetchComment(event);
+					}
+					this.#fetchEventsQuoted(event);
+				};
+				this.#setFetchListAfter10002([event.pubkey], fetchAfter10002);
+				break;
+			}
+			default:
+				break;
+		}
+		callback(event.kind, event);
+	};
+
+	subscribeEventStore = (callback: (kind: number, event?: NostrEvent) => void): Subscription => {
+		return this.#eventStore
+			.filters({ since: 0 }, true)
+			.subscribe((event: NostrEvent) => this.fetchNext(event, callback));
 	};
 
 	#getRelays = (relayType: 'read' | 'write'): string[] => {

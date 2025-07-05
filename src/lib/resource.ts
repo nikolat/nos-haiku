@@ -1183,6 +1183,11 @@ export class RelayConnector {
 		} else if (isAntenna) {
 			if (followingPubkeys.length > 0) {
 				const f: LazyFilter = { ...filterBase, kinds: kindsBase, authors: followingPubkeys };
+				if (date !== undefined) {
+					const since = Math.floor(date.getTime() / 1000);
+					f.since = since;
+					f.until = until ?? since + 24 * 60 * 60;
+				}
 				filtersB.push(f);
 			}
 		} else if (isTopPage) {

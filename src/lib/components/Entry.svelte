@@ -1794,7 +1794,10 @@
 														<span
 															class="fa-fw fas fa-heart"
 															onclick={() => {
-																rc?.unbookmarkEmojiSets(aTagStr, eventEmojiSetList);
+																rc?.unbookmarkEmojiSets(
+																	aTagStr,
+																	$state.snapshot(eventEmojiSetList)
+																);
 															}}
 														></span>
 													</div>
@@ -1806,7 +1809,11 @@
 															class="fa-fw fas fa-heart"
 															onclick={() => {
 																const recommendedRelay = getSeenOn(event.id, true).at(0);
-																rc?.bookmarkEmojiSets(aTagStr, recommendedRelay, eventEmojiSetList);
+																rc?.bookmarkEmojiSets(
+																	aTagStr,
+																	recommendedRelay,
+																	$state.snapshot(eventEmojiSetList)
+																);
 															}}
 														></span>
 													</div>

@@ -603,7 +603,13 @@
 		return relaySet;
 	});
 	let countToShow: number = $state(10);
-	const timelineSliced = $derived(eventsTimeline.slice(0, countToShow));
+	const maxCountToShow: number = 30;
+	const timelineSliced = $derived(
+		eventsTimeline.slice(
+			countToShow - maxCountToShow > 0 ? countToShow - maxCountToShow : 0,
+			countToShow
+		)
+	);
 	const getQuotedEvents = (eventsAll: NostrEvent[], depth: number): NostrEvent[] => {
 		if (rc === undefined) {
 			return [];
@@ -665,8 +671,12 @@
 		console.info('[Loading Complete]');
 		const correctionCount = timelineSliced.filter((ev) => ev.created_at === lastUntil).length;
 		const diff = 11 - correctionCount;
+		const lastChild = document.querySelector('.FeedList > .Entry:last-child');
 		countToShow += diff; //unitlと同時刻のイベントは被って取得されるので補正
-		isLoading = false;
+		setTimeout(() => {
+			lastChild?.scrollIntoView({ block: 'end' });
+			isLoading = false;
+		}, 10);
 		//新規にTLに表示されるイベントのみ深くfetchする
 		for (const event of timelineSliced.slice(-1 * diff, -1)) {
 			rc?.fetchNext(event, () => {}, true);
@@ -686,6 +696,7 @@
 			document.documentElement.clientHeight
 		);
 		const pageMostBottom = scrollHeight - window.innerHeight;
+		const pageMostTop = 0;
 		const scrollTop = window.scrollY || document.documentElement.scrollTop;
 		if (scrollTop > pageMostBottom - scrollThreshold) {
 			if (!isScrolledBottom && !isLoading) {
@@ -708,6 +719,14 @@
 			}
 		} else if (isScrolledBottom && scrollTop < pageMostBottom + scrollThreshold) {
 			isScrolledBottom = false;
+		}
+		if (scrollTop === pageMostTop) {
+			countToShow = countToShow - 10 < 10 ? 10 : countToShow - 10;
+			if (countToShow > 10) {
+				setTimeout(() => {
+					window.scrollBy({ top: 10, behavior: 'smooth' });
+				}, 100);
+			}
 		}
 	};
 

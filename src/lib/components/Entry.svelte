@@ -2075,7 +2075,7 @@
 											class="Avatar"
 										/>
 										<Content
-											content={getName(event.pubkey, profileMap, eventFollowList, false, true)}
+											content={getName(event.pubkey, profileMap, eventFollowList, true, true)}
 											tags={prof?.event.tags ?? []}
 											isAbout={true}
 										/>

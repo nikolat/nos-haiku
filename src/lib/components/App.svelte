@@ -179,6 +179,9 @@
 			case 1068:
 			case 1111:
 			case 39701: {
+				if (kind === 1068) {
+					eventsPoll = sortEvents(rc.getEventsByFilter({ kinds: [1018, 1068] }));
+				}
 				const kinds: number[] = [1, 6, 16, 42, 1068, 1111, 39701];
 				let tl: NostrEvent[] = [];
 				if (up.isAntenna && loginPubkey !== undefined) {
@@ -314,7 +317,7 @@
 				break;
 			}
 			case 1018: {
-				eventsPoll = sortEvents(rc.getEventsByFilter({ kinds: [kind] }));
+				eventsPoll = sortEvents(rc.getEventsByFilter({ kinds: [1018, 1068] }));
 				break;
 			}
 			case 10000: {

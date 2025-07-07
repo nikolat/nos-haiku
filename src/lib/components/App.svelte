@@ -484,7 +484,7 @@
 		} else {
 			sub = rc.subscribeEventStore(callback);
 			for (const k of [
-				0, 1, 3, 7, 8, 40, 41, 1068, 10000, 10001, 10002, 10005, 10006, 10030, 30078
+				0, 1, 3, 7, 8, 40, 41, 1018, 1068, 10000, 10001, 10002, 10005, 10006, 10030, 30078
 			]) {
 				callback(k);
 			}
@@ -784,7 +784,7 @@
 		document.addEventListener('nlAuth', nlAuth);
 		document.addEventListener('scroll', handlerScroll);
 		setTimeout(() => {
-			locale.set(lang);
+			locale.set(lang ?? 'en');
 			initFetch();
 		}, 10);
 		intervalID = setInterval(() => {

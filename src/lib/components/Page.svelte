@@ -653,7 +653,7 @@
 														rc?.unbookmarkChannel(
 															currentChannelPointer.id,
 															loginPubkey,
-															eventMyPublicChatsList
+															$state.snapshot(eventMyPublicChatsList)
 														);
 													}}
 												></span>
@@ -665,7 +665,10 @@
 												<span
 													class="fa-fw fas fa-heart"
 													onclick={() => {
-														rc?.bookmarkChannel(currentChannelPointer.id, eventMyPublicChatsList);
+														rc?.bookmarkChannel(
+															currentChannelPointer.id,
+															$state.snapshot(eventMyPublicChatsList)
+														);
 													}}
 												></span>
 											</div>

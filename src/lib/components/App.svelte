@@ -491,6 +491,9 @@
 			]) {
 				callback(k);
 			}
+			if (loginPubkey !== undefined) {
+				eventMyPublicChatsList = rc.getReplaceableEvent(10005, loginPubkey);
+			}
 		}
 		const pubkey: string | undefined =
 			up.currentProfilePointer?.pubkey ??

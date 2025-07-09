@@ -286,7 +286,7 @@
 			{@const nameToShow = getName(hex, profileMap, eventFollowList, false, true)}
 			<a href="/{enc}"
 				><img
-					src={prof?.picture ?? getRoboHashURL(hex)}
+					src={prof?.picture ?? getRoboHashURL(nip19.npubEncode(hex))}
 					alt={nameToShow}
 					title={nameToShow}
 					class="Avatar"

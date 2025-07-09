@@ -1,6 +1,5 @@
 <script lang="ts">
 	import {
-		getAddressPointerFromAId,
 		getChannelMap,
 		getEventsAddressableLatest,
 		getEventsFilteredByMute,
@@ -28,14 +27,13 @@
 	import { afterNavigate, beforeNavigate } from '$app/navigation';
 	import { page } from '$app/state';
 	import { sortEvents, type NostrEvent } from 'nostr-tools/pure';
-	import { isAddressableKind, isReplaceableKind } from 'nostr-tools/kinds';
+	import { isAddressableKind } from 'nostr-tools/kinds';
 	import type { Filter } from 'nostr-tools/filter';
 	import { normalizeURL } from 'nostr-tools/utils';
 	import * as nip19 from 'nostr-tools/nip19';
 	import {
 		getAddressPointerFromATag,
 		getProfileContent,
-		getTagValue,
 		isValidProfile,
 		unixNow
 	} from 'applesauce-core/helpers';
@@ -616,55 +614,8 @@
 			countToShow
 		)
 	);
-	const getQuotedEvents = (eventsAll: NostrEvent[], depth: number): NostrEvent[] => {
-		if (rc === undefined) {
-			return [];
-		}
-		const ids: string[] = Array.from(
-			new Set<string>(
-				eventsAll
-					.filter((ev) => ev.tags.some((tag) => tag.length >= 2 && ['e', 'q'].includes(tag[0])))
-					.map((ev) => ev.tags.map((tag) => tag[1]))
-					.flat()
-			)
-		);
-		const eventsFromId: NostrEvent[] = rc.getEventsByFilter({ ids });
-		const aids: string[] = Array.from(
-			new Set<string>(
-				eventsAll
-					.filter((ev) => ev.tags.some((tag) => tag.length >= 2 && ['a', 'q'].includes(tag[0])))
-					.map((ev) => ev.tags.map((tag) => tag[1]))
-					.flat()
-			)
-		).filter((aid) => aid !== undefined);
-		const aps: nip19.AddressPointer[] = aids
-			.map((aid) => getAddressPointerFromAId(aid))
-			.filter((aid) => aid !== null);
-		const eventsFromAId: NostrEvent[] = aps
-			.map((ap) => rc!.getReplaceableEvent(ap.kind, ap.pubkey, ap.identifier))
-			.filter((ev) => ev !== undefined) as NostrEvent[];
-		const eventsRepliedE: NostrEvent[] = rc.getEventsByFilter({
-			'#e': eventsAll.map((ev) => ev.id)
-		});
-		const eventsRepliedA: NostrEvent[] = rc.getEventsByFilter({
-			'#a': eventsAll
-				.filter((ev) => isReplaceableKind(ev.kind) || isAddressableKind(ev.kind))
-				.map((ev) => `${ev.kind}:${ev.pubkey}:${getTagValue(ev, 'd') ?? ''}`)
-		});
-		const eventMap = new Map<string, NostrEvent>();
-		for (const event of [...eventsFromId, ...eventsFromAId, ...eventsRepliedE, ...eventsRepliedA]) {
-			eventMap.set(event.id, event);
-		}
-		const res: NostrEvent[] = Array.from(eventMap.values());
-		const depthNext = depth - 1;
-		if (depthNext > 0) {
-			return [...res, ...getQuotedEvents(res, depthNext)];
-		} else {
-			return res;
-		}
-	};
 	const eventsQuoted: NostrEvent[] = $derived(
-		getQuotedEvents([...timelineSliced, ...eventsPinList], 5)
+		rc === undefined ? [] : rc.getQuotedEvents([...timelineSliced, ...eventsPinList], 5)
 	);
 	const isFullDisplayMode: boolean = $derived(
 		up.currentAddressPointer !== undefined || up.currentEventPointer !== undefined

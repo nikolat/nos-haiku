@@ -1068,6 +1068,7 @@ export class RelayConnector {
 		urlSearchParams: URLSearchParams,
 		loginPubkey: string | undefined,
 		followingPubkeys: string[],
+		limit: number,
 		until?: number,
 		completeCustom?: () => void
 	) => {
@@ -1099,7 +1100,7 @@ export class RelayConnector {
 		const filtersB: LazyFilter[] = [];
 		const filterBase: LazyFilter = {
 			until: until ?? now,
-			limit: until === undefined ? 10 : 11
+			limit: until === undefined ? limit : limit + 1
 		};
 		const kindsBase: number[] = [1, 6, 16, 42, 1068, 1111, 39701];
 		const kindSetQ: Set<number> = new Set<number>();

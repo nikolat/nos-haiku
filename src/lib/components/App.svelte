@@ -523,18 +523,18 @@
 								.map((tag) => tag[1]) ?? [];
 						if (pubkeysSecond.length > 0) {
 							rc.fetchKind10002(pubkeysSecond, () => {
-								rc.fetchTimeline(up, urlSearchParams, loginPubkey, followingPubkeys);
+								rc.fetchTimeline(up, urlSearchParams, loginPubkey, followingPubkeys, limit);
 							});
 						} else {
-							rc.fetchTimeline(up, urlSearchParams, loginPubkey, followingPubkeys);
+							rc.fetchTimeline(up, urlSearchParams, loginPubkey, followingPubkeys, limit);
 						}
 					});
 				} else {
-					rc.fetchTimeline(up, urlSearchParams, loginPubkey, followingPubkeys);
+					rc.fetchTimeline(up, urlSearchParams, loginPubkey, followingPubkeys, limit);
 				}
 			});
 		} else {
-			rc.fetchTimeline(up, urlSearchParams, loginPubkey, followingPubkeys);
+			rc.fetchTimeline(up, urlSearchParams, loginPubkey, followingPubkeys, limit);
 		}
 	};
 
@@ -606,11 +606,13 @@
 		}
 		return relaySet;
 	});
-	let countToShow: number = $state(10);
-	const maxCountToShow: number = 30;
-	const timelineSliced = $derived(
+	const limit: number = 10;
+	let countToShow: number = $state(limit);
+	let countToShowMax: number = limit;
+	const scopeCountToShow: number = 3 * limit;
+	const timelineSliced: NostrEvent[] = $derived(
 		eventsTimeline.slice(
-			countToShow - maxCountToShow > 0 ? countToShow - maxCountToShow : 0,
+			countToShow - scopeCountToShow > 0 ? countToShow - scopeCountToShow : 0,
 			countToShow
 		)
 	);
@@ -620,16 +622,21 @@
 	const isFullDisplayMode: boolean = $derived(
 		up.currentAddressPointer !== undefined || up.currentEventPointer !== undefined
 	);
-	const scrollThreshold: number = 300;
+	const scrollThreshold: number = 500;
+	let isScrolledTop: boolean = false;
 	let isScrolledBottom: boolean = false;
 	let isLoading: boolean = $state(false);
 	let lastUntil: number | undefined = undefined;
 	const completeCustom = (): void => {
 		console.info('[Loading Complete]');
-		const correctionCount = timelineSliced.filter((ev) => ev.created_at === lastUntil).length;
-		const diff = 11 - correctionCount;
+		const correctionCount = Math.max(
+			1,
+			timelineSliced.filter((ev) => ev.created_at === lastUntil).length
+		);
+		const diff = limit + 1 - correctionCount;
 		const lastChild = document.querySelector('.FeedList > .Entry:last-child');
 		countToShow += diff; //unitlと同時刻のイベントは被って取得されるので補正
+		countToShowMax = Math.max(countToShowMax, countToShow);
 		setTimeout(() => {
 			lastChild?.scrollIntoView({ block: 'end' });
 			isLoading = false;
@@ -658,11 +665,17 @@
 		if (scrollTop > pageMostBottom - scrollThreshold) {
 			if (!isScrolledBottom && !isLoading) {
 				isScrolledBottom = true;
+				isLoading = true;
+				//取得済のイベントは再取得しない
+				if (countToShow + limit <= countToShowMax) {
+					console.info('[Loading Start(not fetching)]');
+					completeCustom();
+					return;
+				}
 				const lastUntilNext: number | undefined = timelineSliced.at(-1)?.created_at;
 				if (lastUntilNext === undefined || lastUntil === lastUntilNext) {
 					return;
 				}
-				isLoading = true;
 				lastUntil = lastUntilNext;
 				console.info('[Loading Start]');
 				rc.fetchTimeline(
@@ -670,20 +683,27 @@
 					urlSearchParams,
 					loginPubkey,
 					followingPubkeys,
+					limit,
 					lastUntil,
 					completeCustom
 				);
 			}
-		} else if (isScrolledBottom && scrollTop < pageMostBottom + scrollThreshold) {
+		} else if (isScrolledBottom && scrollTop < pageMostBottom - scrollThreshold) {
 			isScrolledBottom = false;
 		}
-		if (scrollTop === pageMostTop) {
-			countToShow = countToShow - 10 < 10 ? 10 : countToShow - 10;
-			if (countToShow > 10) {
-				setTimeout(() => {
-					window.scrollBy({ top: 10, behavior: 'smooth' });
-				}, 100);
+		if (scrollTop < pageMostTop + scrollThreshold && countToShow > scopeCountToShow) {
+			if (!isScrolledTop && !isLoading) {
+				isScrolledTop = true;
+				if (countToShow > scopeCountToShow) {
+					const secondChild = document.querySelector('.FeedList > .Entry:nth-child(2)');
+					countToShow = Math.max(countToShow - limit, scopeCountToShow);
+					setTimeout(() => {
+						secondChild?.scrollIntoView({ block: 'start' });
+					}, 10);
+				}
 			}
+		} else if (isScrolledTop && scrollTop > pageMostTop + scrollThreshold) {
+			isScrolledTop = false;
 		}
 	};
 

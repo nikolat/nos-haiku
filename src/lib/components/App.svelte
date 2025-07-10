@@ -337,13 +337,13 @@
 			}
 			case 10005: {
 				eventsChannelBookmark = rc.getEventsByFilter({ kinds: [kind] });
-				if (loginPubkey !== undefined && event?.pubkey === loginPubkey) {
+				if (loginPubkey !== undefined && (event?.pubkey === loginPubkey || event === undefined)) {
 					eventMyPublicChatsList = rc.getReplaceableEvent(kind, loginPubkey);
 				}
 				break;
 			}
 			case 10006: {
-				if (loginPubkey !== undefined && event?.pubkey === loginPubkey) {
+				if (loginPubkey !== undefined && (event?.pubkey === loginPubkey || event === undefined)) {
 					const eventBlockedRelay = rc.getReplaceableEvent(kind, loginPubkey);
 					const blockedRelays: string[] =
 						eventBlockedRelay?.tags
@@ -488,9 +488,6 @@
 				0, 1, 3, 7, 8, 40, 41, 1018, 1068, 10000, 10001, 10002, 10005, 10006, 10030, 30078
 			]) {
 				callback(k);
-			}
-			if (loginPubkey !== undefined) {
-				eventMyPublicChatsList = rc.getReplaceableEvent(10005, loginPubkey);
 			}
 		}
 		const pubkey: string | undefined =

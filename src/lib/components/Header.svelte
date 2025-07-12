@@ -497,7 +497,7 @@
 													await rc?.sendDeletion(targetEvent);
 												}}
 												reactionEvent={ev}
-												profile={undefined}
+												profile={prof}
 												isAuthor={false}
 											/></a
 										>

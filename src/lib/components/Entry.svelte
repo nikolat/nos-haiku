@@ -591,7 +591,7 @@
 										await rc?.sendDeletion(targetEvent);
 									}}
 									reactionEvent={event}
-									profile={undefined}
+									profile={prof}
 									isAuthor={false}
 								/>
 							{:else if event.kind === 4}

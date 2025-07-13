@@ -2575,7 +2575,7 @@
 	}
 	.Entry__content {
 		padding: 3px 1px;
-		max-height: 30em;
+		max-height: 32em;
 		overflow-y: auto;
 	}
 	/* ↑の overflow-y: auto の影響で引用内の絵文字ピッカーが隠れてしまうため 本当は overflow-y: visible にしたい… */

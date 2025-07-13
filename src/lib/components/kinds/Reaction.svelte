@@ -22,7 +22,7 @@
 	const src: string = $derived(
 		profile?.picture !== undefined && URL.canParse(profile.picture ?? '')
 			? profile.picture
-			: getRoboHashURL(reactionEvent.pubkey)
+			: getRoboHashURL(nip19.npubEncode(reactionEvent.pubkey))
 	);
 </script>
 

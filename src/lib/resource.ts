@@ -2698,7 +2698,7 @@ export class RelayConnector {
 			tags.push(pTagToReply);
 		}
 		tags = tags.filter(
-			(tag) => !(tag.length > 2 && tag[0] === 'p' && pubkeysExcluded.includes(tag[1]))
+			(tag) => !(tag.length >= 2 && tag[0] === 'p' && pubkeysExcluded.includes(tag[1]))
 		);
 		if (contentWarningReason !== undefined) {
 			tags.push(

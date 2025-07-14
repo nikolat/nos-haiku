@@ -267,7 +267,7 @@
 			loginPubkey,
 			contentToSend,
 			addPoll ? '' : channelNameToCreate,
-			pubkeysExcluded,
+			$state.snapshot(pubkeysExcluded),
 			isEnabledEventProtection,
 			clientTag,
 			channelMap,

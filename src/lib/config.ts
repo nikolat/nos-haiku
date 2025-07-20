@@ -23,7 +23,7 @@ export const indexerRelays = [
 	'wss://indexer.coracle.social/'
 ];
 export const profileRelays = ['wss://directory.yabu.me/'];
-export const searchRelays = ['wss://search.nos.today/', 'wss://relay.nostr.band/'];
+export const searchRelays = ['wss://search.nos.today/'];
 export const urlToLinkProfileEditor = 'https://nos-profile-arekore.vercel.app/';
 export const urlToLinkRelayEditor = 'https://npub.dev/';
 export const expansionThreshold = 5;

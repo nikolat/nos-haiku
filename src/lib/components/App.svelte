@@ -534,9 +534,11 @@
 			}
 		} else {
 			sub = rc.subscribeEventStore(callback);
-			for (const k of [
-				0, 1, 3, 7, 8, 40, 41, 1018, 1068, 10000, 10001, 10002, 10005, 10006, 10030, 30078
-			]) {
+			//kind1は最後にしないと遅延セットしてるtimelineが虚無で上書きされてしまうので
+			const kinds = [
+				0, 3, 7, 8, 40, 41, 1018, 1068, 10000, 10001, 10002, 10005, 10006, 10030, 30078, 1
+			];
+			for (const k of kinds) {
 				callback(k);
 			}
 		}

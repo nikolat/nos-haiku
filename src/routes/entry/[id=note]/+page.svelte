@@ -5,7 +5,10 @@
 	import { nip19 } from 'nostr-tools';
 
 	let currentEventPointer: nip19.EventPointer | undefined = $state();
-	const getEventPointer = (urlId: string): nip19.EventPointer => {
+	const getEventPointer = (urlId: string | undefined): nip19.EventPointer => {
+		if (urlId === undefined) {
+			throw new TypeError('urlId is undefined');
+		}
 		if (/^(nevent1|note1)/.test(urlId)) {
 			const d = nip19.decode(urlId);
 			if (d.type === 'nevent') {

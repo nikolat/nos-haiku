@@ -6,7 +6,9 @@
 	let category: string | undefined = $state();
 
 	afterNavigate(() => {
-		category = page.params.tag.toLowerCase();
+		if (page.params.tag !== undefined) {
+			category = page.params.tag.toLowerCase();
+		}
 	});
 </script>
 

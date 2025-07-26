@@ -6,7 +6,10 @@
 
 	let currentProfilePointer: nip19.ProfilePointer | undefined = $state();
 	let date: Date | undefined = $state();
-	const getProfilePointer = (urlId: string): nip19.ProfilePointer => {
+	const getProfilePointer = (urlId: string | undefined): nip19.ProfilePointer => {
+		if (urlId === undefined) {
+			throw new TypeError('urlId is undefined');
+		}
 		if (/^(nprofile1|npub1)/.test(urlId)) {
 			const d = nip19.decode(urlId);
 			if (d.type === 'nprofile') {
@@ -23,7 +26,9 @@
 
 	afterNavigate(() => {
 		currentProfilePointer = getProfilePointer(page.params.id);
-		date = new Date(page.params.date);
+		if (page.params.date !== undefined) {
+			date = new Date(encodeURI(page.params.date));
+		}
 	});
 </script>
 

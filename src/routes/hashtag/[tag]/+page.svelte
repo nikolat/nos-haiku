@@ -6,7 +6,9 @@
 	let hashtag: string | undefined = $state();
 
 	afterNavigate(() => {
-		hashtag = page.params.tag.toLowerCase();
+		if (page.params.tag !== undefined) {
+			hashtag = page.params.tag.toLowerCase();
+		}
 	});
 </script>
 

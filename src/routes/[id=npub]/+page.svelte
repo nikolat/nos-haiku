@@ -5,7 +5,10 @@
 	import { nip19 } from 'nostr-tools';
 
 	let currentProfilePointer: nip19.ProfilePointer | undefined = $state();
-	const getProfilePointer = (urlId: string): nip19.ProfilePointer => {
+	const getProfilePointer = (urlId: string | undefined): nip19.ProfilePointer => {
+		if (urlId === undefined) {
+			throw new TypeError('urlId is undefined');
+		}
 		if (/^(nprofile1|npub1)/.test(urlId)) {
 			const d = nip19.decode(urlId);
 			if (d.type === 'nprofile') {

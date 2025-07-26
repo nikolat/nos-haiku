@@ -5,7 +5,10 @@
 	import { nip19 } from 'nostr-tools';
 
 	let currentAddressPointer: nip19.AddressPointer | undefined = $state();
-	const getAddressPointer = (urlId: string): nip19.AddressPointer => {
+	const getAddressPointer = (urlId: string | undefined): nip19.AddressPointer => {
+		if (urlId === undefined) {
+			throw new TypeError('urlId is undefined');
+		}
 		if (/^naddr1/.test(urlId)) {
 			const d = nip19.decode(urlId);
 			if (d.type === 'naddr') {

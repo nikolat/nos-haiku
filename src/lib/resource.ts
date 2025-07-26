@@ -98,6 +98,7 @@ export class RelayConnector {
 	#rxReqBRp: ReqB;
 	#rxReqBAd: ReqB;
 	#rxReqF: ReqF;
+	#rxSubF: Subscription | undefined;
 	#deadRelays: string[];
 	#blockedRelays: string[];
 	#eventsDeletion: NostrEvent[];
@@ -227,10 +228,15 @@ export class RelayConnector {
 			next,
 			complete
 		});
-		this.#rxNostr.use(this.#rxReqF).pipe(this.#tie, this.#uniq).subscribe({
-			next,
-			complete
-		});
+		const sub: Subscription = this.#rxNostr
+			.use(this.#rxReqF)
+			.pipe(this.#tie, this.#uniq)
+			.subscribe({
+				next,
+				complete
+			});
+		this.#rxSubF?.unsubscribe();
+		this.#rxSubF = sub;
 	};
 
 	#mergeFilterRp: MergeFilter = (a: LazyFilter[], b: LazyFilter[]) => {
@@ -1412,12 +1418,17 @@ export class RelayConnector {
 		const [filterMention, optionsMention] = mf;
 		const reqTL: ReqF = createRxForwardReq();
 		const reqMention: ReqF = createRxForwardReq();
-		merge(this.#rxNostr.use(reqTL, options), this.#rxNostr.use(reqMention, optionsMention))
+		const sub: Subscription = merge(
+			this.#rxNostr.use(reqTL, options),
+			this.#rxNostr.use(reqMention, optionsMention)
+		)
 			.pipe(this.#tie, this.#uniq)
 			.subscribe({
 				next: this.#next,
 				complete: this.#complete
 			});
+		this.#rxSubF?.unsubscribe();
+		this.#rxSubF = sub;
 		this.#rxNostr.setDefaultRelays(relays);
 		reqTL.emit(filtersF);
 		reqMention.emit(filterMention);

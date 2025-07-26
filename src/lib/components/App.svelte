@@ -163,11 +163,10 @@
 		if (rc === undefined) {
 			return;
 		}
+		let newEventsTimeline: NostrEvent[] | undefined;
 		switch (kind) {
 			case 0: {
-				eventsProfile = getEventsAddressableLatest(rc.getEventsByFilter({ kinds: [kind] })).filter(
-					(ev) => isValidProfile(ev)
-				);
+				setNewEventsProfile();
 				break;
 			}
 			case 1:
@@ -267,7 +266,8 @@
 					const until = since + 24 * 60 * 60;
 					tl = tl.filter((ev) => since <= ev.created_at && ev.created_at < until);
 				}
-				eventsTimeline = sortEvents(tl);
+				newEventsTimeline = sortEvents(tl);
+				setNewEventsTimeline(newEventsTimeline, event);
 				//TLに含まれるイベントのみ深くfetchする
 				const idsInTimeline: Set<string> = new Set<string>(
 					[...timelineSliced, ...eventsQuoted].map((ev) => ev.id)
@@ -297,7 +297,7 @@
 				break;
 			}
 			case 7: {
-				eventsReaction = sortEvents(rc.getEventsByFilter({ kinds: [kind] }));
+				setNewEventsReaction();
 				break;
 			}
 			case 8:
@@ -389,7 +389,8 @@
 				break;
 		}
 		if (up.currentEventPointer !== undefined) {
-			eventsTimeline = rc.getEventsByFilter({ ids: [up.currentEventPointer.id] });
+			newEventsTimeline = rc.getEventsByFilter({ ids: [up.currentEventPointer.id] });
+			setNewEventsTimeline(newEventsTimeline, event);
 		} else if (up.currentAddressPointer !== undefined) {
 			const ap = up.currentAddressPointer;
 			const filter: Filter = {
@@ -399,7 +400,8 @@
 			if (isAddressableKind(ap.kind)) {
 				filter['#d'] = [ap.identifier];
 			}
-			eventsTimeline = rc.getEventsByFilter(filter);
+			newEventsTimeline = rc.getEventsByFilter(filter);
+			setNewEventsTimeline(newEventsTimeline, event);
 		} else if ((kindSet.size > 0 || pSet.size > 0) && up.query === undefined) {
 			const filter: Filter = { kinds: Array.from(kindSet) };
 			if (up.currentProfilePointer !== undefined) {
@@ -411,13 +413,17 @@
 			if (relaySet.size > 0) {
 				tl = tl.filter((ev) => rc?.getSeenOn(ev.id, false).some((r) => relaySet.has(r)));
 			}
-			eventsTimeline = tl;
+			newEventsTimeline = tl;
+			setNewEventsTimeline(newEventsTimeline, event);
 		} else if (isTopPage && followingPubkeys.length > 0) {
-			let tl = eventsTimeline.filter((ev) => followingPubkeys.includes(ev.pubkey));
+			let tl = (newEventsTimeline ?? eventsTimeline).filter((ev) =>
+				followingPubkeys.includes(ev.pubkey)
+			);
 			if (relaySet.size > 0) {
 				tl = tl.filter((ev) => rc?.getSeenOn(ev.id, false).some((r) => relaySet.has(r)));
 			}
-			eventsTimeline = tl;
+			newEventsTimeline = tl;
+			setNewEventsTimeline(newEventsTimeline, event);
 		}
 		const kinds: number[] = [1, 4, 6, 7, 8, 16, 42, 1111, 9735, 39701];
 		if (
@@ -428,6 +434,50 @@
 		) {
 			eventsMention = sortEvents(rc.getEventsByFilter({ kinds, '#p': [loginPubkey] }));
 		}
+	};
+
+	let timerEventsTimeline: number | undefined;
+	const eventsForFetchNext: NostrEvent[] = [];
+	const setNewEventsTimeline = (events: NostrEvent[], event: NostrEvent | undefined) => {
+		if (event !== undefined && !eventsForFetchNext.map((ev) => ev.id).includes(event.id)) {
+			eventsForFetchNext.push(event);
+		}
+		clearTimeout(timerEventsTimeline);
+		timerEventsTimeline = setTimeout(() => {
+			eventsTimeline = events;
+			//TLに含まれるイベントのみ深くfetchする
+			const idsInTimeline: Set<string> = new Set<string>(
+				[...timelineSliced, ...eventsQuoted].map((ev) => ev.id)
+			);
+			for (const event of eventsForFetchNext) {
+				if (event !== undefined && idsInTimeline.has(event.id)) {
+					rc?.fetchNext(event, () => {}, true);
+				}
+			}
+			eventsForFetchNext.length = 0;
+		}, 100);
+	};
+	let timerEventsProfile: number | undefined;
+	const setNewEventsProfile = () => {
+		clearTimeout(timerEventsProfile);
+		timerEventsProfile = setTimeout(() => {
+			if (rc === undefined) {
+				return;
+			}
+			eventsProfile = getEventsAddressableLatest(rc.getEventsByFilter({ kinds: [0] })).filter(
+				(ev) => isValidProfile(ev)
+			);
+		}, 100);
+	};
+	let timerEventsReaction: number | undefined;
+	const setNewEventsReaction = () => {
+		clearTimeout(timerEventsReaction);
+		timerEventsReaction = setTimeout(() => {
+			if (rc === undefined) {
+				return;
+			}
+			eventsReaction = sortEvents(rc.getEventsByFilter({ kinds: [7] }));
+		}, 100);
 	};
 
 	const callbackConnectionState = (packet: ConnectionStatePacket) => {

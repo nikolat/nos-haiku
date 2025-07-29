@@ -665,10 +665,7 @@
 												<span
 													class="fa-fw fas fa-heart"
 													onclick={() => {
-														rc?.bookmarkChannel(
-															currentChannelPointer.id,
-															$state.snapshot(eventMyPublicChatsList)
-														);
+														rc?.bookmarkChannel(channel, $state.snapshot(eventMyPublicChatsList));
 													}}
 												></span>
 											</div>
@@ -704,7 +701,7 @@
 													<a
 														title={$_('Page.main.mute-it').replace('{idView}', channel.name)}
 														onclick={() => {
-															rc?.muteChannel(currentChannelPointer.id, loginPubkey, eventMuteList);
+															rc?.muteChannel(channel, loginPubkey, eventMuteList);
 														}}
 														><i class="fa-fw fas fa-eye-slash"></i>
 														{$_('Page.main.mute-it').replace('{idView}', channel.name)}</a

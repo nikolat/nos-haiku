@@ -1826,7 +1826,7 @@ export class RelayConnector {
 	};
 
 	muteChannel = async (
-		channelId: string,
+		channel: ChannelContent,
 		loginPubkey: string,
 		eventMuteList: NostrEvent | undefined
 	): Promise<Observable<OkPacketAgainstEvent>> => {
@@ -1836,11 +1836,8 @@ export class RelayConnector {
 		const kind = 10000;
 		let tags: string[][];
 		let content: string;
-		const eTag: string[] = ['e', channelId];
-		const recommendedRelay: string | undefined = this.getSeenOn(channelId, true).at(0);
-		if (recommendedRelay !== undefined) {
-			eTag.push(recommendedRelay);
-		}
+		const recommendedRelay: string | undefined = this.#getRelayHintEvent(channel.eventkind40);
+		const eTag: string[] = ['e', channel.id, recommendedRelay ?? '', channel.pubkey];
 		if (eventMuteList === undefined) {
 			tags = [];
 			content = await window.nostr.nip04.encrypt(loginPubkey, JSON.stringify([eTag]));
@@ -2004,7 +2001,7 @@ export class RelayConnector {
 	};
 
 	bookmarkChannel = async (
-		channelId: string,
+		channel: ChannelContent,
 		eventMyPublicChatsList: NostrEvent | undefined
 	): Promise<Observable<OkPacketAgainstEvent>> => {
 		if (window.nostr === undefined) {
@@ -2013,11 +2010,8 @@ export class RelayConnector {
 		const kind = 10005;
 		let tags: string[][];
 		let content: string;
-		const eTag: string[] = ['e', channelId];
-		const recommendedRelay: string | undefined = this.getSeenOn(channelId, true).at(0);
-		if (recommendedRelay !== undefined) {
-			eTag.push(recommendedRelay);
-		}
+		const recommendedRelay: string | undefined = this.#getRelayHintEvent(channel.eventkind40);
+		const eTag: string[] = ['e', channel.id, recommendedRelay ?? '', channel.pubkey];
 		if (eventMyPublicChatsList === undefined) {
 			tags = [eTag];
 			content = '';
@@ -2073,8 +2067,7 @@ export class RelayConnector {
 	};
 
 	bookmarkEmojiSets = async (
-		aTagStr: string,
-		recommendedRelay: string | undefined,
+		eventEmojiSet: NostrEvent,
 		eventEmojiSetList: NostrEvent | undefined
 	): Promise<Observable<OkPacketAgainstEvent>> => {
 		if (window.nostr === undefined) {
@@ -2086,7 +2079,11 @@ export class RelayConnector {
 		const aTagStrs = eventEmojiSetList?.tags
 			.filter((tag) => tag.length >= 2 && tag[0] === 'a')
 			.map((tag) => tag[1]);
+		const aTagStr: string = getCoordinateFromAddressPointer(
+			getAddressPointerForEvent(eventEmojiSet)
+		);
 		const aTag = ['a', aTagStr];
+		const recommendedRelay: string | undefined = this.#getRelayHintEvent(eventEmojiSet);
 		if (recommendedRelay !== undefined) {
 			aTag.push(recommendedRelay);
 		}
@@ -2186,10 +2183,8 @@ export class RelayConnector {
 
 	bookmarkBadge = async (
 		profileBadgesEvent: NostrEvent | undefined,
-		aTagStr: string,
-		recommendedRelayATag: string | undefined,
-		eTagStr: string,
-		recommendedRelayETag: string | undefined
+		badgeDefinitionEvent: NostrEvent,
+		badgeAwardEvent: NostrEvent
 	): Promise<Observable<OkPacketAgainstEvent>> => {
 		if (window.nostr === undefined) {
 			throw new Error('window.nostr is undefined');
@@ -2200,14 +2195,21 @@ export class RelayConnector {
 		const aTagStrs = profileBadgesEvent?.tags
 			.filter((tag) => tag.length >= 2 && tag[0] === 'a')
 			.map((tag) => tag[1]);
-		const aTag = ['a', aTagStr];
+		const aTagStr: string = getCoordinateFromAddressPointer(
+			getAddressPointerForEvent(badgeDefinitionEvent)
+		);
+		const aTag: string[] = ['a', aTagStr];
+		const recommendedRelayATag: string | undefined = this.#getRelayHintEvent(badgeDefinitionEvent);
 		if (recommendedRelayATag !== undefined) {
 			aTag.push(recommendedRelayATag);
 		}
-		const eTag = ['e', eTagStr];
-		if (recommendedRelayETag !== undefined) {
-			eTag.push(recommendedRelayETag);
-		}
+		const recommendedRelayETag: string | undefined = this.#getRelayHintEvent(badgeAwardEvent);
+		const eTag: string[] = [
+			'e',
+			badgeAwardEvent.id,
+			recommendedRelayETag ?? '',
+			badgeAwardEvent.pubkey
+		];
 		if (profileBadgesEvent === undefined || aTagStrs === undefined) {
 			const dTag = ['d', 'profile_badges'];
 			tags = [dTag, aTag, eTag];
@@ -2294,8 +2296,8 @@ export class RelayConnector {
 		obj.picture = channel.picture ?? '';
 		obj.relays = this.#getRelays('write').filter(this.#relayFilter);
 		const content = JSON.stringify(obj);
-		const recommendedRelay: string = this.getSeenOn(channel.id, true).at(0) ?? '';
-		const eTag = ['e', channel.id, recommendedRelay, channel.pubkey];
+		const relayHintEvent: string | undefined = this.#getRelayHintEvent(channel.eventkind40);
+		const eTag = ['e', channel.id, relayHintEvent ?? '', channel.pubkey];
 		const tags: string[][] = [eTag];
 		for (const tTag of new Set<string>(channel.categories)) {
 			tags.push(['t', tTag]);
@@ -2328,8 +2330,9 @@ export class RelayConnector {
 		}
 		const content = '';
 		const kind = 1018;
+		const relayHintEvent: string | undefined = this.#getRelayHintEvent(targetEventToRespond);
 		const tags: string[][] = [
-			['e', targetEventToRespond.id],
+			['e', targetEventToRespond.id, relayHintEvent ?? '', targetEventToRespond.pubkey],
 			...responses.map((response) => ['response', response])
 		];
 		if (isEnabledEventProtection) {
@@ -2560,10 +2563,6 @@ export class RelayConnector {
 			}
 		}
 		//投稿作成
-		const recommendedRelay: string =
-			targetEventToReply === undefined
-				? ''
-				: (this.getSeenOn(targetEventToReply.id, true).at(0) ?? '');
 		let tags: string[][] = [];
 		let kind: number;
 		if (kindForEdit !== undefined) {
@@ -2606,12 +2605,13 @@ export class RelayConnector {
 			const rootTag = targetEventToReply.tags.find(
 				(tag) => tag.length >= 4 && tag[0] === 'e' && tag[3] === 'root'
 			);
+			const relayHintEvent: string | undefined = this.#getRelayHintEvent(targetEventToReply);
 			if (rootTag !== undefined) {
 				tags.push(rootTag);
 				tags.push([
 					'e',
 					targetEventToReply.id,
-					recommendedRelay,
+					relayHintEvent ?? '',
 					'reply',
 					targetEventToReply.pubkey
 				]);
@@ -2619,7 +2619,7 @@ export class RelayConnector {
 				tags.push([
 					'e',
 					targetEventToReply.id,
-					recommendedRelay,
+					relayHintEvent ?? '',
 					'root',
 					targetEventToReply.pubkey
 				]);

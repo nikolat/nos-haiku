@@ -957,24 +957,17 @@
 															}}
 														></span>
 													</div>
-												{:else}
+												{:else if badgeDefinitionEvent !== undefined}
 													<div title={$_('Entry.add-to-favorites')} class="FavoriteButton">
 														<!-- svelte-ignore a11y_click_events_have_key_events -->
 														<!-- svelte-ignore a11y_no_static_element_interactions -->
 														<span
 															class="fa-fw fas fa-heart"
 															onclick={() => {
-																const recommendedRelayETag = getSeenOn(event.id, true).at(0);
-																const recommendedRelayATag = getSeenOn(
-																	badgeDefinitionEvent?.id ?? '',
-																	true
-																).at(0);
 																rc?.bookmarkBadge(
 																	$state.snapshot(profileBadgesEvent),
-																	aId,
-																	recommendedRelayATag,
-																	event.id,
-																	recommendedRelayETag
+																	badgeDefinitionEvent,
+																	event
 																);
 															}}
 														></span>
@@ -1808,12 +1801,7 @@
 														<span
 															class="fa-fw fas fa-heart"
 															onclick={() => {
-																const recommendedRelay = getSeenOn(event.id, true).at(0);
-																rc?.bookmarkEmojiSets(
-																	aTagStr,
-																	recommendedRelay,
-																	$state.snapshot(eventEmojiSetList)
-																);
+																rc?.bookmarkEmojiSets(event, $state.snapshot(eventEmojiSetList));
 															}}
 														></span>
 													</div>

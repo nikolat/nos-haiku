@@ -2733,7 +2733,6 @@ export class RelayConnector {
 					if (tag[2] !== undefined) {
 						r.push(tag[2]);
 						if (tag[3] !== undefined) {
-							r.push('');
 							r.push(tag[3]);
 						}
 					}

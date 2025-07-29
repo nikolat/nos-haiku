@@ -115,8 +115,8 @@ export class RelayConnector {
 
 	#secOnCompleteTimeout = 1000;
 	#secBufferTime = 1000;
-	#limitReaction = 20;
-	#limitComment = 100;
+	#limitReaction = 500;
+	#limitComment = 500;
 	#limitRelay = 5;
 
 	constructor(useAuth: boolean, callbackConnectionState: (packet: ConnectionStatePacket) => void) {

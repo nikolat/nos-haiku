@@ -1008,7 +1008,7 @@ export const getChannelMap = (eventsChannel: NostrEvent[], eventsChannelEdit: No
 
 export const getName = (
 	pubkey: string,
-	profileMap: Map<string, ProfileContent>,
+	profileMap: Map<string, ProfileContentEvent>,
 	eventFollowList: NostrEvent | undefined,
 	isNameDisabled?: boolean,
 	excludeIcon?: boolean
@@ -1033,6 +1033,11 @@ export const getName = (
 		nameToShow = display_name;
 	} else {
 		nameToShow = `${namePrefix}${nip19.npubEncode(pubkey)}`;
+	}
+	const birthday = prof?.birthday;
+	const today = new Date();
+	if (birthday?.month === today.getMonth() + 1 && birthday.day === today.getDate()) {
+		nameToShow = `🎂${nameToShow}`;
 	}
 	if (nameToShow.length > 20) {
 		nameToShow = `${nameToShow.slice(0, 20)}...`;

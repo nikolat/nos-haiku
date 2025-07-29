@@ -1,6 +1,12 @@
 <script lang="ts">
 	import { defaultAccountUri, getRoboHashURL } from '$lib/config';
-	import { getEmoji, getEmojiMap, getName, type ChannelContent } from '$lib/utils';
+	import {
+		getEmoji,
+		getEmojiMap,
+		getName,
+		type ChannelContent,
+		type ProfileContentEvent
+	} from '$lib/utils';
 	import type { RelayConnector } from '$lib/resource';
 	import { beforeNavigate, goto } from '$app/navigation';
 	import { onMount } from 'svelte';
@@ -14,7 +20,7 @@
 		type OptionalFormDataFields
 	} from '$lib/nip96';
 	import { getToken } from 'nostr-tools/nip98';
-	import { unixNow, type ProfileContent } from 'applesauce-core/helpers';
+	import { unixNow } from 'applesauce-core/helpers';
 	import { _ } from 'svelte-i18n';
 	import { browser } from '$app/environment';
 
@@ -44,7 +50,7 @@
 		eventToReply?: NostrEvent;
 		isTopPage: boolean;
 		channelMap: Map<string, ChannelContent>;
-		profileMap: Map<string, ProfileContent>;
+		profileMap: Map<string, ProfileContentEvent>;
 		isEnabledEventProtection: boolean;
 		clientTag: string[] | undefined;
 		uploaderSelected: string;

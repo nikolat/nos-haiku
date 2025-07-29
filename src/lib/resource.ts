@@ -785,7 +785,7 @@ export class RelayConnector {
 		this.#rxReqB1111.emit(filter, options);
 	};
 
-	#getEventsByIdWithRelayHint = (
+	#fetchEventsByIdWithRelayHint = (
 		event: NostrEvent,
 		tagNameToGet: string,
 		relaysToExclude: string[],
@@ -934,7 +934,7 @@ export class RelayConnector {
 			}
 		}
 		//リレーヒント付き引用による取得
-		this.#getEventsByIdWithRelayHint(event, 'q', relays, false);
+		this.#fetchEventsByIdWithRelayHint(event, 'q', relays, false);
 	};
 
 	fetchKind10002 = (pubkeys: string[], completeCustom: () => void) => {
@@ -1331,22 +1331,42 @@ export class RelayConnector {
 						if (!this.#eventStore.hasReplaceable(0, currentAddressPointer.pubkey)) {
 							this.#fetchProfile(currentAddressPointer.pubkey);
 						}
+						const event: NostrEvent | undefined = this.getReplaceableEvent(
+							currentAddressPointer.kind,
+							currentAddressPointer.pubkey,
+							currentAddressPointer.identifier
+						);
+						if (event !== undefined) {
+							this.fetchUserProfile(event);
+						}
 					}
 				} else if (filterB.kinds?.every((kind) => isReplaceableKind(kind))) {
 					this.#rxReqBRp.emit(filterB, options);
-					if (
-						currentAddressPointer !== undefined &&
-						!this.#eventStore.hasReplaceable(0, currentAddressPointer.pubkey)
-					) {
-						this.#fetchProfile(currentAddressPointer.pubkey);
+					if (currentAddressPointer !== undefined) {
+						if (!this.#eventStore.hasReplaceable(0, currentAddressPointer.pubkey)) {
+							this.#fetchProfile(currentAddressPointer.pubkey);
+						}
+						const event: NostrEvent | undefined = this.getReplaceableEvent(
+							currentAddressPointer.kind,
+							currentAddressPointer.pubkey
+						);
+						if (event !== undefined) {
+							this.fetchUserProfile(event);
+						}
 					}
 				} else if (filterB.ids !== undefined) {
 					this.#rxReqBId.emit(filterB, options);
-					if (
-						currentEventPointer?.author !== undefined &&
-						!this.#eventStore.hasReplaceable(0, currentEventPointer.author)
-					) {
-						this.#fetchProfile(currentEventPointer.author);
+					if (currentEventPointer !== undefined) {
+						if (
+							currentEventPointer?.author !== undefined &&
+							!this.#eventStore.hasReplaceable(0, currentEventPointer.author)
+						) {
+							this.#fetchProfile(currentEventPointer.author);
+						}
+						const event: NostrEvent | undefined = this.#eventStore.getEvent(currentEventPointer.id);
+						if (event !== undefined) {
+							this.fetchUserProfile(event);
+						}
 					}
 				} else {
 					this.#rxReqBRg.emit(filterB, options);

@@ -552,6 +552,14 @@ export class RelayConnector {
 				this.#setFetchListAfter10002([event.pubkey], fetchAfter10002);
 				break;
 			}
+			case 9734: {
+				const fetchAfter10002 = () => {
+					if (!this.#eventStore.hasReplaceable(0, event.pubkey)) {
+						this.#fetchProfile(event.pubkey);
+					}
+				};
+				this.#setFetchListAfter10002([event.pubkey], fetchAfter10002);
+			}
 			case 9735: {
 				const pTag = event.tags.findLast((tag) => tag[0] === 'p');
 				const pHint = getPubkeyIfValid(pTag?.at(1));
@@ -562,15 +570,9 @@ export class RelayConnector {
 						}
 					}
 					const event9734 = getEvent9734(event);
-					if (event9734 === null) {
-						return;
+					if (event9734 !== null) {
+						this.#eventStore.add(event9734);
 					}
-					const fetchAfter10002next = () => {
-						if (!this.#eventStore.hasReplaceable(0, event9734.pubkey)) {
-							this.#fetchProfile(event9734.pubkey);
-						}
-					};
-					this.#setFetchListAfter10002([event9734.pubkey], fetchAfter10002next);
 				};
 				const pubkeySet = new Set<string>([event.pubkey]);
 				if (pHint !== undefined) {

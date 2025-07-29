@@ -452,6 +452,9 @@
 			for (const event of eventsForFetchNext) {
 				if (event !== undefined && idsInTimeline.has(event.id)) {
 					rc?.fetchNext(event, () => {}, true);
+					if (kindSet.size > 0) {
+						rc?.fetchUserProfile(event);
+					}
 				}
 			}
 			eventsForFetchNext.length = 0;

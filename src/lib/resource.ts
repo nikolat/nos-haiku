@@ -1069,6 +1069,20 @@ export class RelayConnector {
 		});
 	};
 
+	fetchUserProfile = (event: NostrEvent): void => {
+		const pubkeySet = new Set<string>([
+			event.pubkey,
+			...event.tags.filter((tag) => tag.length >= 2 && tag[0] === 'p').map((tag) => tag[1])
+		]);
+		this.#setFetchListAfter10002(Array.from(pubkeySet), () => {
+			for (const pubkey of pubkeySet) {
+				if (this.getReplaceableEvent(0, pubkey) === undefined) {
+					this.#fetchProfile(pubkey);
+				}
+			}
+		});
+	};
+
 	fetchTimeline = (
 		params: UrlParams,
 		urlSearchParams: URLSearchParams,

@@ -687,7 +687,9 @@
 		countToShow += diff; //unitlと同時刻のイベントは被って取得されるので補正
 		countToShowMax = Math.max(countToShowMax, countToShow);
 		setTimeout(() => {
-			lastChild?.scrollIntoView({ block: 'end' });
+			if (countToShow > scopeCountToShow) {
+				lastChild?.scrollIntoView({ block: 'end' });
+			}
 			isLoading = false;
 		}, 10);
 		//新規にTLに表示されるイベントのみ深くfetchする

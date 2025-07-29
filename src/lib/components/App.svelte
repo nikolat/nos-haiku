@@ -982,7 +982,7 @@
 			{isEnabledUseClientTag}
 			{isEnabledRelativeTime}
 			{nowRealtime}
-			bind:isLoading
+			{isLoading}
 		/>
 	{/if}
 </div>

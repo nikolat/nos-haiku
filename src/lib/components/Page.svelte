@@ -67,7 +67,7 @@
 		isEnabledUseClientTag,
 		isEnabledRelativeTime,
 		nowRealtime,
-		isLoading = $bindable()
+		isLoading
 	}: {
 		rc: RelayConnector | undefined;
 		loginPubkey: string | undefined;

@@ -64,6 +64,7 @@
 		baseEventToEdit: NostrEvent | undefined;
 	} = $props();
 
+	let isCustomEmojiEnabled: boolean = $state(true);
 	let pubkeysExcluded: string[] = $state([]);
 	let filesToUpload: FileList | undefined = $state();
 	let imetaMap: Map<string, FileUploadResponse> = new Map<string, FileUploadResponse>();
@@ -230,7 +231,7 @@
 			isEnabledEventProtection,
 			clientTag,
 			channelMap,
-			eventsEmojiSet,
+			eventsEmojiSet, //除外をプレビューに反映させると選択できなくなってしまう
 			addPoll ? undefined : targetEventToReply,
 			imetaMap,
 			contentWarningReason,
@@ -277,7 +278,7 @@
 			isEnabledEventProtection,
 			clientTag,
 			channelMap,
-			eventsEmojiSet,
+			isCustomEmojiEnabled ? eventsEmojiSet : [],
 			addPoll ? undefined : targetEventToReply,
 			imetaMap,
 			contentWarningReason,
@@ -297,6 +298,7 @@
 			pollPeriod = 1 * 24 * 60 * 60;
 			filesToUpload = undefined;
 			showForm = false;
+			isCustomEmojiEnabled = true;
 			previewEvent = undefined;
 			if (isNeededShowEvent && event !== null) {
 				const nevent: string = nip19.neventEncode({ ...event, author: event.pubkey });
@@ -305,7 +307,10 @@
 		});
 	};
 
-	const pubkeysMentioningTo = $derived(
+	const hasCustomEmoji: boolean = $derived(
+		previewEvent?.tags.some((tag) => tag.length >= 2 && tag[0] === 'emoji') ?? false
+	);
+	const pubkeysMentioningTo: string[] = $derived(
 		previewEvent?.tags.filter((tag) => tag.length >= 2 && tag[0] === 'p').map((tag) => tag[1]) ?? []
 	);
 
@@ -313,6 +318,7 @@
 		callInsertText = insertText;
 	});
 	beforeNavigate(() => {
+		isCustomEmojiEnabled = true;
 		pubkeysExcluded = [];
 		filesToUpload = undefined;
 		channelNameToCreate = '';
@@ -493,6 +499,30 @@
 							>
 								<i class="fa-fw far fa-smile-plus"></i>
 							</button>
+							{#if hasCustomEmoji}
+								<button
+									class={isCustomEmojiEnabled
+										? 'Button toggle-custom-emoji'
+										: 'Button toggle-custom-emoji excluded'}
+									onclick={() => {
+										isCustomEmojiEnabled = !isCustomEmojiEnabled;
+									}}
+									title="enable custom emoji"
+									aria-label="enable custom emoji"
+								>
+									<svg
+										xmlns="http://www.w3.org/2000/svg"
+										width="24"
+										height="24"
+										viewBox="0 0 24 24"
+									>
+										<path
+											fill-rule="evenodd"
+											d="M12,23 C5.92486775,23 1,18.0751322 1,12 C1,5.92486775 5.92486775,1 12,1 C18.0751322,1 23,5.92486775 23,12 C23,18.0751322 18.0751322,23 12,23 Z M12,21 C16.9705627,21 21,16.9705627 21,12 C21,7.02943725 16.9705627,3 12,3 C7.02943725,3 3,7.02943725 3,12 C3,16.9705627 7.02943725,21 12,21 Z M15.2746538,14.2978292 L16.9105622,15.4483958 C15.7945475,17.0351773 13.9775544,18 12,18 C10.0224456,18 8.20545254,17.0351773 7.08943782,15.4483958 L8.72534624,14.2978292 C9.4707028,15.3575983 10.6804996,16 12,16 C13.3195004,16 14.5292972,15.3575983 15.2746538,14.2978292 Z M14,11 L14,9 L16,9 L16,11 L14,11 Z M8,11 L8,9 L10,9 L10,11 L8,11 Z"
+										/>
+									</svg>
+								</button>
+							{/if}
 							{#if pubkeysMentioningTo.length > 0}
 								mention to:
 								{#each pubkeysMentioningTo as p (p)}
@@ -632,6 +662,7 @@
 		right: 10px;
 		top: 3px;
 	}
+	span.ql-formats > button.toggle-custom-emoji,
 	span.channel-clear > button,
 	button.ToolbarItem {
 		border: none;
@@ -649,6 +680,11 @@
 	button.ToolbarItem {
 		background-color: rgba(127, 127, 127, 0);
 		border-radius: 10%;
+	}
+	span.ql-formats > button.toggle-custom-emoji > svg {
+		width: 24px;
+		height: 16px;
+		fill: var(--secondary-text-color);
 	}
 	span.channel-clear > button.channel-clear > svg {
 		width: 16px;
@@ -685,7 +721,7 @@
 	.toggle-mention {
 		padding: 1px 3px;
 	}
-	.Button.toggle-mention.excluded:before {
+	.Button.excluded:before {
 		background-color: #cccccc;
 		border: 2px solid #bfbfbf;
 		box-shadow: 0 2px 0 #bebebe;

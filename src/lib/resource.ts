@@ -559,6 +559,7 @@ export class RelayConnector {
 					}
 				};
 				this.#setFetchListAfter10002([event.pubkey], fetchAfter10002);
+				break;
 			}
 			case 9735: {
 				const pTag = event.tags.findLast((tag) => tag[0] === 'p');

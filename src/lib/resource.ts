@@ -2536,6 +2536,7 @@ export class RelayConnector {
 		content: string,
 		channelNameToCreate: string,
 		pubkeysExcluded: string[],
+		hashtagsExcluded: string[],
 		isEnabledEventProtection: boolean,
 		clientTag: string[] | undefined,
 		channelMap: Map<string, ChannelContent>,
@@ -2746,7 +2747,9 @@ export class RelayConnector {
 			tags.push(pTagToReply);
 		}
 		tags = tags.filter(
-			(tag) => !(tag.length >= 2 && tag[0] === 'p' && pubkeysExcluded.includes(tag[1]))
+			(tag) =>
+				!(tag.length >= 2 && tag[0] === 'p' && pubkeysExcluded.includes(tag[1])) &&
+				!(tag.length >= 2 && tag[0] === 't' && hashtagsExcluded.includes(tag[1]))
 		);
 		if (contentWarningReason !== undefined) {
 			tags.push(
@@ -2803,6 +2806,7 @@ export class RelayConnector {
 		content: string,
 		channelNameToCreate: string,
 		pubkeysExcluded: string[],
+		hashtagsExcluded: string[],
 		isEnabledEventProtection: boolean,
 		clientTag: string[] | undefined,
 		channelMap: Map<string, ChannelContent>,
@@ -2823,6 +2827,7 @@ export class RelayConnector {
 			content,
 			channelNameToCreate,
 			pubkeysExcluded,
+			hashtagsExcluded,
 			isEnabledEventProtection,
 			clientTag,
 			channelMap,

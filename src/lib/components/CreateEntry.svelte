@@ -66,6 +66,7 @@
 
 	let isCustomEmojiEnabled: boolean = $state(true);
 	let pubkeysExcluded: string[] = $state([]);
+	let hashtagsExcluded: string[] = $state([]);
 	let filesToUpload: FileList | undefined = $state();
 	let imetaMap: Map<string, FileUploadResponse> = new Map<string, FileUploadResponse>();
 	let inputFile: HTMLInputElement;
@@ -228,10 +229,11 @@
 			contentToSend,
 			addPoll ? '' : channelNameToCreate,
 			[], //除外をプレビューに反映させると選択できなくなってしまう
+			[], //同上
 			isEnabledEventProtection,
 			clientTag,
 			channelMap,
-			eventsEmojiSet, //除外をプレビューに反映させると選択できなくなってしまう
+			eventsEmojiSet, //同上
 			addPoll ? undefined : targetEventToReply,
 			imetaMap,
 			contentWarningReason,
@@ -273,6 +275,10 @@
 				if (tag[0] === 'p' && pubkeysExcluded.includes(tag[1])) {
 					continue;
 				}
+				//ハッシュタグ無効化の除外
+				if (tag[0] === 't' && hashtagsExcluded.includes(tag[1])) {
+					continue;
+				}
 				event.tags.push([...tag]);
 			}
 			return event;
@@ -302,6 +308,7 @@
 			contentToSend,
 			addPoll ? '' : channelNameToCreate,
 			$state.snapshot(pubkeysExcluded),
+			$state.snapshot(hashtagsExcluded),
 			isEnabledEventProtection,
 			clientTag,
 			channelMap,
@@ -341,6 +348,11 @@
 			.filter((tag) => tag.length >= 2 && tag[0] === 'p')
 			.map((tag) => tag[1]) ?? []
 	);
+	const hashtagsIncluded: string[] = $derived(
+		previewEventLocal?.tags
+			.filter((tag) => tag.length >= 2 && tag[0] === 't')
+			.map((tag) => tag[1]) ?? []
+	);
 
 	onMount(() => {
 		callInsertText = insertText;
@@ -348,6 +360,7 @@
 	beforeNavigate(() => {
 		isCustomEmojiEnabled = true;
 		pubkeysExcluded = [];
+		hashtagsExcluded = [];
 		filesToUpload = undefined;
 		channelNameToCreate = '';
 		addContentWarning = false;
@@ -570,6 +583,22 @@
 											alt={getName(p, profileMap, eventFollowList)}
 											class="Avatar Avatar--sm"
 										/></button
+									>
+								{/each}
+							{/if}
+							{#if hashtagsIncluded.length > 0}
+								hashtags:
+								{#each hashtagsIncluded as t (t)}
+									{@const isExcluded = hashtagsExcluded.includes(t)}
+									<button
+										class={isExcluded ? 'Button toggle-hashtag excluded' : 'Button toggle-hashtag'}
+										onclick={() => {
+											if (isExcluded) {
+												hashtagsExcluded = hashtagsExcluded.filter((hashtag) => hashtag !== t);
+											} else {
+												hashtagsExcluded.push(t);
+											}
+										}}>#{t}</button
 									>
 								{/each}
 							{/if}

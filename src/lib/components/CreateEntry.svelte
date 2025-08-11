@@ -248,12 +248,39 @@
 			(addPoll && pollItems.filter((item) => item.length > 0).length < 2)
 		)
 	);
-	$effect(() => {
-		if (canSendNote) {
-			previewEvent = previewEvents?.eventToSend;
+	//除外を設定していても反映されないプレビュー
+	const previewEventLocal: UnsignedEvent | undefined = $derived(
+		canSendNote ? previewEvents?.eventToSend : undefined
+	);
+	//除外が反映されるプレビュー
+	const previewEventToShow: UnsignedEvent | undefined = $derived.by(() => {
+		if (previewEventLocal === undefined) {
+			return undefined;
 		} else {
-			previewEvent = undefined;
+			const event: UnsignedEvent = {
+				content: previewEventLocal.content,
+				created_at: previewEventLocal.created_at,
+				kind: previewEventLocal.kind,
+				pubkey: previewEventLocal.pubkey,
+				tags: []
+			};
+			for (const tag of previewEventLocal.tags) {
+				//絵文字無効化の除外
+				if (!isCustomEmojiEnabled && tag[0] === 'emoji') {
+					continue;
+				}
+				//メンション無効化の除外
+				if (tag[0] === 'p' && pubkeysExcluded.includes(tag[1])) {
+					continue;
+				}
+				event.tags.push([...tag]);
+			}
+			return event;
 		}
+	});
+	//プレビュー表示には除外を反映させる
+	$effect(() => {
+		previewEvent = previewEventToShow;
 	});
 
 	const callSendNote = () => {
@@ -299,7 +326,6 @@
 			filesToUpload = undefined;
 			showForm = false;
 			isCustomEmojiEnabled = true;
-			previewEvent = undefined;
 			if (isNeededShowEvent && event !== null) {
 				const nevent: string = nip19.neventEncode({ ...event, author: event.pubkey });
 				goto(`/entry/${nevent}`);
@@ -308,10 +334,12 @@
 	};
 
 	const hasCustomEmoji: boolean = $derived(
-		previewEvent?.tags.some((tag) => tag.length >= 2 && tag[0] === 'emoji') ?? false
+		previewEventLocal?.tags.some((tag) => tag.length >= 2 && tag[0] === 'emoji') ?? false
 	);
 	const pubkeysMentioningTo: string[] = $derived(
-		previewEvent?.tags.filter((tag) => tag.length >= 2 && tag[0] === 'p').map((tag) => tag[1]) ?? []
+		previewEventLocal?.tags
+			.filter((tag) => tag.length >= 2 && tag[0] === 'p')
+			.map((tag) => tag[1]) ?? []
 	);
 
 	onMount(() => {

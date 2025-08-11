@@ -679,7 +679,7 @@
 						{/if}
 					</div>
 					<div class="Entry__body">
-						{#if !isPreview && pubkeysMentioningTo.length > 0}
+						{#if pubkeysMentioningTo.length > 0}
 							<span class="Mention">
 								To:
 								{#each pubkeysMentioningTo.slice(0, 10) as p (p)}

@@ -425,6 +425,13 @@
 			newEventsTimeline = tl;
 			setNewEventsTimeline(newEventsTimeline, event);
 		}
+		setEventsMension(kind, event);
+	};
+
+	const setEventsMension = (kind: number, event: NostrEvent | undefined): void => {
+		if (rc === undefined) {
+			return;
+		}
 		const kinds: number[] = [1, 4, 6, 7, 8, 16, 42, 1111, 9735, 39701];
 		if (
 			kinds.includes(kind) &&
@@ -484,6 +491,7 @@
 				return;
 			}
 			eventsReaction = sortEvents(rc.getEventsByFilter({ kinds: [7] }));
+			setEventsMension(7, undefined);
 		}, 100);
 	};
 

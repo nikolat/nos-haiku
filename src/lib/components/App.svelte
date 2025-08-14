@@ -9,7 +9,7 @@
 		type ProfileContentEvent,
 		type UrlParams
 	} from '$lib/utils';
-	import { initialLocale, uploaderURLs } from '$lib/config';
+	import { defaultKindsSelected, initialLocale, uploaderURLs } from '$lib/config';
 	import {
 		getDeadRelays,
 		getLoginPubkey,
@@ -811,23 +811,23 @@
 		unsubscriber = preferences.subscribe(
 			(value: {
 				loginPubkey: string | undefined;
-				lang: string;
-				isEnabledDarkMode: boolean;
-				isEnabledRelativeTime: boolean;
-				isEnabledUseClientTag: boolean;
-				isEnabledEventProtection: boolean;
-				uploaderSelected: string;
-				kindsSelected: number[];
+				lang: string | undefined;
+				isEnabledDarkMode: boolean | undefined;
+				isEnabledRelativeTime: boolean | undefined;
+				isEnabledUseClientTag: boolean | undefined;
+				isEnabledEventProtection: boolean | undefined;
+				uploaderSelected: string | undefined;
+				kindsSelected: number[] | undefined;
 			}) => {
 				loginPubkey = value.loginPubkey;
 				setLoginPubkey(loginPubkey);
-				lang = value.lang;
-				isEnabledDarkMode = value.isEnabledDarkMode;
-				isEnabledRelativeTime = value.isEnabledRelativeTime;
-				isEnabledUseClientTag = value.isEnabledUseClientTag;
-				isEnabledEventProtection = value.isEnabledEventProtection;
-				uploaderSelected = value.uploaderSelected;
-				kindsSelected = value.kindsSelected;
+				lang = value.lang ?? initialLocale;
+				isEnabledDarkMode = value.isEnabledDarkMode ?? true;
+				isEnabledRelativeTime = value.isEnabledRelativeTime ?? true;
+				isEnabledUseClientTag = value.isEnabledUseClientTag ?? false;
+				isEnabledEventProtection = value.isEnabledEventProtection ?? false;
+				uploaderSelected = value.uploaderSelected ?? uploaderURLs[0];
+				kindsSelected = value.kindsSelected ?? defaultKindsSelected;
 			}
 		);
 		if (up.isError) {

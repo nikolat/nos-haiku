@@ -122,6 +122,7 @@
 	let isEnabledRelativeTime: boolean = $state(true);
 	let isEnabledEventProtection: boolean = $state(false);
 	let uploaderSelected: string = $state(uploaderURLs[0]);
+	let kindsSelected: number[] = $state([]);
 	let eventsChannel: NostrEvent[] = $state([]);
 	let eventsChannelEdit: NostrEvent[] = $state([]);
 	let eventsChannelBookmark: NostrEvent[] = $state([]);
@@ -154,6 +155,11 @@
 		uploaderSelected = value;
 		saveLocalStorage();
 	};
+	const setKindsSelected = (value: number[]): void => {
+		kindsSelected = value;
+		rc?.setKindsBase(value);
+		saveLocalStorage();
+	};
 
 	let urlSearchParams: URLSearchParams = $state(page.url.searchParams);
 	let nowRealtime: number = $state(unixNow());
@@ -179,7 +185,7 @@
 				if (kind === 1068) {
 					eventsPoll = sortEvents(rc.getEventsByFilter({ kinds: [1018, 1068] }));
 				}
-				const kinds: number[] = [1, 6, 16, 42, 1068, 1111, 39701];
+				const kinds: number[] = kindsSelected;
 				let tl: NostrEvent[] = [];
 				if (up.isAntenna && loginPubkey !== undefined) {
 					const authors: string[] =
@@ -543,6 +549,7 @@
 			clearCache();
 			rc = new RelayConnector(loginPubkey !== undefined, callbackConnectionState);
 			setRelayConnector(rc);
+			rc.setKindsBase(kindsSelected);
 			sub = rc.subscribeEventStore(callback);
 			if (loginPubkey !== undefined) {
 				pubkeySet.add(loginPubkey);
@@ -610,7 +617,8 @@
 			isEnabledRelativeTime,
 			isEnabledUseClientTag,
 			isEnabledEventProtection,
-			uploaderSelected
+			uploaderSelected,
+			kindsSelected
 		});
 	};
 
@@ -809,6 +817,7 @@
 				isEnabledUseClientTag: boolean;
 				isEnabledEventProtection: boolean;
 				uploaderSelected: string;
+				kindsSelected: number[];
 			}) => {
 				loginPubkey = value.loginPubkey;
 				setLoginPubkey(loginPubkey);
@@ -818,6 +827,7 @@
 				isEnabledUseClientTag = value.isEnabledUseClientTag;
 				isEnabledEventProtection = value.isEnabledEventProtection;
 				uploaderSelected = value.uploaderSelected;
+				kindsSelected = value.kindsSelected;
 			}
 		);
 		if (up.isError) {
@@ -930,6 +940,8 @@
 			{eventRelayList}
 			{uploaderSelected}
 			{setUploaderSelected}
+			{kindsSelected}
+			{setKindsSelected}
 			{eventsBadge}
 			{eventsPoll}
 			{eventsQuoted}

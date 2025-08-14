@@ -159,6 +159,7 @@
 			"relays-edit": "Edit your relays",
 			"too-many-relays": "Too many relays. Keep relay lists small (2-4 relays of each category).",
 			"uploader": "Uploader",
+			"kinds": "Kinds",
 			"select-uploader": "Select uploader"
 		}
 	},

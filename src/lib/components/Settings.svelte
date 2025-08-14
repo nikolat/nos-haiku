@@ -1,6 +1,12 @@
 <script lang="ts">
-	import { uploaderURLs, urlToLinkProfileEditor, urlToLinkRelayEditor } from '$lib/config';
 	import {
+		defaultKindsSelected,
+		uploaderURLs,
+		urlToLinkProfileEditor,
+		urlToLinkRelayEditor
+	} from '$lib/config';
+	import {
+		getNameOfKind,
 		getRelaysToUseFromKind10002Event,
 		type ChannelContent,
 		type ProfileContentEvent
@@ -35,6 +41,8 @@
 		eventRelayList,
 		uploaderSelected,
 		setUploaderSelected,
+		kindsSelected,
+		setKindsSelected,
 		eventsBadge,
 		eventsPoll,
 		eventsQuoted,
@@ -68,6 +76,8 @@
 		eventRelayList: NostrEvent | undefined;
 		uploaderSelected: string;
 		setUploaderSelected: (value: string) => void;
+		kindsSelected: number[];
+		setKindsSelected: (value: number[]) => void;
 		eventsBadge: NostrEvent[];
 		eventsPoll: NostrEvent[];
 		eventsQuoted: NostrEvent[];
@@ -319,6 +329,34 @@
 										<option value={uploader}>{uploader}</option>
 									{/each}
 								</select>
+							</div>
+						</div>
+						<div class="Settings__section">
+							<div class="Label"><span>{$_('Settings.account.kinds')}</span></div>
+							<div class="Control">
+								<ul>
+									{#each defaultKindsSelected as kind (kind)}
+										{@const isSelected = kindsSelected.includes(kind)}
+										<li>
+											<input
+												name="kinds"
+												type="checkbox"
+												disabled={loginPubkey === undefined}
+												checked={isSelected}
+												onchange={() => {
+													let newKindsSelected: number[] = [];
+													if (kindsSelected.includes(kind)) {
+														newKindsSelected = kindsSelected.filter((k) => k !== kind);
+													} else {
+														newKindsSelected = [...kindsSelected, kind].toSorted();
+													}
+													setKindsSelected(newKindsSelected);
+												}}
+											/>
+											kind:{kind} ({getNameOfKind(kind)})
+										</li>
+									{/each}
+								</ul>
 							</div>
 						</div>
 					</div>

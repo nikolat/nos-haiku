@@ -56,7 +56,13 @@ import type { RelayRecord } from 'nostr-tools/relay';
 import type { Filter } from 'nostr-tools/filter';
 import { normalizeURL } from 'nostr-tools/utils';
 import * as nip19 from 'nostr-tools/nip19';
-import { defaultRelays, indexerRelays, profileRelays, searchRelays } from '$lib/config';
+import {
+	defaultKindsSelected,
+	defaultRelays,
+	indexerRelays,
+	profileRelays,
+	searchRelays
+} from '$lib/config';
 import type { FileUploadResponse } from '$lib/nip96';
 import {
 	getAddressPointerFromAId,
@@ -101,6 +107,7 @@ export class RelayConnector {
 	#rxSubF: Subscription | undefined;
 	#deadRelays: string[];
 	#blockedRelays: string[];
+	#kindsBase: number[];
 	#eventsDeletion: NostrEvent[];
 	#tie: OperatorFunction<
 		EventPacket,
@@ -144,6 +151,7 @@ export class RelayConnector {
 		this.#rxReqF = createRxForwardReq();
 		this.#deadRelays = [];
 		this.#blockedRelays = [];
+		this.#kindsBase = defaultKindsSelected;
 		this.#eventsDeletion = [];
 		[this.#tie, this.#seenOn] = createTie();
 		[this.#uniq, this.#eventIds] = createUniq((packet: EventPacket): string => packet.event.id);
@@ -172,6 +180,10 @@ export class RelayConnector {
 
 	setBlockedRelays = (blockedRelays: string[]): void => {
 		this.#blockedRelays = blockedRelays;
+	};
+
+	setKindsBase = (kindsBase: number[]): void => {
+		this.#kindsBase = kindsBase;
 	};
 
 	#relayFilter = (relay: string) =>
@@ -1125,7 +1137,7 @@ export class RelayConnector {
 			until: until ?? now,
 			limit: until === undefined ? limit : limit + 1
 		};
-		const kindsBase: number[] = [1, 6, 16, 42, 1068, 1111, 39701];
+		const kindsBase: number[] = this.#kindsBase;
 		const kindSetQ: Set<number> = new Set<number>();
 		const authorSetQ: Set<string> = new Set<string>();
 		const pSetQ: Set<string> = new Set<string>();

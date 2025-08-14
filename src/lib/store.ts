@@ -1,5 +1,5 @@
 import { persisted } from 'svelte-persisted-store';
-import { initialLocale, uploaderURLs } from '$lib/config';
+import { defaultKindsSelected, initialLocale, uploaderURLs } from '$lib/config';
 
 export const preferences = persisted<
 	{
@@ -10,6 +10,7 @@ export const preferences = persisted<
 		isEnabledUseClientTag: boolean;
 		isEnabledEventProtection: boolean;
 		uploaderSelected: string;
+		kindsSelected: number[];
 	},
 	{
 		loginPubkey: string | undefined;
@@ -19,6 +20,7 @@ export const preferences = persisted<
 		isEnabledUseClientTag: boolean;
 		isEnabledEventProtection: boolean;
 		uploaderSelected: string;
+		kindsSelected: number[];
 	}
 >('preferences', {
 	loginPubkey: undefined,
@@ -27,5 +29,6 @@ export const preferences = persisted<
 	isEnabledRelativeTime: true,
 	isEnabledUseClientTag: false,
 	isEnabledEventProtection: false,
-	uploaderSelected: uploaderURLs[0]
+	uploaderSelected: uploaderURLs[0],
+	kindsSelected: defaultKindsSelected
 });

@@ -1052,3 +1052,16 @@ export const getProfileId = (prof: ProfileContent | undefined) => {
 	}
 	return name;
 };
+
+export const getNameOfKind = (kind: number): string => {
+	const nameMap = new Map<number, string>([
+		[1, 'Short Text Note'],
+		[6, 'Repost'],
+		[16, 'Generic Repost'],
+		[42, 'Channel Message'],
+		[1068, 'Poll'],
+		[1111, 'Comment'],
+		[39701, 'Web bookmarks']
+	]);
+	return nameMap.get(kind) ?? '';
+};

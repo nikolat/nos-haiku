@@ -288,7 +288,11 @@
 					{#await nip05.isValid(currentPubkey, nip05string)}
 						<p>❔{abbreviatedNip05}</p>
 					{:then isValid}
-						<p>{isValid ? '✅' : '❌'}{abbreviatedNip05}</p>
+						{#if isValid}
+							<p>✅<a href="/{abbreviatedNip05}">{abbreviatedNip05}</a></p>
+						{:else}
+							<p>❌{abbreviatedNip05}</p>
+						{/if}
 					{:catch _error}
 						<p>❌{abbreviatedNip05}</p>
 					{/await}

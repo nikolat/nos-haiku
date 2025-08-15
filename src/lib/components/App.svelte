@@ -848,8 +848,14 @@
 		urlSearchParams = page.url.searchParams;
 		document.addEventListener('nlAuth', nlAuth);
 		document.addEventListener('scroll', handlerScroll);
-		setTimeout(() => {
+		//+page.svelte で up がセットされてから実行する
+		setTimeout(async () => {
 			locale.set(lang ?? 'en');
+			const sleep = (timeout: number) => new Promise((handler) => setTimeout(handler, timeout));
+			while (up.isNIP05Fetching) {
+				console.info('[NIP05 fetching...]');
+				await sleep(100);
+			}
 			initFetch();
 		}, 10);
 		intervalID = setInterval(() => {

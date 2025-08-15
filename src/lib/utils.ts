@@ -52,6 +52,7 @@ export type UrlParams = {
 	isSettings?: boolean;
 	isAntenna?: boolean;
 	isError?: boolean;
+	isNIP05Fetching?: boolean;
 };
 
 interface MyBaseEmoji extends BaseEmoji {

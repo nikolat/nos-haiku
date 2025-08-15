@@ -132,10 +132,15 @@
 				isInProcess = false;
 				return;
 			}
-			const request = new Request(processing_url);
 			const sleep = (timeout: number) => new Promise((handler) => setTimeout(handler, timeout));
 			let retry: number = 5;
 			while (true) {
+				const request = new Request(processing_url, {
+					method: 'GET',
+					headers: {
+						Authorization: await getToken(processing_url, 'GET', sign, true)
+					}
+				});
 				const response = await fetch(request);
 				if (response.status === 201) {
 					break;

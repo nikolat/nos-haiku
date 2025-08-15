@@ -1,3 +1,5 @@
+import { NostrTypeGuard } from 'nostr-tools/nip19';
+
 export function match(param: string) {
-	return /^nevent\w+$/.test(param);
+	return NostrTypeGuard.isNEvent(param);
 }

@@ -251,7 +251,7 @@
 	const canSendNote: boolean = $derived(
 		!(
 			contentToSend.length === 0 ||
-			/nsec1\w{58}/.test(contentToSend) ||
+			/nsec1[a-z\d]{58}/.test(contentToSend) ||
 			(!addPoll && channelNameToCreate.length === 0 && isTopPage) ||
 			(addPoll && pollItems.filter((item) => item.length > 0).length < 2)
 		)

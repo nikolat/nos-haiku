@@ -2,7 +2,7 @@
 	import { afterNavigate } from '$app/navigation';
 	import { page } from '$app/state';
 	import App from '$lib/components/App.svelte';
-	import { nip19 } from 'nostr-tools';
+	import * as nip19 from 'nostr-tools/nip19';
 
 	let currentAddressPointer: nip19.AddressPointer | undefined = $state();
 	const getAddressPointer = (urlId: string | undefined): nip19.AddressPointer => {

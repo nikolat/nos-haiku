@@ -123,11 +123,11 @@
 		const regMatchArray = [
 			'https?://[\\w!?/=+\\-_~:;.,*&@#$%()[\\]]+',
 			'wss?://[\\w!?/=+\\-_~:;.,*&@#$%()[\\]]+',
-			'nostr:npub1\\w{58}',
-			'nostr:nprofile1\\w+',
-			'nostr:note1\\w{58}',
-			'nostr:nevent1\\w+',
-			'nostr:naddr1\\w+',
+			'nostr:npub1[a-z\\d]{58}',
+			'nostr:nprofile1[a-z\\d]+',
+			'nostr:note1[a-z\\d]+',
+			'nostr:nevent1[a-z\\d]+',
+			'nostr:naddr1[a-z\\d]+',
 			'#[^\\s#]+'
 		];
 		const emojiUrlMap: Map<string, string> = new Map<string, string>();

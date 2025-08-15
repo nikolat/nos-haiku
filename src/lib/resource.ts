@@ -406,9 +406,15 @@ export class RelayConnector {
 				if ([1, 42].includes(event.kind) && !isInTimeline) {
 					break;
 				}
+				const pTags: string[] = event.tags
+					.filter((tag) => tag.length >= 2 && tag[0] === 'p')
+					.map((tag) => tag[1]);
+				const pubkeys: string[] = Array.from(new Set<string>([event.pubkey, ...pTags]));
 				const fetchAfter10002 = () => {
-					if (!this.#eventStore.hasReplaceable(0, event.pubkey)) {
-						this.#fetchProfile(event.pubkey);
+					for (const pubkey of pubkeys) {
+						if (!this.#eventStore.hasReplaceable(0, pubkey)) {
+							this.#fetchProfile(pubkey);
+						}
 					}
 					if (!isForwardReq) {
 						this.#fetchDeletion(event);
@@ -422,7 +428,7 @@ export class RelayConnector {
 					}
 					this.#fetchEventsQuoted(event);
 				};
-				this.#setFetchListAfter10002([event.pubkey], fetchAfter10002);
+				this.#setFetchListAfter10002(pubkeys, fetchAfter10002);
 				break;
 			}
 			case 4: {

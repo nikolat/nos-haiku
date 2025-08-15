@@ -14,9 +14,11 @@
 		getDeadRelays,
 		getLoginPubkey,
 		getRelayConnector,
+		getSubscription,
 		setDeadRelays,
 		setLoginPubkey,
-		setRelayConnector
+		setRelayConnector,
+		setSubscription
 	} from '$lib/resource.svelte';
 	import { RelayConnector } from '$lib/resource';
 	import Header from '$lib/components/Header.svelte';
@@ -68,7 +70,7 @@
 	let isEnabledUseClientTag: boolean = $state(false);
 	let deadRelays: string[] = $derived(getDeadRelays());
 	let rc: RelayConnector | undefined = $derived(getRelayConnector());
-	let sub: Subscription | undefined;
+	let sub: Subscription | undefined = $derived(getSubscription());
 	let eventsProfile: NostrEvent[] = $state([]);
 	const profileMap: Map<string, ProfileContentEvent> = $derived(
 		new Map<string, ProfileContentEvent>(
@@ -278,7 +280,11 @@
 				const idsInTimeline: Set<string> = new Set<string>(
 					[...timelineSliced, ...eventsQuoted].map((ev) => ev.id)
 				);
-				if (event !== undefined && idsInTimeline.has(event.id)) {
+				if (
+					event !== undefined &&
+					idsInTimeline.has(event.id) &&
+					[1, 6, 16, 42].includes(event.kind)
+				) {
 					rc.fetchNext(event, () => {}, true);
 				}
 				break;
@@ -463,7 +469,11 @@
 				[...timelineSliced, ...eventsQuoted].map((ev) => ev.id)
 			);
 			for (const event of eventsForFetchNext) {
-				if (event !== undefined && idsInTimeline.has(event.id)) {
+				if (
+					event !== undefined &&
+					idsInTimeline.has(event.id) &&
+					[1, 6, 16, 42].includes(event.kind)
+				) {
 					rc?.fetchNext(event, () => {}, true);
 					if (
 						kindSet.size > 0 ||
@@ -551,11 +561,13 @@
 			setRelayConnector(rc);
 			rc.setKindsBase(kindsSelected);
 			sub = rc.subscribeEventStore(callback);
+			setSubscription(sub);
 			if (loginPubkey !== undefined) {
 				pubkeySet.add(loginPubkey);
 			}
 		} else {
 			sub = rc.subscribeEventStore(callback);
+			setSubscription(sub);
 			//kind1は最後にしないと遅延セットしてるtimelineが虚無で上書きされてしまうので
 			const kinds = [
 				0, 3, 7, 8, 40, 41, 1018, 1068, 10000, 10001, 10002, 10005, 10006, 10030, 30078, 1

@@ -531,6 +531,13 @@ export class RelayConnector {
 							.find((tag) => tag.length >= 2 && tag[0] === 'endsAt' && /^\d+$/.test(tag[1]))
 							?.at(1) ?? '0'
 					);
+					const relays: string[] = Array.from(
+						new Set<string>(
+							event.tags
+								.filter((tag) => tag.length >= 2 && tag[0] === 'relay')
+								.map((tag) => normalizeURL(tag[1]))
+						)
+					);
 					const filters: Filter[] = [
 						{
 							kinds: [1018],
@@ -543,7 +550,11 @@ export class RelayConnector {
 							until: unixNow()
 						}
 					];
-					this.#rxReqBRg.emit(filters);
+					if (relays.length > 0) {
+						this.#rxReqBRg.emit(filters, { relays });
+					} else {
+						this.#rxReqBRg.emit(filters);
+					}
 				};
 				this.#setFetchListAfter10002([event.pubkey], fetchAfter10002);
 				break;
@@ -1381,6 +1392,9 @@ export class RelayConnector {
 						const event: NostrEvent | undefined = this.#eventStore.getEvent(currentEventPointer.id);
 						if (event !== undefined) {
 							this.fetchUserProfile(event);
+							if (event.kind === 1068) {
+								this.fetchNext(event, () => {}, false);
+							}
 						}
 					}
 				} else {

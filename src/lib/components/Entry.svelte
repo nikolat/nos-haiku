@@ -36,7 +36,7 @@
 	import { normalizeURL } from 'nostr-tools/utils';
 	import * as nip19 from 'nostr-tools/nip19';
 	import { getSatoshisAmountFromBolt11 } from 'nostr-tools/nip57';
-	import { getInboxes } from 'applesauce-core/helpers';
+	import { getAddressPointerForEvent, getInboxes } from 'applesauce-core/helpers';
 	import { _ } from 'svelte-i18n';
 
 	let {
@@ -194,7 +194,7 @@
 		const url = `https://bsky.app/profile/${m[1]}/post/${m[2]}`;
 		return url;
 	});
-	const clientInfo: { name: string; url: string } | undefined = $derived.by(() => {
+	const clientInfo: { name: string; naddr: nip19.NAddr } | undefined = $derived.by(() => {
 		const tag = event.tags.find((tag) => tag.length >= 3 && tag[0] === 'client');
 		const aId = tag?.at(2);
 		if (tag === undefined || aId === undefined) {
@@ -209,9 +209,8 @@
 			ap.relays = [relayHint];
 		}
 		const naddr = nip19.naddrEncode(ap);
-		const url = getClientURL(naddr);
 		const name = tag[1];
-		return { name, url };
+		return { name, naddr };
 	});
 	const contentWarningReason: string | null = $derived.by(() => {
 		const cwTag: string[] | undefined = event.tags.find((tag) => tag[0] === 'content-warning');
@@ -1824,6 +1823,8 @@
 										{event.content}
 									{:else}
 										{@const name = obj.name ?? obj.display_name ?? 'unknown'}
+										{@const ap = getAddressPointerForEvent(event, getSeenOn(event.id, true))}
+										{@const naddr = nip19.naddrEncode(ap)}
 										<div class="handler-information">
 											{#if URL.canParse(obj.banner ?? '')}
 												<img src={obj.banner} alt="banner" class="banner" />
@@ -1846,6 +1847,11 @@
 												{/if}
 											</p>
 											<p>{obj.about}</p>
+											<p>
+												<a href={getClientURL(naddr)} target="_blank" rel="noopener noreferrer"
+													>open in nostrapp.link</a
+												>
+											</p>
 										</div>
 									{/if}
 								{:else if event.kind === 39701}
@@ -2045,9 +2051,7 @@
 							{/if}
 							{#if clientInfo !== undefined}
 								<span class="via"
-									>via <a href={clientInfo.url} target="_blank" rel="noopener noreferrer"
-										>{clientInfo.name}</a
-									></span
+									>via <a href="/entry/{clientInfo.naddr}">{clientInfo.name}</a></span
 								>
 							{/if}
 						</dvi>

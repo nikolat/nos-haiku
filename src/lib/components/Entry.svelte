@@ -386,6 +386,15 @@
 		}
 		return undefined;
 	});
+	const naddrOfThisEvent: nip19.NAddr | null = $derived.by(() => {
+		let ap: nip19.AddressPointer;
+		try {
+			ap = getAddressPointerForEvent(event, getSeenOn(event.id, true));
+		} catch (_error) {
+			return null;
+		}
+		return nip19.naddrEncode(ap);
+	});
 
 	let zapWindowContainer: HTMLElement | undefined = $state();
 
@@ -404,8 +413,7 @@
 		let obj: HandlerInformation;
 		try {
 			obj = JSON.parse(content);
-		} catch (error) {
-			console.warn(error);
+		} catch (_error) {
 			return null;
 		}
 		return obj;
@@ -1823,8 +1831,6 @@
 										{event.content}
 									{:else}
 										{@const name = obj.name ?? obj.display_name ?? 'unknown'}
-										{@const ap = getAddressPointerForEvent(event, getSeenOn(event.id, true))}
-										{@const naddr = nip19.naddrEncode(ap)}
 										<div class="handler-information">
 											{#if URL.canParse(obj.banner ?? '')}
 												<img src={obj.banner} alt="banner" class="banner" />
@@ -1847,11 +1853,15 @@
 												{/if}
 											</p>
 											<p>{obj.about}</p>
-											<p>
-												<a href={getClientURL(naddr)} target="_blank" rel="noopener noreferrer"
-													>open in nostrapp.link</a
-												>
-											</p>
+											{#if naddrOfThisEvent !== null}
+												<p>
+													<a
+														href={getClientURL(naddrOfThisEvent)}
+														target="_blank"
+														rel="noopener noreferrer">open in nostrapp.link</a
+													>
+												</p>
+											{/if}
 										</div>
 									{/if}
 								{:else if event.kind === 39701}

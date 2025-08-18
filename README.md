@@ -57,6 +57,10 @@ This is a mini-blog modeled after [Sudo Haiku](https://h.sudo.ne.jp/), built usi
 
 - [emoji-mart](https://github.com/missive/emoji-mart)
 
+### Effect
+
+- [canvas-confetti](https://github.com/catdad/canvas-confetti)
+
 ## License
 
 - base HTML, CSS, and some images ... (c) h.sudo.ne.jp

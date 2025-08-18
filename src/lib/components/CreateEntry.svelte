@@ -21,6 +21,7 @@
 	} from '$lib/nip96';
 	import { getToken } from 'nostr-tools/nip98';
 	import { unixNow } from 'applesauce-core/helpers';
+	import confetti from 'canvas-confetti';
 	import { _ } from 'svelte-i18n';
 	import { browser } from '$app/environment';
 
@@ -71,6 +72,7 @@
 	let imetaMap: Map<string, FileUploadResponse> = new Map<string, FileUploadResponse>();
 	let inputFile: HTMLInputElement;
 	let textArea: HTMLTextAreaElement;
+	let postButton: HTMLButtonElement;
 
 	let emojiPickerContainer: HTMLElement | undefined = $state();
 	const callGetEmoji = () => {
@@ -295,6 +297,20 @@
 		previewEvent = previewEventToShow;
 	});
 
+	const callConfetti = (): void => {
+		let centerX: number;
+		let centerY: number;
+		const rect = postButton.getBoundingClientRect();
+		centerX = rect.x + rect.width / 2;
+		centerY = rect.y + rect.height / 2;
+		confetti({
+			origin: {
+				x: centerX / window.innerWidth,
+				y: centerY / window.innerHeight
+			}
+		});
+	};
+
 	const callSendNote = () => {
 		if (loginPubkey === undefined || !canSendNote) {
 			return;
@@ -344,6 +360,11 @@
 				goto(`/entry/${nevent}`);
 			}
 		});
+		//8/19はハイクの日
+		const today = new Date();
+		if (today.getMonth() + 1 === 8 && today.getDate() === 19) {
+			callConfetti();
+		}
 	};
 
 	const hasCustomEmoji: boolean = $derived(
@@ -670,7 +691,7 @@
 			</div>
 		{/if}
 		<div class="CreateEntry__actions">
-			<button class="Button" disabled={!canSendNote} onclick={callSendNote}>
+			<button class="Button" disabled={!canSendNote} onclick={callSendNote} bind:this={postButton}>
 				<span>{$_('CreateEntry.post')}</span>
 			</button>
 			{#if eventToReply !== undefined}

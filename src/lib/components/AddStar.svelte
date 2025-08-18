@@ -4,6 +4,7 @@
 	import Reaction from '$lib/components/kinds/Reaction.svelte';
 	import type { NostrEvent } from 'nostr-tools/pure';
 	import type { ProfileContent } from 'applesauce-core/helpers';
+	import confetti from 'canvas-confetti';
 
 	let {
 		sendReaction,
@@ -53,8 +54,55 @@
 			({ emojiStr, emojiUrl }: { emojiStr: string; emojiUrl: string | undefined }) => {
 				isEmojiPickerOpened = false;
 				sendReaction(emojiStr, emojiUrl);
+				callConfetti();
 			}
 		);
+	};
+
+	let postButton: HTMLButtonElement;
+	const defaults = {
+		spread: 360,
+		ticks: 50,
+		gravity: 0,
+		decay: 0.94,
+		startVelocity: 30,
+		colors: ['FFE400', 'FFBD00', 'E89400', 'FFCA6C', 'FDFFB8']
+	};
+	const shoot = (): void => {
+		let centerX: number;
+		let centerY: number;
+		const rect = postButton.getBoundingClientRect();
+		centerX = rect.x + rect.width / 2;
+		centerY = rect.y + rect.height / 2;
+		confetti({
+			...defaults,
+			particleCount: 40,
+			scalar: 1.2,
+			shapes: ['star'],
+			origin: {
+				x: centerX / window.innerWidth,
+				y: centerY / window.innerHeight
+			}
+		});
+		confetti({
+			...defaults,
+			particleCount: 10,
+			scalar: 0.75,
+			shapes: ['circle'],
+			origin: {
+				x: centerX / window.innerWidth,
+				y: centerY / window.innerHeight
+			}
+		});
+	};
+	const callConfetti = (): void => {
+		//8/19はハイクの日
+		const today = new Date();
+		if (today.getMonth() + 1 === 8 && today.getDate() === 19) {
+			setTimeout(shoot, 0);
+			setTimeout(shoot, 100);
+			setTimeout(shoot, 200);
+		}
 	};
 </script>
 
@@ -65,8 +113,10 @@
 		disabled={loginPubkey === undefined}
 		onclick={() => {
 			sendReaction();
+			callConfetti();
 		}}
 		aria-label="add a star"
+		bind:this={postButton}
 	>
 		<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16">
 			<path

@@ -54,54 +54,93 @@
 			({ emojiStr, emojiUrl }: { emojiStr: string; emojiUrl: string | undefined }) => {
 				isEmojiPickerOpened = false;
 				sendReaction(emojiStr, emojiUrl);
-				callConfetti();
+				callConfetti(emojiStr, emojiUrl);
 			}
 		);
 	};
 
 	let postButton: HTMLButtonElement;
-	const defaults = {
-		spread: 360,
-		ticks: 50,
-		gravity: 0,
-		decay: 0.94,
-		startVelocity: 30,
-		colors: ['FFE400', 'FFBD00', 'E89400', 'FFCA6C', 'FDFFB8']
-	};
 	const shoot = (): void => {
-		let centerX: number;
-		let centerY: number;
+		const defaults = {
+			spread: 360,
+			ticks: 50,
+			gravity: 0,
+			decay: 0.94,
+			startVelocity: 30,
+			colors: ['FFE400', 'FFBD00', 'E89400', 'FFCA6C', 'FDFFB8']
+		};
 		const rect = postButton.getBoundingClientRect();
-		centerX = rect.x + rect.width / 2;
-		centerY = rect.y + rect.height / 2;
+		const centerX: number = rect.x + rect.width / 2;
+		const centerY: number = rect.y + rect.height / 2;
+		const origin = {
+			x: centerX / window.innerWidth,
+			y: centerY / window.innerHeight
+		};
 		confetti({
 			...defaults,
 			particleCount: 40,
 			scalar: 1.2,
 			shapes: ['star'],
-			origin: {
-				x: centerX / window.innerWidth,
-				y: centerY / window.innerHeight
-			}
+			origin
 		});
 		confetti({
 			...defaults,
 			particleCount: 10,
 			scalar: 0.75,
 			shapes: ['circle'],
-			origin: {
-				x: centerX / window.innerWidth,
-				y: centerY / window.innerHeight
-			}
+			origin
 		});
 	};
-	const callConfetti = (): void => {
+	const shootStar = (): void => {
+		setTimeout(shoot, 0);
+		setTimeout(shoot, 100);
+		setTimeout(shoot, 200);
+	};
+	const shootText = (emojiStr: string): void => {
+		const scalar = 2;
+		const emoji = confetti.shapeFromText({ text: emojiStr, scalar });
+		const defaults = {
+			spread: 360,
+			ticks: 60,
+			gravity: 0,
+			decay: 0.96,
+			startVelocity: 20,
+			shapes: [emoji],
+			scalar
+		};
+		confetti({
+			...defaults,
+			particleCount: 30
+		});
+		confetti({
+			...defaults,
+			particleCount: 5,
+			flat: true
+		});
+		confetti({
+			...defaults,
+			particleCount: 15,
+			scalar: scalar / 2,
+			shapes: ['circle']
+		});
+	};
+	const shootEmoji = (emojiStr: string): void => {
+		const shootF = () => {
+			shootText(emojiStr);
+		};
+		setTimeout(shootF, 0);
+		setTimeout(shootF, 100);
+		setTimeout(shootF, 200);
+	};
+	const callConfetti = (emojiStr?: string, emojiUrl?: string): void => {
 		//8/19はハイクの日
 		const today = new Date();
 		if (today.getMonth() + 1 === 8 && today.getDate() === 19) {
-			setTimeout(shoot, 0);
-			setTimeout(shoot, 100);
-			setTimeout(shoot, 200);
+			if (emojiStr !== undefined && emojiUrl === undefined) {
+				shootEmoji(emojiStr);
+			} else {
+				shootStar();
+			}
 		}
 	};
 </script>

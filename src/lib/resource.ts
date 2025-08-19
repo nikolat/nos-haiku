@@ -1122,7 +1122,8 @@ export class RelayConnector {
 		followingPubkeys: string[],
 		limit: number,
 		until?: number,
-		completeCustom?: () => void
+		completeCustom?: () => void,
+		isFirstFetch?: boolean
 	) => {
 		const {
 			currentAddressPointer,
@@ -1344,77 +1345,72 @@ export class RelayConnector {
 				});
 			rxReqBCustom.emit(filtersB, options);
 			rxReqBCustom.over();
+		}
+		if (!isFirstFetch) {
 			return; //追加読み込みはここで終了
-		} else {
-			for (const filterB of filtersB) {
-				if (filterB.kinds?.every((kind) => isAddressableKind(kind))) {
-					if (currentAddressPointer === undefined) {
-						this.#rxReqBAd.emit(filterB, options);
-						if (currentProfilePointer !== undefined) {
-							this.#setFetchListAfter0(currentProfilePointer.pubkey, () => {
-								const event = this.getReplaceableEvent(0, currentProfilePointer.pubkey);
-								if (event !== undefined) {
-									this.#fetchEventsQuoted(event);
-								}
-							});
-						}
-					} else {
-						this.#rxReqBAd.emit(filterB, options);
-						if (!this.#eventStore.hasReplaceable(0, currentAddressPointer.pubkey)) {
-							this.#fetchProfile(currentAddressPointer.pubkey);
-						}
-						const event: NostrEvent | undefined = this.getReplaceableEvent(
-							currentAddressPointer.kind,
-							currentAddressPointer.pubkey,
-							currentAddressPointer.identifier
-						);
-						if (event !== undefined) {
-							this.fetchUserProfile(event);
-						}
-					}
-				} else if (filterB.kinds?.every((kind) => isReplaceableKind(kind))) {
-					this.#rxReqBRp.emit(filterB, options);
-					if (currentAddressPointer !== undefined) {
-						if (!this.#eventStore.hasReplaceable(0, currentAddressPointer.pubkey)) {
-							this.#fetchProfile(currentAddressPointer.pubkey);
-						}
-						const event: NostrEvent | undefined = this.getReplaceableEvent(
-							currentAddressPointer.kind,
-							currentAddressPointer.pubkey
-						);
-						if (event !== undefined) {
-							this.fetchUserProfile(event);
-						}
-					}
-				} else if (filterB.ids !== undefined) {
-					this.#rxReqBId.emit(filterB, options);
-					if (currentEventPointer !== undefined) {
-						if (
-							currentEventPointer?.author !== undefined &&
-							!this.#eventStore.hasReplaceable(0, currentEventPointer.author)
-						) {
-							this.#fetchProfile(currentEventPointer.author);
-						}
-						const event: NostrEvent | undefined = this.#eventStore.getEvent(currentEventPointer.id);
-						if (event !== undefined) {
-							this.fetchUserProfile(event);
-							if (event.kind === 1068) {
-								this.fetchNext(event, () => {}, false);
+		}
+		for (const filterB of filtersB) {
+			if (filterB.kinds?.every((kind) => isAddressableKind(kind))) {
+				if (currentAddressPointer === undefined) {
+					if (currentProfilePointer !== undefined) {
+						this.#setFetchListAfter0(currentProfilePointer.pubkey, () => {
+							const event = this.getReplaceableEvent(0, currentProfilePointer.pubkey);
+							if (event !== undefined) {
+								this.#fetchEventsQuoted(event);
 							}
-						}
+						});
 					}
 				} else {
-					this.#rxReqBRg.emit(filterB, options);
+					if (!this.#eventStore.hasReplaceable(0, currentAddressPointer.pubkey)) {
+						this.#fetchProfile(currentAddressPointer.pubkey);
+					}
+					const event: NostrEvent | undefined = this.getReplaceableEvent(
+						currentAddressPointer.kind,
+						currentAddressPointer.pubkey,
+						currentAddressPointer.identifier
+					);
+					if (event !== undefined) {
+						this.fetchUserProfile(event);
+					}
+				}
+			} else if (filterB.kinds?.every((kind) => isReplaceableKind(kind))) {
+				if (currentAddressPointer !== undefined) {
+					if (!this.#eventStore.hasReplaceable(0, currentAddressPointer.pubkey)) {
+						this.#fetchProfile(currentAddressPointer.pubkey);
+					}
+					const event: NostrEvent | undefined = this.getReplaceableEvent(
+						currentAddressPointer.kind,
+						currentAddressPointer.pubkey
+					);
+					if (event !== undefined) {
+						this.fetchUserProfile(event);
+					}
+				}
+			} else if (filterB.ids !== undefined) {
+				if (currentEventPointer !== undefined) {
+					if (
+						currentEventPointer?.author !== undefined &&
+						!this.#eventStore.hasReplaceable(0, currentEventPointer.author)
+					) {
+						this.#fetchProfile(currentEventPointer.author);
+					}
+					const event: NostrEvent | undefined = this.#eventStore.getEvent(currentEventPointer.id);
+					if (event !== undefined) {
+						this.fetchUserProfile(event);
+						if (event.kind === 1068) {
+							this.fetchNext(event, () => {}, false);
+						}
+					}
 				}
 			}
-			if (currentProfilePointer !== undefined) {
-				const authors = [currentProfilePointer.pubkey];
-				this.#rxReqBRp.emit({ kinds: [10001, 10005], authors, until: now }, options);
-				this.#rxReqBAd.emit(
-					{ kinds: [30008], authors, '#d': ['profile_badges'], until: now },
-					options
-				);
-			}
+		}
+		if (currentProfilePointer !== undefined) {
+			const authors = [currentProfilePointer.pubkey];
+			this.#rxReqBRp.emit({ kinds: [10001, 10005], authors, until: now }, options);
+			this.#rxReqBAd.emit(
+				{ kinds: [30008], authors, '#d': ['profile_badges'], until: now },
+				options
+			);
 		}
 		const since = now + 1;
 		const filtersF: LazyFilter[] = [];

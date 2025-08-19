@@ -591,6 +591,21 @@
 		loginPubkey: string | undefined,
 		pubkeys: string[]
 	) => {
+		const fetchTimeline = (): void => {
+			rc.fetchTimeline(
+				up,
+				urlSearchParams,
+				loginPubkey,
+				followingPubkeys,
+				limit,
+				undefined,
+				() => {
+					isLoading = false;
+				},
+				true
+			);
+		};
+		isLoading = true;
 		if (pubkeys.length > 0) {
 			rc.fetchKind10002(pubkeys, () => {
 				if (loginPubkey !== undefined && eventFollowList === undefined) {
@@ -606,18 +621,18 @@
 								.map((tag) => tag[1]) ?? [];
 						if (pubkeysSecond.length > 0) {
 							rc.fetchKind10002(pubkeysSecond, () => {
-								rc.fetchTimeline(up, urlSearchParams, loginPubkey, followingPubkeys, limit);
+								fetchTimeline();
 							});
 						} else {
-							rc.fetchTimeline(up, urlSearchParams, loginPubkey, followingPubkeys, limit);
+							fetchTimeline();
 						}
 					});
 				} else {
-					rc.fetchTimeline(up, urlSearchParams, loginPubkey, followingPubkeys, limit);
+					fetchTimeline();
 				}
 			});
 		} else {
-			rc.fetchTimeline(up, urlSearchParams, loginPubkey, followingPubkeys, limit);
+			fetchTimeline();
 		}
 	};
 

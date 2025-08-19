@@ -120,7 +120,7 @@ export class RelayConnector {
 	#uniq: MonoTypeOperatorFunction<EventPacket>;
 	#eventIds: Set<string>;
 
-	#secOnCompleteTimeout = 1000;
+	#secOnCompleteTimeout = 2000;
 	#secBufferTime = 1000;
 	#limitReaction = 500;
 	#limitComment = 500;

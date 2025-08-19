@@ -36,6 +36,7 @@
 	import {
 		getAddressPointerFromATag,
 		getProfileContent,
+		getTagValue,
 		isValidProfile,
 		unixNow
 	} from 'applesauce-core/helpers';
@@ -229,7 +230,22 @@
 						});
 					}
 				} else if (up.currentChannelPointer !== undefined) {
-					tl = rc.getEventsByFilter({ kinds: [42], '#e': [up.currentChannelPointer.id] });
+					tl = rc
+						.getEventsByFilter([
+							{ kinds: [42], '#e': [up.currentChannelPointer.id] },
+							{ kinds: [16], '#k': ['42'] }
+						])
+						.filter(
+							(ev) =>
+								ev.kind !== 16 ||
+								rc
+									?.getEventsByFilter({ ids: [getTagValue(ev, 'e') ?? ''] })
+									.at(0)
+									?.tags.some(
+										(tag) =>
+											tag[0] === 'e' && tag[1] === up.currentChannelPointer?.id && tag[3] === 'root'
+									)
+						);
 				} else if (up.query !== undefined) {
 					if (kindSet.size === 0) {
 						tl = rc.getEventsByFilter([{ kinds: [42] }, { kinds: [16], '#k': ['42'] }]);

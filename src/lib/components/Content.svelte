@@ -256,24 +256,39 @@
 			{:else}
 				<a href={url} target="_blank" rel="noopener noreferrer">{url}</a>
 			{/if}
-		{:else if /^https?:\/\/\S+\.(jpe?g|png|gif|webp|svg)/i.test(url)}
-			<!-- svelte-ignore a11y_click_events_have_key_events -->
-			<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
-			<img
-				alt=""
-				class="Image"
-				src={url}
-				onclick={(e) => e.currentTarget.classList.toggle('expanded')}
-			/>
-		{:else if /^https?:\/\/\S+\.(mp4|mov)/i.test(url)}
-			<video controls preload="metadata">
-				<track kind="captions" />
-				<source src={url} />
-			</video>
-		{:else if /^https?:\/\/\S+\.(mp3|m4a|wav|ogg|aac)/i.test(url)}
-			<audio controls preload="metadata" src={url}></audio>
 		{:else}
-			<a href={url} target="_blank" rel="noopener noreferrer">{url}</a>
+			{#await fetch(url, { method: 'HEAD' })}
+				<a href={url} target="_blank" rel="noopener noreferrer">{url}</a>
+			{:then response}
+				{#if response.ok}
+					{@const ctype = response.headers.get('content-type')}
+					{#if ctype === null}
+						<a href={url} target="_blank" rel="noopener noreferrer">{url}</a>
+					{:else if ctype.startsWith('image/')}
+						<!-- svelte-ignore a11y_click_events_have_key_events -->
+						<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
+						<img
+							alt=""
+							class="Image"
+							src={url}
+							onclick={(e) => e.currentTarget.classList.toggle('expanded')}
+						/>
+					{:else if ctype.startsWith('video/')}
+						<video controls preload="metadata">
+							<track kind="captions" />
+							<source src={url} />
+						</video>
+					{:else if ctype.startsWith('audio/')}
+						<audio controls preload="metadata" src={url}></audio>
+					{:else}
+						<a href={url} target="_blank" rel="noopener noreferrer">{url}</a>
+					{/if}
+				{:else}
+					<a href={url} target="_blank" rel="noopener noreferrer">{url}</a>
+				{/if}
+			{:catch _error}
+				<a href={url} target="_blank" rel="noopener noreferrer">{url}</a>
+			{/await}
 		{/if}{rest}
 	{:else if ct.type === 'relay'}
 		<a href={appendRelay(location.href, ct.href)}>{ct.value}</a>

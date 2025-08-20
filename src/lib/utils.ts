@@ -263,10 +263,22 @@ export const splitNip51ListPublic = (
 };
 
 export const getEncrypt = (): ((pubkey: string, plaintext: string) => Promise<string>) | null => {
-	if (window.nostr?.nip44 !== undefined) {
+	if (window.nostr?.nip44?.encrypt !== undefined) {
 		return window.nostr.nip44.encrypt;
-	} else if (window.nostr?.nip04 !== undefined) {
+	} else if (window.nostr?.nip04?.encrypt !== undefined) {
 		return window.nostr.nip04.encrypt;
+	}
+	return null;
+};
+
+const getDecrypt = (
+	content: string
+): ((pubkey: string, ciphertext: string) => Promise<string>) | null => {
+	const isNIP04: boolean = content.includes('?iv=');
+	if (isNIP04 && window.nostr?.nip04?.decrypt !== undefined) {
+		return window.nostr.nip04.decrypt;
+	} else if (window.nostr?.nip44?.decrypt !== undefined) {
+		return window.nostr.nip44.decrypt;
 	}
 	return null;
 };
@@ -299,17 +311,10 @@ export const splitNip51List = async (
 	const tagList: string[][] = event.tags;
 	let contentList: string[][] = [];
 	if (event.content.length > 0) {
-		const isNIP04: boolean = event.content.includes('?iv=');
-		if (isNIP04 && window.nostr?.nip04 !== undefined) {
+		const decrypt = getDecrypt(event.content);
+		if (decrypt !== null) {
 			try {
-				const content = await window.nostr.nip04.decrypt(loginPubkey, event.content);
-				contentList = JSON.parse(content);
-			} catch (error) {
-				console.warn(error);
-			}
-		} else if (window.nostr?.nip44 !== undefined) {
-			try {
-				const content = await window.nostr.nip44.decrypt(loginPubkey, event.content);
+				const content = await decrypt(loginPubkey, event.content);
 				contentList = JSON.parse(content);
 			} catch (error) {
 				console.warn(error);

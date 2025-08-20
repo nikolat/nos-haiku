@@ -386,7 +386,7 @@
 		}
 		return undefined;
 	});
-	const naddrOfThisEvent: nip19.NAddr | null = $derived.by(() => {
+	const getNaddrOfThisEvent = (event: NostrEvent): nip19.NAddr | null => {
 		let ap: nip19.AddressPointer;
 		try {
 			ap = getAddressPointerForEvent(event, getSeenOn(event.id, true));
@@ -394,7 +394,8 @@
 			return null;
 		}
 		return nip19.naddrEncode(ap);
-	});
+	};
+	const naddrOfThisEvent: nip19.NAddr | null = $state(getNaddrOfThisEvent(event));
 
 	let zapWindowContainer: HTMLElement | undefined = $state();
 

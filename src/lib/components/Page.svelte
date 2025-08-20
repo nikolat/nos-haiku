@@ -252,6 +252,9 @@
 					eventsPinList
 				)
 	);
+	const currentPubkey: string | undefined = $derived(
+		currentProfilePointer?.pubkey ?? currentAddressPointer?.pubkey ?? currentEventPointer?.author
+	);
 	let showSetting: boolean = $state(false);
 	const handlerSetting = (ev: MouseEvent): void => {
 		const target: HTMLElement | null = ev.target as HTMLElement | null;
@@ -321,24 +324,20 @@
 <main class="Homepage View">
 	<div class="Layout">
 		<div
-			class={currentProfilePointer === undefined
+			class={currentPubkey === undefined
 				? 'Column Column--left Column--nomobile'
 				: 'Column Column--left'}
 		>
-			<div class={currentProfilePointer === undefined ? 'Card' : 'Card Card--nomargin'}>
-				{#if currentProfilePointer === undefined}
+			<div class={currentPubkey === undefined ? 'Card' : 'Card Card--nomargin'}>
+				{#if currentPubkey === undefined}
 					<div class="Card__head">
 						<h3 class="Card__title">
 							<i class="fa-fw fas fa-users"></i>{$_('Page.left.recent-users')}
 						</h3>
 					</div>
 				{/if}
-				<div
-					class={currentProfilePointer === undefined
-						? 'Card__body'
-						: 'Card__body Card__body--nopad'}
-				>
-					{#if currentProfilePointer === undefined}
+				<div class={currentPubkey === undefined ? 'Card__body' : 'Card__body Card__body--nopad'}>
+					{#if currentPubkey === undefined}
 						<div class="UserList UserList--grid">
 							{#each profilePubkeysActive as pubkey (pubkey)}
 								{@const prof = profileMap.get(pubkey)}
@@ -358,7 +357,7 @@
 						<Profile
 							{rc}
 							{loginPubkey}
-							currentPubkey={currentProfilePointer.pubkey}
+							{currentPubkey}
 							{profileMap}
 							{channelMap}
 							{eventsTimeline}
@@ -1014,9 +1013,9 @@
 			</div>
 		</div>
 		<div class="Column Column--right">
-			{#if isAntenna ? loginPubkey !== undefined : currentProfilePointer !== undefined}
+			{#if isAntenna ? loginPubkey !== undefined : currentPubkey !== undefined}
 				{@const channelBookmarkIds = channelBookmarkMap.get(
-					(isAntenna ? loginPubkey : currentProfilePointer?.pubkey)!
+					(isAntenna ? loginPubkey : currentPubkey)!
 				)}
 				<div class="Card">
 					<div class="Card__head">

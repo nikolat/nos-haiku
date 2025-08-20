@@ -1404,8 +1404,10 @@ export class RelayConnector {
 				}
 			}
 		}
-		if (currentProfilePointer !== undefined) {
-			const authors = [currentProfilePointer.pubkey];
+		const currentPubkey: string | undefined =
+			currentProfilePointer?.pubkey ?? currentAddressPointer?.pubkey ?? currentEventPointer?.author;
+		if (currentPubkey !== undefined) {
+			const authors = [currentPubkey];
 			this.#rxReqBRp.emit({ kinds: [10001, 10005], authors, until: now }, options);
 			this.#rxReqBAd.emit(
 				{ kinds: [30008], authors, '#d': ['profile_badges'], until: now },

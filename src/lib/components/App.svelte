@@ -724,7 +724,7 @@
 	const limit: number = 10;
 	let countToShow: number = $state(limit);
 	let countToShowMax: number = limit;
-	const scopeCountToShow: number = 3 * limit;
+	const scopeCountToShow: number = 5 * limit;
 	const timelineSliced: NostrEvent[] = $derived(
 		eventsTimeline.slice(
 			countToShow - scopeCountToShow > 0 ? countToShow - scopeCountToShow : 0,
@@ -754,7 +754,7 @@
 		countToShowMax = Math.max(countToShowMax, countToShow);
 		setTimeout(() => {
 			if (countToShow > scopeCountToShow) {
-				lastChild?.scrollIntoView({ block: 'end' });
+				lastChild?.scrollIntoView({ block: 'end', behavior: 'smooth' });
 			}
 			isLoading = false;
 		}, 10);
@@ -815,7 +815,7 @@
 					const secondChild = document.querySelector('.FeedList > .Entry:nth-child(2)');
 					countToShow = Math.max(countToShow - limit, scopeCountToShow);
 					setTimeout(() => {
-						secondChild?.scrollIntoView({ block: 'start' });
+						secondChild?.scrollIntoView({ block: 'start', behavior: 'smooth' });
 					}, 10);
 				}
 			}

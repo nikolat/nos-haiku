@@ -67,6 +67,7 @@ import type { FileUploadResponse } from '$lib/nip96';
 import {
 	getAddressPointerFromAId,
 	getChannelContent,
+	getEncrypt,
 	getEvent9734,
 	getIdsForFilter,
 	getPubkeyIfValid,
@@ -1825,8 +1826,9 @@ export class RelayConnector {
 		loginPubkey: string,
 		eventMuteList: NostrEvent | undefined
 	): Promise<Observable<OkPacketAgainstEvent>> => {
-		if (window.nostr?.nip04 === undefined) {
-			throw new Error('window.nostr.nip04 is undefined');
+		const encrypt = getEncrypt();
+		if (window.nostr === undefined || encrypt === null) {
+			throw new Error('window.nostr.nipXX.encrypt is undefined');
 		}
 		const kind = 10000;
 		let tags: string[][];
@@ -1838,14 +1840,11 @@ export class RelayConnector {
 		}
 		if (eventMuteList === undefined) {
 			tags = [];
-			content = await window.nostr.nip04.encrypt(loginPubkey, JSON.stringify([pTag]));
+			content = await encrypt(loginPubkey, JSON.stringify([pTag]));
 		} else {
 			const { tagList, contentList } = await splitNip51List(eventMuteList, loginPubkey);
 			tags = tagList;
-			content = await window.nostr.nip04.encrypt(
-				loginPubkey,
-				JSON.stringify([...contentList, pTag])
-			);
+			content = await encrypt(loginPubkey, JSON.stringify([...contentList, pTag]));
 		}
 		const eventTemplate: EventTemplate = {
 			kind,
@@ -1862,8 +1861,9 @@ export class RelayConnector {
 		loginPubkey: string,
 		eventMuteList: NostrEvent | undefined
 	): Promise<Observable<OkPacketAgainstEvent>> => {
-		if (window.nostr?.nip04 === undefined) {
-			throw new Error('window.nostr.nip04 is undefined');
+		const encrypt = getEncrypt();
+		if (window.nostr === undefined || encrypt === null) {
+			throw new Error('window.nostr.nipXX.encrypt is undefined');
 		}
 		if (eventMuteList === undefined) {
 			throw new Error('kind:10000 event does not exist');
@@ -1876,7 +1876,7 @@ export class RelayConnector {
 			(tag) => tag.length >= 2 && tag[0] === 'p' && tag[1] === pubkey
 		)
 			? eventMuteList.content
-			: await window.nostr.nip04.encrypt(
+			: await encrypt(
 					loginPubkey,
 					JSON.stringify(
 						contentList.filter((tag) => !(tag.length >= 2 && tag[0] === 'p' && tag[1] === pubkey))
@@ -1897,8 +1897,9 @@ export class RelayConnector {
 		loginPubkey: string,
 		eventMuteList: NostrEvent | undefined
 	): Promise<Observable<OkPacketAgainstEvent>> => {
-		if (window.nostr?.nip04 === undefined) {
-			throw new Error('window.nostr.nip04 is undefined');
+		const encrypt = getEncrypt();
+		if (window.nostr === undefined || encrypt === null) {
+			throw new Error('window.nostr.nipXX.encrypt is undefined');
 		}
 		const kind = 10000;
 		let tags: string[][];
@@ -1907,14 +1908,11 @@ export class RelayConnector {
 		const eTag: string[] = ['e', channel.id, recommendedRelay ?? '', channel.pubkey];
 		if (eventMuteList === undefined) {
 			tags = [];
-			content = await window.nostr.nip04.encrypt(loginPubkey, JSON.stringify([eTag]));
+			content = await encrypt(loginPubkey, JSON.stringify([eTag]));
 		} else {
 			const { tagList, contentList } = await splitNip51List(eventMuteList, loginPubkey);
 			tags = tagList;
-			content = await window.nostr.nip04.encrypt(
-				loginPubkey,
-				JSON.stringify([...contentList, eTag])
-			);
+			content = await encrypt(loginPubkey, JSON.stringify([...contentList, eTag]));
 		}
 		const eventTemplate: EventTemplate = {
 			kind,
@@ -1931,8 +1929,9 @@ export class RelayConnector {
 		loginPubkey: string,
 		eventMuteList: NostrEvent | undefined
 	): Promise<Observable<OkPacketAgainstEvent>> => {
-		if (window.nostr?.nip04 === undefined) {
-			throw new Error('window.nostr.nip04 is undefined');
+		const encrypt = getEncrypt();
+		if (window.nostr === undefined || encrypt === null) {
+			throw new Error('window.nostr.nipXX.encrypt is undefined');
 		}
 		if (eventMuteList === undefined) {
 			throw new Error('kind:10000 event does not exist');
@@ -1945,7 +1944,7 @@ export class RelayConnector {
 			(tag) => tag.length >= 2 && tag[0] === 'e' && tag[1] === channelId
 		)
 			? eventMuteList.content
-			: await window.nostr.nip04.encrypt(
+			: await encrypt(
 					loginPubkey,
 					JSON.stringify(
 						contentList.filter(
@@ -1968,8 +1967,9 @@ export class RelayConnector {
 		loginPubkey: string,
 		eventMuteList: NostrEvent | undefined
 	): Promise<Observable<OkPacketAgainstEvent>> => {
-		if (window.nostr?.nip04 === undefined) {
-			throw new Error('window.nostr is undefined');
+		const encrypt = getEncrypt();
+		if (window.nostr === undefined || encrypt === null) {
+			throw new Error('window.nostr.nipXX.encrypt is undefined');
 		}
 		if (eventMuteList === undefined) {
 			throw new Error('kind:10000 event does not exist');
@@ -1982,7 +1982,7 @@ export class RelayConnector {
 			(tag) => tag.length >= 2 && tag[0] === 'word' && tag[1] === word
 		)
 			? eventMuteList.content
-			: await window.nostr.nip04.encrypt(
+			: await encrypt(
 					loginPubkey,
 					JSON.stringify(
 						contentList.filter((tag) => !(tag.length >= 2 && tag[0] === 'word' && tag[1] === word))
@@ -2003,22 +2003,20 @@ export class RelayConnector {
 		loginPubkey: string,
 		eventMuteList: NostrEvent | undefined
 	): Promise<Observable<OkPacketAgainstEvent>> => {
-		if (window.nostr?.nip04 === undefined) {
-			throw new Error('window.nostr is undefined');
+		const encrypt = getEncrypt();
+		if (window.nostr === undefined || encrypt === null) {
+			throw new Error('window.nostr.nipXX.encrypt is undefined');
 		}
 		const kind = 10000;
 		let tags: string[][];
 		let content: string;
 		if (eventMuteList === undefined) {
 			tags = [];
-			content = await window.nostr.nip04.encrypt(loginPubkey, JSON.stringify([['t', hashtag]]));
+			content = await encrypt(loginPubkey, JSON.stringify([['t', hashtag]]));
 		} else {
 			const { tagList, contentList } = await splitNip51List(eventMuteList, loginPubkey);
 			tags = tagList;
-			content = await window.nostr.nip04.encrypt(
-				loginPubkey,
-				JSON.stringify([...contentList, ['t', hashtag]])
-			);
+			content = await encrypt(loginPubkey, JSON.stringify([...contentList, ['t', hashtag]]));
 		}
 		const eventTemplate: EventTemplate = {
 			kind,
@@ -2035,8 +2033,9 @@ export class RelayConnector {
 		loginPubkey: string,
 		eventMuteList: NostrEvent | undefined
 	): Promise<Observable<OkPacketAgainstEvent>> => {
-		if (window.nostr?.nip04 === undefined) {
-			throw new Error('window.nostr is undefined');
+		const encrypt = getEncrypt();
+		if (window.nostr === undefined || encrypt === null) {
+			throw new Error('window.nostr.nipXX.encrypt is undefined');
 		}
 		if (eventMuteList === undefined) {
 			throw new Error('kind:10000 event does not exist');
@@ -2049,7 +2048,7 @@ export class RelayConnector {
 			(tag) => tag.length >= 2 && tag[0] === 't' && tag[1].toLowerCase() === hashtag
 		)
 			? eventMuteList.content
-			: await window.nostr.nip04.encrypt(
+			: await encrypt(
 					loginPubkey,
 					JSON.stringify(
 						contentList.filter(
@@ -2101,8 +2100,9 @@ export class RelayConnector {
 		loginPubkey: string,
 		eventMyPublicChatsList: NostrEvent | undefined
 	): Promise<Observable<OkPacketAgainstEvent>> => {
-		if (window.nostr?.nip04 === undefined) {
-			throw new Error('window.nostr.nip04 is undefined');
+		const encrypt = getEncrypt();
+		if (window.nostr === undefined || encrypt === null) {
+			throw new Error('window.nostr.nipXX.encrypt is undefined');
 		}
 		if (eventMyPublicChatsList === undefined) {
 			throw new Error('kind:10005 event does not exist');
@@ -2115,7 +2115,7 @@ export class RelayConnector {
 			(tag) => tag.length >= 2 && tag[0] === 'e' && tag[1] === channelId
 		)
 			? eventMyPublicChatsList.content
-			: await window.nostr.nip04.encrypt(
+			: await encrypt(
 					loginPubkey,
 					JSON.stringify(
 						contentList.filter(

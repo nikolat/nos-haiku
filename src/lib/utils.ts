@@ -262,6 +262,15 @@ export const splitNip51ListPublic = (
 	return { pPub, ePub, wPub, tPub, tagList };
 };
 
+export const getEncrypt = (): ((pubkey: string, plaintext: string) => Promise<string>) | null => {
+	if (window.nostr?.nip44 !== undefined) {
+		return window.nostr.nip44.encrypt;
+	} else if (window.nostr?.nip04 !== undefined) {
+		return window.nostr.nip04.encrypt;
+	}
+	return null;
+};
+
 export const splitNip51List = async (
 	event: NostrEvent,
 	loginPubkey: string
@@ -289,12 +298,22 @@ export const splitNip51List = async (
 	let [pSec, eSec, wSec, tSec]: [string[], string[], string[], string[]] = [[], [], [], []];
 	const tagList: string[][] = event.tags;
 	let contentList: string[][] = [];
-	if (event.content.length > 0 && window.nostr?.nip04 !== undefined) {
-		try {
-			const content = await window.nostr.nip04.decrypt(loginPubkey, event.content);
-			contentList = JSON.parse(content);
-		} catch (error) {
-			console.warn(error);
+	if (event.content.length > 0) {
+		const isNIP04: boolean = event.content.includes('?iv=');
+		if (isNIP04 && window.nostr?.nip04 !== undefined) {
+			try {
+				const content = await window.nostr.nip04.decrypt(loginPubkey, event.content);
+				contentList = JSON.parse(content);
+			} catch (error) {
+				console.warn(error);
+			}
+		} else if (window.nostr?.nip44 !== undefined) {
+			try {
+				const content = await window.nostr.nip44.decrypt(loginPubkey, event.content);
+				contentList = JSON.parse(content);
+			} catch (error) {
+				console.warn(error);
+			}
 		}
 		[pSec, eSec, wSec, tSec] = ['p', 'e', 'word', 't'].map((tagName: string) =>
 			getList(contentList, tagName)

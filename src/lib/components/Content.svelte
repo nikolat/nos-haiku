@@ -236,17 +236,17 @@
 		return url.href;
 	};
 
-	let responseMap: Map<string, Response> | undefined = $state();
+	let responseMap: Map<string, Response | null> | undefined = $state();
 	onMount(async () => {
-		const rMap = new Map<string, Response>();
+		const rMap = new Map<string, Response | null>();
 		for (const ct of ats.children) {
 			if (ct.type === 'link') {
 				const [url, _rest] = urlLinkString(ct.value);
-				let response: Response;
+				let response: Response | null;
 				try {
 					response = await fetch(url, { method: 'HEAD' });
 				} catch (_error) {
-					continue;
+					response = null;
 				}
 				rMap.set(url, response);
 			}
@@ -279,6 +279,26 @@
 			{@const response = responseMap?.get(url)}
 			{#if response === undefined}
 				<a href={url} target="_blank" rel="noopener noreferrer">{url}</a>
+			{:else if response === null}
+				{#if /^https?:\/\/\S+\.(jpe?g|png|gif|webp|svg)/i.test(url)}
+					<!-- svelte-ignore a11y_click_events_have_key_events -->
+					<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
+					<img
+						alt=""
+						class="Image"
+						src={url}
+						onclick={(e) => e.currentTarget.classList.toggle('expanded')}
+					/>
+				{:else if /^https?:\/\/\S+\.(mp4|mov)/i.test(url)}
+					<video controls preload="metadata">
+						<track kind="captions" />
+						<source src={url} />
+					</video>
+				{:else if /^https?:\/\/\S+\.(mp3|m4a|wav|ogg|aac)/i.test(url)}
+					<audio controls preload="metadata" src={url}></audio>
+				{:else}
+					<a href={url} target="_blank" rel="noopener noreferrer">{url}</a>
+				{/if}
 			{:else if response.ok}
 				{@const ctype = response.headers.get('content-type')}
 				{#if ctype === null}
@@ -298,26 +318,6 @@
 						<source src={url} />
 					</video>
 				{:else if ctype.startsWith('audio/')}
-					<audio controls preload="metadata" src={url}></audio>
-				{:else}
-					<a href={url} target="_blank" rel="noopener noreferrer">{url}</a>
-				{/if}
-			{:else if response.status === 403}
-				{#if /^https?:\/\/\S+\.(jpe?g|png|gif|webp|svg)/i.test(url)}
-					<!-- svelte-ignore a11y_click_events_have_key_events -->
-					<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
-					<img
-						alt=""
-						class="Image"
-						src={url}
-						onclick={(e) => e.currentTarget.classList.toggle('expanded')}
-					/>
-				{:else if /^https?:\/\/\S+\.(mp4|mov)/i.test(url)}
-					<video controls preload="metadata">
-						<track kind="captions" />
-						<source src={url} />
-					</video>
-				{:else if /^https?:\/\/\S+\.(mp3|m4a|wav|ogg|aac)/i.test(url)}
 					<audio controls preload="metadata" src={url}></audio>
 				{:else}
 					<a href={url} target="_blank" rel="noopener noreferrer">{url}</a>

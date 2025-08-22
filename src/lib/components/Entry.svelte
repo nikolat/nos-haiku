@@ -36,7 +36,7 @@
 	import { normalizeURL } from 'nostr-tools/utils';
 	import * as nip19 from 'nostr-tools/nip19';
 	import { getSatoshisAmountFromBolt11 } from 'nostr-tools/nip57';
-	import { getAddressPointerForEvent, getInboxes } from 'applesauce-core/helpers';
+	import { getAddressPointerForEvent, getInboxes, getTagValue } from 'applesauce-core/helpers';
 	import { _ } from 'svelte-i18n';
 
 	let {
@@ -609,7 +609,9 @@
 							{:else if event.kind === 20}
 								Picture
 							{:else if event.kind === 40}
-								Channel
+								Channel Creation
+							{:else if event.kind === 41}
+								Channel Metadata
 							{:else if event.kind === 1018}
 								Poll Response
 							{:else if event.kind === 1068}
@@ -1086,6 +1088,14 @@
 									</p>
 								{:else if event.kind === 40}
 									{@const channel = channelMap.get(event.id)}
+									{#if channel !== undefined}
+										<ChannelMeta {channel} />
+									{:else}
+										unknown channel
+									{/if}
+								{:else if event.kind === 41}
+									{@const id = getTagValue(event, 'e') ?? ''}
+									{@const channel = channelMap.get(id)}
 									{#if channel !== undefined}
 										<ChannelMeta {channel} />
 									{:else}

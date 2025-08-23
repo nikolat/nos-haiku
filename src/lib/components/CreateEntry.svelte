@@ -129,7 +129,7 @@
 		}
 		console.info(fileUploadResponse.message);
 		const processing_url = fileUploadResponse.processing_url;
-		if (processing_url !== undefined) {
+		if (processing_url !== undefined && URL.canParse(processing_url)) {
 			const sleep = (timeout: number) => new Promise((handler) => setTimeout(handler, timeout));
 			let retry: number = 5;
 			while (true) {

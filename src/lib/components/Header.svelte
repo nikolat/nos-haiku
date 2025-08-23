@@ -264,7 +264,7 @@
 			.filter(
 				(ev) =>
 					!(
-						ev.kind === 7 &&
+						[6, 7].includes(ev.kind) &&
 						ev.tags.findLast((tag) => tag.length >= 2 && tag[0] === 'p')?.at(1) !== loginPubkey
 					)
 			)

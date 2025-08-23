@@ -143,9 +143,8 @@ export type FileUploadResponse = {
 	 * The status of the upload request.
 	 * - 'success': Indicates the file was successfully uploaded.
 	 * - 'error': Indicates there was an error in the upload process.
-	 * - 'processing': Indicates the file is still being processed (used in cases of delayed processing).
 	 */
-	status: 'success' | 'error' | 'processing';
+	status: 'success' | 'error';
 
 	/**
 	 * A message provided by the server, which could be a success message, error description, or processing status.

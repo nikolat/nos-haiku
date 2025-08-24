@@ -275,6 +275,14 @@
 						return ps.some((p) => pSet.has(p));
 					});
 				}
+				if (dSet.size > 0) {
+					tl = tl.filter((ev) => {
+						const ds = ev.tags
+							.filter((tag) => tag.length >= 2 && tag[0] === 'd')
+							.map((tag) => tag[1]);
+						return ds.some((d) => dSet.has(d));
+					});
+				}
 				if (authorSet.size > 0) {
 					tl = tl.filter((ev) => authorSet.has(ev.pubkey));
 				}
@@ -430,7 +438,7 @@
 			}
 			newEventsTimeline = rc.getEventsByFilter(filter);
 			setNewEventsTimeline(newEventsTimeline, event);
-		} else if ((kindSet.size > 0 || pSet.size > 0) && up.query === undefined) {
+		} else if ((kindSet.size > 0 || pSet.size > 0 || dSet.size > 0) && up.query === undefined) {
 			const filter: Filter = { kinds: Array.from(kindSet) };
 			if (up.currentProfilePointer !== undefined) {
 				filter.authors = [up.currentProfilePointer.pubkey];
@@ -438,6 +446,22 @@
 				filter.authors = followingPubkeys;
 			}
 			let tl = sortEvents(rc.getEventsByFilter(filter));
+			if (pSet.size > 0) {
+				tl = tl.filter((ev) => {
+					const ps = ev.tags
+						.filter((tag) => tag.length >= 2 && tag[0] === 'p')
+						.map((tag) => tag[1]);
+					return ps.some((p) => pSet.has(p));
+				});
+			}
+			if (dSet.size > 0) {
+				tl = tl.filter((ev) => {
+					const ds = ev.tags
+						.filter((tag) => tag.length >= 2 && tag[0] === 'd')
+						.map((tag) => tag[1]);
+					return ds.some((d) => dSet.has(d));
+				});
+			}
 			if (relaySet.size > 0) {
 				tl = tl.filter((ev) => rc?.getSeenOn(ev.id, false).some((r) => relaySet.has(r)));
 			}
@@ -702,6 +726,15 @@
 			}
 		}
 		return pSet;
+	});
+	const dSet: Set<string> = $derived.by(() => {
+		const dSet: Set<string> = new Set<string>();
+		for (const [k, v] of urlSearchParams) {
+			if (k === 'd') {
+				dSet.add(v);
+			}
+		}
+		return dSet;
 	});
 	const authorSet: Set<string> = $derived.by(() => {
 		const authorSet: Set<string> = new Set<string>();

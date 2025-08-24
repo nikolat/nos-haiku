@@ -665,8 +665,15 @@ export class RelayConnector {
 				this.#setFetchListAfter10002([event.pubkey], fetchAfter10002);
 				break;
 			}
-			default:
+			default: {
+				const fetchAfter10002 = () => {
+					if (!this.#eventStore.hasReplaceable(0, event.pubkey)) {
+						this.#fetchProfile(event.pubkey);
+					}
+				};
+				this.#setFetchListAfter10002([event.pubkey], fetchAfter10002);
 				break;
+			}
 		}
 		callback(event.kind, event);
 	};
@@ -1160,6 +1167,7 @@ export class RelayConnector {
 		const kindSetQ: Set<number> = new Set<number>();
 		const authorSetQ: Set<string> = new Set<string>();
 		const pSetQ: Set<string> = new Set<string>();
+		const dSetQ: Set<string> = new Set<string>();
 		const relaySetQ: Set<string> = new Set<string>();
 		for (const [k, v] of urlSearchParams ?? []) {
 			if (k === 'kind' && /^\d+$/.test(v)) {
@@ -1176,6 +1184,8 @@ export class RelayConnector {
 					continue;
 				}
 				pSetQ.add(v);
+			} else if (k === 'd') {
+				dSetQ.add(v);
 			} else if (k === 'relay' && URL.canParse(v) && v.startsWith('wss://')) {
 				relaySetQ.add(normalizeURL(v));
 			}
@@ -1325,6 +1335,9 @@ export class RelayConnector {
 			}
 			if (pSetQ.size > 0) {
 				filterB['#p'] = Array.from(pSetQ);
+			}
+			if (dSetQ.size > 0) {
+				filterB['#d'] = Array.from(dSetQ);
 			}
 		}
 		if (relaySetQ.size > 0) {

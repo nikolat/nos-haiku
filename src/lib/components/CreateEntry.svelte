@@ -232,7 +232,7 @@
 		const nameForBitchat =
 			currentBitchatGTag === undefined || loginPubkey === undefined
 				? undefined
-				: getName(loginPubkey, profileMap, eventFollowList);
+				: getName(loginPubkey, profileMap, eventFollowList, true, true);
 		return rc?.makeEvent(
 			loginPubkey ?? '',
 			contentToSend,
@@ -335,7 +335,7 @@
 		const nameForBitchat =
 			currentBitchatGTag === undefined || loginPubkey === undefined
 				? undefined
-				: getName(loginPubkey, profileMap, eventFollowList);
+				: getName(loginPubkey, profileMap, eventFollowList, true, true);
 		rc?.sendNote(
 			loginPubkey,
 			contentToSend,

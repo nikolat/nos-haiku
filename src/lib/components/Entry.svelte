@@ -420,6 +420,14 @@
 		return obj;
 	};
 
+	const changeGTag = (baseUrl: string, gTagName: string): string => {
+		const url = new URL(baseUrl);
+		if (!url.searchParams.getAll('g').includes(gTagName)) {
+			url.searchParams.set('g', gTagName);
+		}
+		return url.href;
+	};
+
 	const getEncode = (event: NostrEvent, relays?: string[]): string => {
 		const d = event.tags.find((tag) => tag.length >= 2 && tag[0] === 'd')?.at(1) ?? '';
 		return isReplaceableKind(event.kind) || isAddressableKind(event.kind)
@@ -1701,7 +1709,10 @@
 									{/each}
 								{:else if event.kind === 20000}
 									{@const name = getTagValue(event, 'n')}
-									<p>@{name}:</p>
+									{@const gTagName = getTagValue(event, 'g')}
+									{#if name !== undefined && gTagName !== undefined}
+										<p>@{name} <a href={changeGTag(location.href, gTagName)}>#{gTagName}</a></p>
+									{/if}
 									<p>
 										<Content
 											{rc}

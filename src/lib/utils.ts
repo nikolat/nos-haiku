@@ -1083,9 +1083,12 @@ export const getNameOfKind = (kind: number): string => {
 		[1, 'Short Text Note'],
 		[6, 'Repost'],
 		[16, 'Generic Repost'],
+		[20, 'Picture'],
+		[40, 'Channel Creation'],
 		[42, 'Channel Message'],
 		[1068, 'Poll'],
 		[1111, 'Comment'],
+		[20000, 'Bitchat'],
 		[39701, 'Web bookmarks']
 	]);
 	return nameMap.get(kind) ?? '';

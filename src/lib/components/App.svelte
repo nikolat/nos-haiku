@@ -283,6 +283,14 @@
 						return ds.some((d) => dSet.has(d));
 					});
 				}
+				if (gSet.size > 0) {
+					tl = tl.filter((ev) => {
+						const gs = ev.tags
+							.filter((tag) => tag.length >= 2 && tag[0] === 'g')
+							.map((tag) => tag[1]);
+						return gs.some((g) => gSet.has(g));
+					});
+				}
 				if (authorSet.size > 0) {
 					tl = tl.filter((ev) => authorSet.has(ev.pubkey));
 				}
@@ -438,7 +446,10 @@
 			}
 			newEventsTimeline = rc.getEventsByFilter(filter);
 			setNewEventsTimeline(newEventsTimeline, event);
-		} else if ((kindSet.size > 0 || pSet.size > 0 || dSet.size > 0) && up.query === undefined) {
+		} else if (
+			(kindSet.size > 0 || pSet.size > 0 || dSet.size > 0 || gSet.size > 0) &&
+			up.query === undefined
+		) {
 			const filter: Filter = { kinds: Array.from(kindSet) };
 			if (up.currentProfilePointer !== undefined) {
 				filter.authors = [up.currentProfilePointer.pubkey];
@@ -460,6 +471,14 @@
 						.filter((tag) => tag.length >= 2 && tag[0] === 'd')
 						.map((tag) => tag[1]);
 					return ds.some((d) => dSet.has(d));
+				});
+			}
+			if (gSet.size > 0) {
+				tl = tl.filter((ev) => {
+					const gs = ev.tags
+						.filter((tag) => tag.length >= 2 && tag[0] === 'g')
+						.map((tag) => tag[1]);
+					return gs.some((g) => gSet.has(g));
 				});
 			}
 			if (relaySet.size > 0) {
@@ -735,6 +754,15 @@
 			}
 		}
 		return dSet;
+	});
+	const gSet: Set<string> = $derived.by(() => {
+		const gSet: Set<string> = new Set<string>();
+		for (const [k, v] of urlSearchParams) {
+			if (k === 'g') {
+				gSet.add(v);
+			}
+		}
+		return gSet;
 	});
 	const authorSet: Set<string> = $derived.by(() => {
 		const authorSet: Set<string> = new Set<string>();

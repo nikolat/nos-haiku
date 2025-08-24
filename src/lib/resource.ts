@@ -1168,6 +1168,7 @@ export class RelayConnector {
 		const authorSetQ: Set<string> = new Set<string>();
 		const pSetQ: Set<string> = new Set<string>();
 		const dSetQ: Set<string> = new Set<string>();
+		const gSetQ: Set<string> = new Set<string>();
 		const relaySetQ: Set<string> = new Set<string>();
 		for (const [k, v] of urlSearchParams ?? []) {
 			if (k === 'kind' && /^\d+$/.test(v)) {
@@ -1186,6 +1187,8 @@ export class RelayConnector {
 				pSetQ.add(v);
 			} else if (k === 'd') {
 				dSetQ.add(v);
+			} else if (k === 'g') {
+				gSetQ.add(v);
 			} else if (k === 'relay' && URL.canParse(v) && v.startsWith('wss://')) {
 				relaySetQ.add(normalizeURL(v));
 			}
@@ -1338,6 +1341,9 @@ export class RelayConnector {
 			}
 			if (dSetQ.size > 0) {
 				filterB['#d'] = Array.from(dSetQ);
+			}
+			if (gSetQ.size > 0) {
+				filterB['#g'] = Array.from(gSetQ);
 			}
 		}
 		if (relaySetQ.size > 0) {

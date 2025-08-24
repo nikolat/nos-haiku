@@ -149,6 +149,15 @@
 		}
 		return authorSet;
 	});
+	const gSet: Set<string> = $derived.by(() => {
+		const gSet: Set<string> = new Set<string>();
+		for (const [k, v] of urlSearchParams) {
+			if (k === 'g') {
+				gSet.add(v);
+			}
+		}
+		return gSet;
+	});
 	const relaySet: Set<string> = $derived.by(() => {
 		const relaySet: Set<string> = new Set<string>();
 		for (const [k, v] of urlSearchParams) {
@@ -873,6 +882,9 @@
 						{rc}
 						{loginPubkey}
 						currentChannelId={currentChannelPointer?.id}
+						currentBitchatGTag={kindSet.has(20000) && gSet.size === 1
+							? Array.from(gSet).at(0)
+							: undefined}
 						eventToReply={undefined}
 						{isTopPage}
 						{channelMap}

@@ -29,6 +29,7 @@
 		rc,
 		loginPubkey,
 		currentChannelId,
+		currentBitchatGTag,
 		eventToReply,
 		isTopPage,
 		channelMap,
@@ -48,6 +49,7 @@
 		rc: RelayConnector | undefined;
 		loginPubkey: string | undefined;
 		currentChannelId?: string | undefined;
+		currentBitchatGTag?: string | undefined;
 		eventToReply?: NostrEvent;
 		isTopPage: boolean;
 		channelMap: Map<string, ChannelContent>;
@@ -227,6 +229,10 @@
 				? reasonContentWarning
 				: null
 			: undefined;
+		const nameForBitchat =
+			currentBitchatGTag === undefined || loginPubkey === undefined
+				? undefined
+				: getName(loginPubkey, profileMap, eventFollowList);
 		return rc?.makeEvent(
 			loginPubkey ?? '',
 			contentToSend,
@@ -238,6 +244,8 @@
 			channelMap,
 			eventsEmojiSet, //同上
 			addPoll ? undefined : targetEventToReply,
+			currentBitchatGTag,
+			nameForBitchat,
 			imetaMap,
 			contentWarningReason,
 			addPoll ? pollItems.filter((item) => item.length > 0) : undefined,
@@ -250,7 +258,10 @@
 		!(
 			contentToSend.length === 0 ||
 			/nsec1[a-z\d]{58}/.test(contentToSend) ||
-			(!addPoll && channelNameToCreate.length === 0 && isTopPage) ||
+			(!addPoll &&
+				channelNameToCreate.length === 0 &&
+				isTopPage &&
+				currentBitchatGTag === undefined) ||
 			(addPoll && pollItems.filter((item) => item.length > 0).length < 2)
 		)
 	);
@@ -321,6 +332,10 @@
 				? reasonContentWarning
 				: null
 			: undefined;
+		const nameForBitchat =
+			currentBitchatGTag === undefined || loginPubkey === undefined
+				? undefined
+				: getName(loginPubkey, profileMap, eventFollowList);
 		rc?.sendNote(
 			loginPubkey,
 			contentToSend,
@@ -332,6 +347,8 @@
 			channelMap,
 			isCustomEmojiEnabled ? eventsEmojiSet : [],
 			addPoll ? undefined : targetEventToReply,
+			currentBitchatGTag,
+			nameForBitchat,
 			imetaMap,
 			contentWarningReason,
 			addPoll ? pollItems.filter((item) => item.length > 0) : undefined,
@@ -412,7 +429,7 @@
 	{/if}
 	<div class="CreateEntry__main">
 		<div class="InputGroup">
-			{#if currentChannelId === undefined && eventToReply === undefined && !addPoll}
+			{#if currentChannelId === undefined && currentBitchatGTag === undefined && eventToReply === undefined && !addPoll}
 				<div class="vue-simple-suggest Input CreateEntry__keyword">
 					<div
 						aria-haspopup="listbox"
@@ -515,7 +532,7 @@
 								bind:files={filesToUpload}
 								onchange={uploadFileExec}
 							/>
-							{#if currentChannelId === undefined && eventToReply === undefined}
+							{#if currentChannelId === undefined && currentBitchatGTag === undefined && eventToReply === undefined}
 								<button
 									aria-label="poll"
 									title="poll"

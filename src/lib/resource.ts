@@ -2591,6 +2591,8 @@ export class RelayConnector {
 		channelMap: Map<string, ChannelContent>,
 		eventsEmojiSet: NostrEvent[],
 		targetEventToReply?: NostrEvent,
+		targetBitchatGTag?: string,
+		nameForBitchat?: string,
 		imetaMap?: Map<string, FileUploadResponse>,
 		contentWarningReason?: string | null | undefined,
 		pollItems?: string[],
@@ -2800,6 +2802,10 @@ export class RelayConnector {
 				!(tag.length >= 2 && tag[0] === 'p' && pubkeysExcluded.includes(tag[1])) &&
 				!(tag.length >= 2 && tag[0] === 't' && hashtagsExcluded.includes(tag[1]))
 		);
+		if (targetBitchatGTag !== undefined && nameForBitchat !== undefined) {
+			kind = 20000;
+			tags.push(['g', targetBitchatGTag], ['n', nameForBitchat], ['t', 'teleport']);
+		}
 		if (contentWarningReason !== undefined) {
 			tags.push(
 				contentWarningReason === null
@@ -2861,6 +2867,8 @@ export class RelayConnector {
 		channelMap: Map<string, ChannelContent>,
 		eventsEmojiSet: NostrEvent[],
 		targetEventToReply?: NostrEvent,
+		targetBitchatGTag?: string,
+		nameForBitchat?: string,
 		imetaMap?: Map<string, FileUploadResponse>,
 		contentWarningReason?: string | null | undefined,
 		pollItems?: string[],
@@ -2882,6 +2890,8 @@ export class RelayConnector {
 			channelMap,
 			eventsEmojiSet,
 			targetEventToReply,
+			targetBitchatGTag,
+			nameForBitchat,
 			imetaMap,
 			contentWarningReason,
 			pollItems,

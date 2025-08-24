@@ -645,6 +645,8 @@
 								Public chats list
 							{:else if event.kind === 10030}
 								User emoji list
+							{:else if event.kind === 20000}
+								Bitchat
 							{:else if event.kind === 30003}
 								Bookmark sets
 							{:else if event.kind === 30008}
@@ -1697,6 +1699,46 @@
 											/>
 										{/if}
 									{/each}
+								{:else if event.kind === 20000}
+									{@const name = getTagValue(event, 'n')}
+									<p>@{name}:</p>
+									<p>
+										<Content
+											{rc}
+											content={event.content}
+											tags={event.tags}
+											{channelMap}
+											{profileMap}
+											{loginPubkey}
+											{mutedPubkeys}
+											{mutedChannelIds}
+											{mutedWords}
+											{mutedHashtags}
+											{followingPubkeys}
+											{eventFollowList}
+											{eventEmojiSetList}
+											{eventMuteList}
+											{eventsTimeline}
+											{eventsQuoted}
+											{eventsReaction}
+											{eventsBadge}
+											{eventsPoll}
+											{eventsEmojiSet}
+											{eventsChannelBookmark}
+											{getSeenOn}
+											{uploaderSelected}
+											bind:channelToPost
+											{currentChannelId}
+											{isEnabledRelativeTime}
+											{isEnabledEventProtection}
+											{clientTag}
+											{nowRealtime}
+											{level}
+											isPreview={false}
+											{callInsertText}
+											bind:baseEventToEdit
+										/>
+									</p>
 								{:else if event.kind === 30008}
 									{@const badgeEvent = getEventByAddressPointer(
 										{

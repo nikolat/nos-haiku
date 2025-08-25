@@ -422,6 +422,9 @@
 
 	const changeGTag = (baseUrl: string, gTagName: string): string => {
 		const url = new URL(baseUrl);
+		if (!url.searchParams.getAll('kind').includes('20000')) {
+			url.searchParams.set('kind', '20000');
+		}
 		if (!url.searchParams.getAll('g').includes(gTagName)) {
 			url.searchParams.set('g', gTagName);
 		}

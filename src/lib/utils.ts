@@ -355,6 +355,43 @@ export const getMuteList = async (
 	return [mutedPubkeys, mutedIds, mutedWords, mutedHashTags];
 };
 
+export const getBlockedRelaysList = async (
+	eventBlockedRelaysList: NostrEvent | undefined,
+	loginPubkey: string | undefined
+): Promise<string[]> => {
+	if (
+		eventBlockedRelaysList === undefined ||
+		loginPubkey === undefined ||
+		eventBlockedRelaysList.pubkey !== loginPubkey
+	) {
+		return [];
+	}
+	const getRelayList = (tags: string[][]): string[] =>
+		Array.from(
+			new Set<string>(
+				tags
+					.filter((tag) => tag.length >= 2 && tag[0] === 'relay')
+					.map((tag) => normalizeURL(tag[1]))
+			)
+		);
+	const pubRelays: string[] = getRelayList(eventBlockedRelaysList.tags);
+	let secRelays: string[] = [];
+	if (eventBlockedRelaysList.content.length > 0) {
+		let contentList: string[][] = [];
+		const decrypt = getDecrypt(eventBlockedRelaysList.content);
+		if (decrypt !== null) {
+			try {
+				const content = await decrypt(loginPubkey, eventBlockedRelaysList.content);
+				contentList = JSON.parse(content);
+			} catch (error) {
+				console.warn(error);
+			}
+		}
+		secRelays = getRelayList(contentList);
+	}
+	return Array.from(new Set<string>([...pubRelays, ...secRelays]));
+};
+
 export const getEventsFilteredByMute = (
 	events: NostrEvent[],
 	mutedPubkeys: string[],

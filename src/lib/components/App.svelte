@@ -1,5 +1,6 @@
 <script lang="ts">
 	import {
+		getBlockedRelaysList,
 		getChannelMap,
 		getEventsAddressableLatest,
 		getEventsFilteredByMute,
@@ -91,6 +92,7 @@
 	let eventMuteList: NostrEvent | undefined = $state();
 	let eventRelayList: NostrEvent | undefined = $state();
 	let eventMyPublicChatsList: NostrEvent | undefined = $state();
+	let eventBlockedRelaysList: NostrEvent | undefined = $state();
 	let eventEmojiSetList: NostrEvent | undefined = $state();
 	let eventRead: NostrEvent | undefined = $state();
 	let mutedPubkeys: string[] = $state([]);
@@ -103,6 +105,16 @@
 	$effect(() => {
 		getMuteListPromise.then((v: [string[], string[], string[], string[]]) => {
 			[mutedPubkeys, mutedChannelIds, mutedWords, mutedHashtags] = v;
+		});
+	});
+	let blockedRelays: string[] = $state([]);
+	const getBlockedRelaysListPromise: Promise<string[]> = $derived(
+		getBlockedRelaysList(eventBlockedRelaysList, loginPubkey)
+	);
+	$effect(() => {
+		getBlockedRelaysListPromise.then((v: string[]) => {
+			blockedRelays = v;
+			rc?.setBlockedRelays(blockedRelays);
 		});
 	});
 	let eventsBadge: NostrEvent[] = $state([]);
@@ -388,12 +400,7 @@
 			}
 			case 10006: {
 				if (loginPubkey !== undefined && (event?.pubkey === loginPubkey || event === undefined)) {
-					const eventBlockedRelay = rc.getReplaceableEvent(kind, loginPubkey);
-					const blockedRelays: string[] =
-						eventBlockedRelay?.tags
-							.filter((tag) => tag.length >= 2 && tag[0] === 'relay' && URL.canParse(tag[1]))
-							.map((tag) => normalizeURL(tag[1])) ?? [];
-					rc.setBlockedRelays(blockedRelays);
+					eventBlockedRelaysList = rc.getReplaceableEvent(kind, loginPubkey);
 				}
 				break;
 			}

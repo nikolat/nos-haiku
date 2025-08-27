@@ -2493,6 +2493,7 @@
 								{loginPubkey}
 								currentChannelId={undefined}
 								eventToReply={event}
+								currentBitchatGTag={event.kind === 20000 ? getTagValue(event, 'g') : undefined}
 								isTopPage={false}
 								{channelMap}
 								{profileMap}

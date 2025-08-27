@@ -2681,7 +2681,7 @@ export class RelayConnector {
 		} else if (targetEventToReply.kind === 40) {
 			kind = 42;
 		} else {
-			if ([1, 42].includes(targetEventToReply.kind)) {
+			if ([1, 42, 20000].includes(targetEventToReply.kind)) {
 				kind = targetEventToReply.kind;
 			} else {
 				kind = 1111;
@@ -2690,7 +2690,7 @@ export class RelayConnector {
 		let pTagToReply: string[] | undefined;
 		if (targetEventToReply === undefined) {
 			//do nothing
-		} else if ([1, 40, 42].includes(targetEventToReply.kind)) {
+		} else if ([1, 40, 42, 20000].includes(targetEventToReply.kind)) {
 			const rootTag = targetEventToReply.tags.find(
 				(tag) => tag.length >= 4 && tag[0] === 'e' && tag[3] === 'root'
 			);

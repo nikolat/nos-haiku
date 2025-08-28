@@ -135,7 +135,9 @@
 				<div class="router-link-exact-active router-link-active">
 					<a href={`/${nip19.npubEncode(currentPubkey)}`}>
 						<img
-							src={prof?.picture ?? getRoboHashURL(nip19.npubEncode(currentPubkey))}
+							src={prof !== undefined && URL.canParse(prof.picture ?? '')
+								? prof.picture
+								: getRoboHashURL(nip19.npubEncode(currentPubkey))}
 							alt={$_('Profile.profile-image-of').replace('{name}', name)}
 						/>
 					</a>

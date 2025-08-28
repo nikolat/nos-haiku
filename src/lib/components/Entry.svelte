@@ -536,7 +536,9 @@
 					<div>
 						<a href="/{nip19.npubEncode(event.pubkey)}">
 							<img
-								src={prof?.picture ?? getRoboHashURL(nip19.npubEncode(event.pubkey))}
+								src={prof !== undefined && URL.canParse(prof.picture ?? '')
+									? prof.picture
+									: getRoboHashURL(nip19.npubEncode(event.pubkey))}
 								alt={getName(event.pubkey, profileMap, eventFollowList)}
 								class="Avatar"
 							/>
@@ -710,7 +712,9 @@
 									{@const prof = profileMap.get(p)}
 									<a href="/{nip19.npubEncode(p)}">
 										<img
-											src={prof?.picture ?? getRoboHashURL(nip19.npubEncode(p))}
+											src={prof !== undefined && URL.canParse(prof.picture ?? '')
+												? prof.picture
+												: getRoboHashURL(nip19.npubEncode(p))}
 											alt={getName(p, profileMap, eventFollowList)}
 											class="Avatar Avatar--sm"
 										/>
@@ -737,8 +741,9 @@
 										{#if !(eventReplyTo !== undefined && getEventsFilteredByMute([eventReplyTo], mutedPubkeys, mutedChannelIds, mutedWords, mutedHashtags).length === 0)}
 											{#if pubkeyReplyTo !== undefined}
 												<img
-													src={profReplyTo?.picture ??
-														getRoboHashURL(nip19.npubEncode(pubkeyReplyTo))}
+													src={profReplyTo !== undefined && URL.canParse(profReplyTo.picture ?? '')
+														? profReplyTo.picture
+														: getRoboHashURL(nip19.npubEncode(pubkeyReplyTo))}
 													alt={getName(pubkeyReplyTo, profileMap, eventFollowList)}
 													class="Avatar Avatar--sm"
 												/>
@@ -2140,7 +2145,9 @@
 								<span class="User">
 									<a href="/{nip19.npubEncode(event.pubkey)}">
 										<img
-											src={prof?.picture ?? getRoboHashURL(nip19.npubEncode(event.pubkey))}
+											src={prof !== undefined && URL.canParse(prof.picture ?? '')
+												? prof.picture
+												: getRoboHashURL(nip19.npubEncode(event.pubkey))}
 											alt={getName(event.pubkey, profileMap, eventFollowList)}
 											class="Avatar"
 										/>
@@ -2407,7 +2414,9 @@
 								{#each eventsReplying as ev (ev.id)}
 									{@const prof = profileMap.get(ev.pubkey)}
 									<img
-										src={prof?.picture ?? getRoboHashURL(nip19.npubEncode(ev.pubkey))}
+										src={prof !== undefined && URL.canParse(prof.picture ?? '')
+											? prof.picture
+											: getRoboHashURL(nip19.npubEncode(ev.pubkey))}
 										alt={getName(ev.pubkey, profileMap, eventFollowList)}
 										class="Avatar"
 									/>

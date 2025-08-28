@@ -20,9 +20,10 @@ export const defaultRelays: string[] = [
 export const indexerRelays = [
 	'wss://directory.yabu.me/',
 	'wss://purplepag.es/',
+	'wss://user.kindpag.es/',
 	'wss://indexer.coracle.social/'
 ];
-export const profileRelays = ['wss://directory.yabu.me/'];
+export const profileRelays = ['wss://directory.yabu.me/', 'wss://user.kindpag.es/'];
 export const searchRelays = ['wss://search.nos.today/'];
 export const urlToLinkProfileEditor = 'https://nos-profile-arekore.vercel.app/';
 export const urlToLinkRelayEditor = 'https://npub.dev/';

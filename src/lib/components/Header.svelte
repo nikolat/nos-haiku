@@ -375,7 +375,9 @@
 					<li class="NavGroup__item">
 						<a href="/{nip19.npubEncode(loginPubkey)}" class="">
 							<img
-								src={prof?.picture ?? getRoboHashURL(nip19.npubEncode(loginPubkey))}
+								src={prof !== undefined && URL.canParse(prof.picture ?? '')
+									? prof.picture
+									: getRoboHashURL(nip19.npubEncode(loginPubkey))}
 								class="Avatar"
 								alt=""
 							/>{$_('Header.my-page')}</a
@@ -472,7 +474,9 @@
 									<img
 										alt=""
 										loading="lazy"
-										src={prof?.picture ?? getRoboHashURL(nip19.npubEncode(evFrom.pubkey))}
+										src={prof !== undefined && URL.canParse(prof.picture ?? '')
+											? prof.picture
+											: getRoboHashURL(nip19.npubEncode(evFrom.pubkey))}
 										title={getName(evFrom.pubkey, profileMap, eventFollowList)}
 										class="Avatar Avatar--md"
 									/>

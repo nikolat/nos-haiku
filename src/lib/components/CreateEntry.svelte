@@ -415,16 +415,15 @@
 
 <div class="CreateEntry">
 	{#if browser}
+		{@const picture =
+			loginPubkey === undefined
+				? defaultAccountUri
+				: URL.canParse(profileMap.get(loginPubkey)?.picture ?? '')
+					? profileMap.get(loginPubkey)?.picture
+					: getRoboHashURL(nip19.npubEncode(loginPubkey))}
 		<a
 			href="/{loginPubkey === undefined ? '' : nip19.npubEncode(loginPubkey)}"
-			class="CreateEntry__profile"
-			><img
-				src={loginPubkey === undefined
-					? defaultAccountUri
-					: (profileMap.get(loginPubkey)?.picture ?? getRoboHashURL(nip19.npubEncode(loginPubkey)))}
-				class="Avatar"
-				alt=""
-			/></a
+			class="CreateEntry__profile"><img src={picture} class="Avatar" alt="" /></a
 		>
 	{/if}
 	<div class="CreateEntry__main">
@@ -619,7 +618,9 @@
 											}
 										}}
 										><img
-											src={prof?.picture ?? getRoboHashURL(nip19.npubEncode(p))}
+											src={prof !== undefined && URL.canParse(prof.picture ?? '')
+												? prof.picture
+												: getRoboHashURL(nip19.npubEncode(p))}
 											alt={getName(p, profileMap, eventFollowList)}
 											class="Avatar Avatar--sm"
 										/></button

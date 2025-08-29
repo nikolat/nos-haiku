@@ -2797,15 +2797,15 @@ export class RelayConnector {
 		if (pTagToReply !== undefined) {
 			tags.push(pTagToReply);
 		}
+		if (targetBitchatGTag !== undefined && nameForBitchat !== undefined) {
+			kind = 20000;
+			tags.push(['g', targetBitchatGTag], ['n', nameForBitchat], ['t', 'teleport']);
+		}
 		tags = tags.filter(
 			(tag) =>
 				!(tag.length >= 2 && tag[0] === 'p' && pubkeysExcluded.includes(tag[1])) &&
 				!(tag.length >= 2 && tag[0] === 't' && hashtagsExcluded.includes(tag[1]))
 		);
-		if (targetBitchatGTag !== undefined && nameForBitchat !== undefined) {
-			kind = 20000;
-			tags.push(['g', targetBitchatGTag], ['n', nameForBitchat], ['t', 'teleport']);
-		}
 		if (contentWarningReason !== undefined) {
 			tags.push(
 				contentWarningReason === null

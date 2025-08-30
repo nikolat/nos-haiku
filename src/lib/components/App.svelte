@@ -193,9 +193,12 @@
 			case 1:
 			case 6:
 			case 16:
+			case 20:
+			case 40:
 			case 42:
 			case 1068:
 			case 1111:
+			case 20000:
 			case 39701: {
 				if (kind === 1068) {
 					eventsPoll = sortEvents(rc.getEventsByFilter({ kinds: [1018, 1068] }));

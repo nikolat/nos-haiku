@@ -200,6 +200,9 @@
 			case 1111:
 			case 20000:
 			case 39701: {
+				if (kind === 40) {
+					eventsChannel = rc.getEventsByFilter({ kinds: [kind] });
+				}
 				if (kind === 1068) {
 					eventsPoll = sortEvents(rc.getEventsByFilter({ kinds: [1018, 1068] }));
 				}
@@ -363,10 +366,6 @@
 			case 30008:
 			case 30009: {
 				eventsBadge = sortEvents(rc.getEventsByFilter({ kinds: [8, 30008, 30009] }));
-				break;
-			}
-			case 40: {
-				eventsChannel = rc.getEventsByFilter({ kinds: [kind] });
 				break;
 			}
 			case 41: {

@@ -1045,14 +1045,12 @@
 										invalid award
 									{/if}
 								{:else if event.kind === 17}
-									{@const r = event.tags
-										.find((tag) => tag.length >= 2 && tag[0] === 'r' && URL.canParse(tag[1]))
-										?.at(1)}
-									{#if r === undefined}
-										<p class="warning-message">url not found</p>
-									{:else}
-										<Content content={r} tags={[]} />
-									{/if}
+									{@const is = event.tags
+										.filter((tag) => tag.length >= 2 && ['i', 'r'].includes(tag[0]))
+										.map((tag) => (URL.canParse(tag[2]) ? tag[2] : tag[1]))}
+									{#each new Set<string>(is) as i (i)}
+										<p><Content content={i} tags={[]} /></p>
+									{/each}
 								{:else if event.kind === 20}
 									{@const title = event.tags
 										.find((tag) => tag.length >= 2 && tag[0] === 'title')

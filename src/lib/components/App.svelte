@@ -791,7 +791,7 @@
 		}
 		return relaySet;
 	});
-	const limit: number = 10;
+	const limit: number = 20;
 	let countToShow: number = $state(limit);
 	let countToShowMax: number = limit;
 	const scopeCountToShow: number = 5 * limit;
@@ -861,6 +861,7 @@
 				}
 				const lastUntilNext: number | undefined = timelineSliced.at(-1)?.created_at;
 				if (lastUntilNext === undefined || lastUntil === lastUntilNext) {
+					isLoading = false;
 					return;
 				}
 				lastUntil = lastUntilNext;

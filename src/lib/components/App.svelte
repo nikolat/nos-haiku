@@ -613,7 +613,7 @@
 	};
 
 	const initStatus = () => {
-		countToShow = 10;
+		countToShow = limit;
 		isScrolledBottom = false;
 		isLoading = false;
 		lastUntil = undefined;

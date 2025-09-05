@@ -2606,9 +2606,7 @@ export class RelayConnector {
 	} => {
 		const relaysToAdd: Set<string> = new Set<string>();
 		const created_at = unixNow();
-		const relaysToWrite = this.#getRelays('write')
-			.filter(this.#relayFilter)
-			.slice(0, this.#limitRelay);
+		const relaysToWrite = this.#getRelays('write').filter(this.#relayFilter);
 		let eventChannelToSend: UnsignedEvent | undefined;
 		if (kindForEdit !== undefined || (pollItems !== undefined && pollItems.length > 0)) {
 			//do nothing

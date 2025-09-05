@@ -15,7 +15,8 @@ export const defaultRelays: string[] = [
 	'wss://nrelay-jp.c-stellar.net/',
 	'wss://nrelay.c-stellar.net/',
 	'wss://nostream.ocha.one/',
-	'wss://nostr.compile-error.net/'
+	'wss://nostr.compile-error.net/',
+	'wss://lang.relays.land/ja'
 ];
 export const indexerRelays = [
 	'wss://directory.yabu.me/',

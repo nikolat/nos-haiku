@@ -65,7 +65,7 @@
 										aria-label={$_('MuteList.unmute')}
 										onclick={() => {
 											if (loginPubkey !== undefined) {
-												rc?.unmutePubkey(pubkey, loginPubkey, eventMuteList);
+												rc?.unmutePubkey(pubkey, loginPubkey, $state.snapshot(eventMuteList));
 											}
 										}}><i class="fa-fw fas fa-trash-alt"></i></button
 									>
@@ -114,7 +114,7 @@
 										aria-label={$_('MuteList.unmute')}
 										onclick={() => {
 											if (loginPubkey !== undefined) {
-												rc?.unmuteChannel(channel.id, loginPubkey, eventMuteList);
+												rc?.unmuteChannel(channel.id, loginPubkey, $state.snapshot(eventMuteList));
 											}
 										}}><i class="fa-fw fas fa-trash-alt"></i></button
 									>
@@ -153,7 +153,7 @@
 											aria-label={$_('MuteList.unmute')}
 											onclick={() => {
 												if (loginPubkey !== undefined) {
-													rc?.unmuteWord(word, loginPubkey, eventMuteList);
+													rc?.unmuteWord(word, loginPubkey, $state.snapshot(eventMuteList));
 												}
 											}}><i class="fa-fw fas fa-trash-alt"></i></button
 										>
@@ -192,7 +192,7 @@
 											aria-label={$_('MuteList.unmute')}
 											onclick={() => {
 												if (loginPubkey !== undefined) {
-													rc?.unmuteHashtag(hashTag, loginPubkey, eventMuteList);
+													rc?.unmuteHashtag(hashTag, loginPubkey, $state.snapshot(eventMuteList));
 												}
 											}}><i class="fa-fw fas fa-trash-alt"></i></button
 										>

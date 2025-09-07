@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { resolve } from '$app/paths';
 	import { getRoboHashURL } from '$lib/config';
 	import type { RelayConnector } from '$lib/resource';
 	import type { ChannelContent, ProfileContentEvent } from '$lib/utils';
@@ -51,7 +52,7 @@
 						{@const prof = profileMap.get(pubkey)}
 						<li style="">
 							<div>
-								<a href="/{nip19.npubEncode(pubkey)}"
+								<a href={resolve(`/${nip19.npubEncode(pubkey)}`)}
 									><img alt="" src={prof?.picture ?? getRoboHashURL(nip19.npubEncode(pubkey))} /></a
 								>
 							</div>
@@ -95,7 +96,7 @@
 					{#each mutedChannels as channel (channel.id)}
 						<li>
 							<div>
-								<a href="/keyword/{nip19.neventEncode({ id: channel.id })}">
+								<a href={resolve(`/keyword/${nip19.neventEncode({ id: channel.id })}`)}>
 									<img
 										alt=""
 										src={URL.canParse(channel.picture ?? '')

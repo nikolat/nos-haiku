@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { resolve } from '$app/paths';
 	import type { ChannelContent, ProfileContentEvent } from '$lib/utils';
 	import type { RelayConnector } from '$lib/resource';
 	import type { NostrEvent } from 'nostr-tools/pure';
@@ -85,7 +86,9 @@
 					<ul>
 						{#each channelMapSearched.values() as channel (channel.id)}
 							<li>
-								<a href="/keyword/{nip19.neventEncode(channel)}" class="">{channel.name}</a>
+								<a href={resolve(`/keyword/${nip19.neventEncode(channel)}`)} class=""
+									>{channel.name}</a
+								>
 							</li>
 						{:else}
 							<li>{$_('Search.nothing-found-for').replace('{query}', query)}</li>

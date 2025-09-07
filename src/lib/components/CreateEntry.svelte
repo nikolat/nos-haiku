@@ -1,4 +1,7 @@
 <script lang="ts">
+	import { browser } from '$app/environment';
+	import { beforeNavigate, goto } from '$app/navigation';
+	import { resolve } from '$app/paths';
 	import { defaultAccountUri, getRoboHashURL } from '$lib/config';
 	import {
 		getEmoji,
@@ -8,7 +11,6 @@
 		type ProfileContentEvent
 	} from '$lib/utils';
 	import type { RelayConnector } from '$lib/resource';
-	import { beforeNavigate, goto } from '$app/navigation';
 	import { onMount } from 'svelte';
 	import type { EventTemplate, NostrEvent, UnsignedEvent } from 'nostr-tools/pure';
 	import * as nip19 from 'nostr-tools/nip19';
@@ -23,7 +25,6 @@
 	import { unixNow } from 'applesauce-core/helpers';
 	import confetti from 'canvas-confetti';
 	import { _ } from 'svelte-i18n';
-	import { browser } from '$app/environment';
 
 	let {
 		rc,
@@ -370,7 +371,7 @@
 			isCustomEmojiEnabled = true;
 			if (isNeededShowEvent && event !== null) {
 				const nevent: string = nip19.neventEncode({ ...event, author: event.pubkey });
-				goto(`/entry/${nevent}`);
+				goto(resolve(`/entry/${nevent}`));
 			}
 		});
 		//8/19はハイクの日
@@ -422,7 +423,7 @@
 					? profileMap.get(loginPubkey)?.picture
 					: getRoboHashURL(nip19.npubEncode(loginPubkey))}
 		<a
-			href="/{loginPubkey === undefined ? '' : nip19.npubEncode(loginPubkey)}"
+			href={resolve(`/${loginPubkey === undefined ? '' : nip19.npubEncode(loginPubkey)}`)}
 			class="CreateEntry__profile"><img src={picture} class="Avatar" alt="" /></a
 		>
 	{/if}

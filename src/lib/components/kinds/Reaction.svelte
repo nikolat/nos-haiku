@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { resolve } from '$app/paths';
 	import { defaultReactionToShow, getRoboHashURL } from '$lib/config';
 	import { isCustomEmoji, isValidEmoji } from '$lib/utils';
 	import type { NostrEvent } from 'nostr-tools/pure';
@@ -48,7 +49,7 @@
 			{reactionEvent.content.replace(/^\+$/, defaultReactionToShow).replace(/^-$/, '💔') ||
 				defaultReactionToShow}
 		{/if}
-	</span><a class="reactionstar-link" href="/{npub}">
+	</span><a class="reactionstar-link" href={resolve(`/${npub}`)}>
 		<img class="reactionstar-profile-picture" {src} alt="id:{name}" title="id:{name}" />
 	</a>{#if isAuthor}
 		<button

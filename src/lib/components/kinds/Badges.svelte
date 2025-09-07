@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { resolve } from '$app/paths';
 	import type { NostrEvent } from 'nostr-tools/pure';
 	import * as nip19 from 'nostr-tools/nip19';
 
@@ -81,7 +82,7 @@
 		{@const title = tagMap(ev30009).get('name') ?? ''}
 		{@const image = tagMap(ev30009).get('image') ?? ''}
 		{#if URL.canParse(image)}
-			<a href={`/entry/${nip19.neventEncode({ ...ev8, author: ev8.pubkey })}`}>
+			<a href={resolve(`/entry/${nip19.neventEncode({ ...ev8, author: ev8.pubkey })}`)}>
 				<img alt={title} {title} src={image} class="badge" />
 			</a>
 		{/if}

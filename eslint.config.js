@@ -39,6 +39,7 @@ export default ts.config(
 	{
 		rules: {
 			'svelte/prefer-svelte-reactivity': 'off',
+			'svelte/no-navigation-without-resolve': 'off',
 			'@typescript-eslint/no-explicit-any': 'warn',
 			'@typescript-eslint/no-unused-vars': [
 				'warn',

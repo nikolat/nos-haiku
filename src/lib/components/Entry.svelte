@@ -31,6 +31,7 @@
 	import CreateEntry from '$lib/components/CreateEntry.svelte';
 	import { onMount } from 'svelte';
 	import { afterNavigate, beforeNavigate } from '$app/navigation';
+	import { resolve } from '$app/paths';
 	import { getEventHash, type NostrEvent, type UnsignedEvent } from 'nostr-tools/pure';
 	import { isAddressableKind, isReplaceableKind } from 'nostr-tools/kinds';
 	import { normalizeURL } from 'nostr-tools/utils';
@@ -534,7 +535,7 @@
 			<div class="Entry__main">
 				<div class="Entry__profile">
 					<div>
-						<a href="/{nip19.npubEncode(event.pubkey)}">
+						<a href={resolve(`/${nip19.npubEncode(event.pubkey)}`)}>
 							<img
 								src={prof !== undefined && URL.canParse(prof.picture ?? '')
 									? prof.picture
@@ -552,7 +553,7 @@
 								{#if channel === undefined}
 									Channel Message
 								{:else}
-									<a href="/keyword/{nip19.neventEncode(channel)}">{channel.name}</a>
+									<a href={resolve(`/keyword/${nip19.neventEncode(channel)}`)}>{channel.name}</a>
 									{#if currentChannelId === undefined}
 										<span class="post-channel">
 											<button
@@ -587,24 +588,26 @@
 							{:else if event.kind === 0}
 								User Metadata
 							{:else if event.kind === 1}
-								<a href="/{nip19.npubEncode(event.pubkey)}">{getProfileId(prof)}</a>
+								<a href={resolve(`/${nip19.npubEncode(event.pubkey)}`)}>{getProfileId(prof)}</a>
 							{:else if event.kind === 3}
 								Follows
 							{:else if [6, 16].includes(event.kind)}
 								<span title={`kind:${event.kind} repost`}>🔁</span>
 								{#if event.kind === 6}
-									<a href="/{nip19.npubEncode(event.pubkey)}">{getProfileId(prof)}</a>
+									<a href={resolve(`/${nip19.npubEncode(event.pubkey)}`)}>{getProfileId(prof)}</a>
 								{:else if event.kind === 16 && event.tags.some((tag) => tag.length >= 2 && tag[0] === 'k' && tag[1] === '42')}
 									{@const channelIdReposted = getRootId(repostedEvent)}
 									{@const repostedChannel = channelMap.get(channelIdReposted ?? '')}
 									{#if channelIdReposted === undefined}
 										invalid channel
 									{:else if repostedChannel !== undefined}
-										<a href="/keyword/{nip19.neventEncode(repostedChannel)}"
+										<a href={resolve(`/keyword/${nip19.neventEncode(repostedChannel)}`)}
 											>{repostedChannel.name ?? 'unknown'}</a
 										>
 									{:else}
-										<a href="/keyword/{nip19.neventEncode({ id: channelIdReposted })}">unknown</a>
+										<a href={resolve(`/keyword/${nip19.neventEncode({ id: channelIdReposted })}`)}
+											>unknown</a
+										>
 									{/if}
 								{/if}
 							{:else if [7, 17].includes(event.kind)}
@@ -710,7 +713,7 @@
 								To:
 								{#each pubkeysMentioningTo.slice(0, 10) as p (p)}
 									{@const prof = profileMap.get(p)}
-									<a href="/{nip19.npubEncode(p)}">
+									<a href={resolve(`/${nip19.npubEncode(p)}`)}>
 										<img
 											src={prof !== undefined && URL.canParse(prof.picture ?? '')
 												? prof.picture
@@ -735,7 +738,7 @@
 										? nip19.naddrEncode(addressReplyTo)
 										: undefined}
 							<div class="Entry__parentmarker">
-								<a href="/entry/{link}">
+								<a href={resolve(`/entry/${link}`)}>
 									<i class="fa-fw fas fa-arrow-alt-from-right"></i>
 									<span class="Mention">
 										{#if !(eventReplyTo !== undefined && getEventsFilteredByMute([eventReplyTo], mutedPubkeys, mutedChannelIds, mutedWords, mutedHashtags).length === 0)}
@@ -815,7 +818,7 @@
 										{@const ap: nip19.AddressPointer | null = getAddressPointerFromAId(repostedEventAId)}
 										{#if ap !== null}
 											{@const encoded = nip19.naddrEncode(ap)}
-											<a href={`/entry/${encoded}`}>{`nostr:${encoded}`}</a>
+											<a href={resolve(`/entry/${encoded}`)}>{`nostr:${encoded}`}</a>
 										{/if}
 									{:else if repostedEventId !== undefined}
 										{@const eTag = event.tags.findLast((tag) => tag.length >= 4 && tag[0] === 'e')}
@@ -834,7 +837,7 @@
 											author: repostedPubkey,
 											relays
 										})}
-										<a href={`/entry/${encoded}`}>{`nostr:${encoded}`}</a>
+										<a href={resolve(`/entry/${encoded}`)}>{`nostr:${encoded}`}</a>
 									{/if}
 								{:else if event.kind === 0}
 									<Profile
@@ -919,7 +922,7 @@
 										{@const ap: nip19.AddressPointer | null = getAddressPointerFromAId(repostedEventAId)}
 										{#if ap !== null}
 											{@const encoded = nip19.naddrEncode(ap)}
-											<a href={`/entry/${encoded}`}>{`nostr:${encoded}`}</a>
+											<a href={resolve(`/entry/${encoded}`)}>{`nostr:${encoded}`}</a>
 										{/if}
 									{:else if repostedEventId !== undefined}
 										{@const eTag = event.tags.findLast((tag) => tag.length >= 4 && tag[0] === 'e')}
@@ -938,7 +941,7 @@
 											author: repostedPubkey,
 											relays
 										})}
-										<a href={`/entry/${encoded}`}>{`nostr:${encoded}`}</a>
+										<a href={resolve(`/entry/${encoded}`)}>{`nostr:${encoded}`}</a>
 									{/if}
 								{:else if event.kind === 8}
 									{@const ps = new Set<string>(
@@ -1551,7 +1554,7 @@
 											{#if tag[0] === 'e' && tag[1] !== undefined}
 												{@const nevent = nip19.neventEncode({ id: tag[1] })}
 												{#if getEventById(tag[1], eventsAll) === undefined}
-													<p><a href={`/entry/${nevent}`}>nostr:{nevent}</a></p>
+													<p><a href={resolve(`/entry/${nevent}`)}>nostr:{nevent}</a></p>
 												{:else}
 													<p>
 														<Content
@@ -1597,7 +1600,7 @@
 													invalid a tag: {tag[0]}, {tag[1]}
 												{:else if getEventByAddressPointer(ap, eventsAll) === undefined}
 													<p>
-														<a href={`/entry/${nip19.naddrEncode(ap)}`}
+														<a href={resolve(`/entry/${nip19.naddrEncode(ap)}`)}
 															>nostr:{nip19.naddrEncode(ap)}</a
 														>
 													</p>
@@ -2132,7 +2135,7 @@
 							{/if}
 							{#if clientInfo !== undefined}
 								<span class="via"
-									>via <a href="/entry/{clientInfo.naddr}">{clientInfo.name}</a></span
+									>via <a href={resolve(`/entry/${clientInfo.naddr}`)}>{clientInfo.name}</a></span
 								>
 							{/if}
 						</dvi>
@@ -2141,7 +2144,7 @@
 						{#if !isPreview}
 							<div class="EntryMeta">
 								<span class="User">
-									<a href="/{nip19.npubEncode(event.pubkey)}">
+									<a href={resolve(`/${nip19.npubEncode(event.pubkey)}`)}>
 										<img
 											src={prof !== undefined && URL.canParse(prof.picture ?? '')
 												? prof.picture
@@ -2158,7 +2161,7 @@
 								</span>
 								<span class="Separator">·</span>
 								<span class="Time">
-									<a href={`/entry/${getEncode(event)}`}>
+									<a href={resolve(`/entry/${getEncode(event)}`)}>
 										<time
 											datetime={new Date(1000 * event.created_at).toISOString()}
 											title={getAbsoluteTime(event.created_at)}

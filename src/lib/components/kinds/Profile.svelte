@@ -11,6 +11,7 @@
 	import Badges from '$lib/components/kinds/Badges.svelte';
 	import { onMount } from 'svelte';
 	import { afterNavigate, beforeNavigate } from '$app/navigation';
+	import { resolve } from '$app/paths';
 	import type { NostrEvent } from 'nostr-tools/pure';
 	import * as nip05 from 'nostr-tools/nip05';
 	import * as nip19 from 'nostr-tools/nip19';
@@ -133,7 +134,7 @@
 				style="border-color: rgb(127, 127, 127); background-color: rgb(127, 127, 127);"
 			>
 				<div class="router-link-exact-active router-link-active">
-					<a href={`/${nip19.npubEncode(currentPubkey)}`}>
+					<a href={resolve(`/${nip19.npubEncode(currentPubkey)}`)}>
 						<img
 							src={prof !== undefined && URL.canParse(prof.picture ?? '')
 								? prof.picture
@@ -158,7 +159,7 @@
 							<span class="fa-fw fas fa-cog"></span>
 						</div>
 						<div class="SettingButton__Dropdown Dropdown--right">
-							<a href="/settings">
+							<a href={resolve('/settings')}>
 								<i class="fa-fw fas fa-cog"></i>
 								{$_('Profile.settings')}
 							</a>
@@ -220,7 +221,9 @@
 							{/if}
 							<a
 								title={`${$_('Profile.view-custom-emoji-pre')}${name}${$_('Profile.view-custom-emoji-suf')}`}
-								href={`/entry/${nip19.naddrEncode({ identifier: '', pubkey: currentPubkey, kind: 10030 })}`}
+								href={resolve(
+									`/entry/${nip19.naddrEncode({ identifier: '', pubkey: currentPubkey, kind: 10030 })}`
+								)}
 							>
 								<i class="fa-fw fas fa-smile"></i>
 								{$_('Profile.view-custom-emoji-pre')}
@@ -271,7 +274,7 @@
 				{getEventByAddressPointer}
 			/>
 			<h3 class="router-link-exact-active router-link-active">
-				<a href={`/${nip19.npubEncode(currentPubkey)}`}>
+				<a href={resolve(`/${nip19.npubEncode(currentPubkey)}`)}>
 					<Content content={display_name} tags={prof?.event.tags ?? []} isAbout={true} />
 				</a>
 			</h3>
@@ -291,7 +294,7 @@
 						<p>❔{abbreviatedNip05}</p>
 					{:then isValid}
 						{#if isValid}
-							<p>✅<a href="/{abbreviatedNip05}">{abbreviatedNip05}</a></p>
+							<p>✅<a href={resolve(`/${abbreviatedNip05}`)}>{abbreviatedNip05}</a></p>
 						{:else}
 							<p>❌{abbreviatedNip05}</p>
 						{/if}

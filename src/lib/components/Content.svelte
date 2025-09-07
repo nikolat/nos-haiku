@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { resolve } from '$app/paths';
 	import { getRoboHashURL } from '$lib/config';
 	import {
 		getName,
@@ -327,7 +328,8 @@
 			{/if}
 		{/if}{rest}
 	{:else if ct.type === 'relay'}
-		<a href={appendRelay(location.href, ct.href)}>{ct.value}</a>
+		{@const url = appendRelay(location.href, ct.href)}
+		<a href={url}>{ct.value}</a>
 	{:else if ct.type === 'mention'}
 		{@const d = ct.decoded}
 		{#if ['npub', 'nprofile'].includes(d.type)}
@@ -335,7 +337,7 @@
 			{@const enc = ct.encoded}
 			{@const prof = profileMap.get(hex)}
 			{@const nameToShow = getName(hex, profileMap, eventFollowList, false, true)}
-			<a href="/{enc}"
+			<a href={resolve(`/${enc}`)}
 				><img
 					src={prof !== undefined && URL.canParse(prof.picture ?? '')
 						? prof.picture
@@ -395,7 +397,7 @@
 				/>
 			{:else}
 				{@const enc = ct.encoded}
-				<a href={`/entry/${enc}`}>{`nostr:${enc}`}</a>
+				<a href={resolve(`/entry/${enc}`)}>{`nostr:${enc}`}</a>
 			{/if}
 		{/if}
 	{:else if ct.type === 'hashtag'}
@@ -403,7 +405,7 @@
 			.filter((tag) => tag.length >= 2 && tag[0] === 't')
 			.map((tag) => tag[1].toLowerCase())}
 		{#if tTags.includes(ct.hashtag)}
-			<a href="/hashtag/{encodeURI(ct.hashtag)}">{ct.value}</a>
+			<a href={resolve(`/hashtag/${encodeURI(ct.hashtag)}`)}>{ct.value}</a>
 		{:else}
 			{ct.value}
 		{/if}

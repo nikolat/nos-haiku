@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { resolve } from '$app/paths';
 	import type { ChannelContent } from '$lib/utils';
 	import type { NostrEvent } from 'nostr-tools/pure';
 	import * as nip19 from 'nostr-tools/nip19';
@@ -23,7 +24,7 @@
 		{@const channel = channelMap.get(channelId)}
 		{#if channel !== undefined}
 			<li class="KeywordItem">
-				<a href="/keyword/{nip19.neventEncode(channel)}" class="KeywordItem__title"
+				<a href={resolve(`/keyword/${nip19.neventEncode(channel)}`)} class="KeywordItem__title"
 					>{channel.name}</a
 				>
 				<span class="post-channel">

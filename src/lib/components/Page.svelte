@@ -23,6 +23,7 @@
 	import CreateEntry from '$lib/components/CreateEntry.svelte';
 	import Entry from '$lib/components/Entry.svelte';
 	import { afterNavigate, beforeNavigate } from '$app/navigation';
+	import { resolve } from '$app/paths';
 	import { getEventHash, type NostrEvent, type UnsignedEvent } from 'nostr-tools/pure';
 	import { normalizeURL } from 'nostr-tools/utils';
 	import * as nip19 from 'nostr-tools/nip19';
@@ -351,7 +352,7 @@
 							{#each profilePubkeysActive as pubkey (pubkey)}
 								{@const prof = profileMap.get(pubkey)}
 								<div class="UserList__user">
-									<a href="/{nip19.npubEncode(pubkey)}">
+									<a href={resolve(`/${nip19.npubEncode(pubkey)}`)}>
 										<img
 											src={prof?.picture ?? getRoboHashURL(nip19.npubEncode(pubkey))}
 											alt={getName(pubkey, profileMap, eventFollowList)}
@@ -515,7 +516,9 @@
 											{/if}
 											<a
 												title={$_('Page.main.view-custom-emoji').replace('{idView}', idView)}
-												href={`/entry/${nip19.naddrEncode({ identifier: '', pubkey: currentProfilePointer.pubkey, kind: 10030 })}`}
+												href={resolve(
+													`/entry/${nip19.naddrEncode({ identifier: '', pubkey: currentProfilePointer.pubkey, kind: 10030 })}`
+												)}
 												><i class="fa-fw fas fa-smile"></i>
 												{$_('Page.main.view-custom-emoji').replace('{idView}', idView)}</a
 											>
@@ -533,7 +536,9 @@
 								{#if channel.categories.length > 0}
 									<div class="categories">
 										{#each channel.categories as category (category)}
-											<a class="category" href="/category/{encodeURI(category)}">#{category}</a>
+											<a class="category" href={resolve(`/category/${encodeURI(category)}`)}
+												>#{category}</a
+											>
 										{/each}
 									</div>
 								{/if}

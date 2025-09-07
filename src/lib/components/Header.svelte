@@ -12,6 +12,7 @@
 	import Reaction from '$lib/components/kinds/Reaction.svelte';
 	import Content from '$lib/components/Content.svelte';
 	import { afterNavigate, beforeNavigate, goto } from '$app/navigation';
+	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
 	import type { NostrEvent } from 'nostr-tools/pure';
 	import { isAddressableKind, isReplaceableKind } from 'nostr-tools/kinds';
@@ -148,7 +149,8 @@
 		if (currentProfilePointer !== undefined) {
 			kvs.push(['author', currentProfilePointer.pubkey]);
 		}
-		goto(`${path}?${new URLSearchParams(kvs).toString()}`);
+		const url = `${path}?${new URLSearchParams(kvs).toString()}`;
+		goto(url);
 	};
 
 	let nav: HTMLElement;
@@ -304,7 +306,7 @@
 						/>
 					</svg>
 				</a>
-				<a href="/">
+				<a href={resolve('/')}>
 					<img alt="" src={titleLogoImageUri} />
 				</a>
 			</span>
@@ -373,7 +375,7 @@
 				{#if loginPubkey !== undefined}
 					{@const prof = profileMap.get(loginPubkey)}
 					<li class="NavGroup__item">
-						<a href="/{nip19.npubEncode(loginPubkey)}" class="">
+						<a href={resolve(`/${nip19.npubEncode(loginPubkey)}`)} class="">
 							<img
 								src={prof !== undefined && URL.canParse(prof.picture ?? '')
 									? prof.picture
@@ -384,19 +386,24 @@
 						>
 					</li>
 					<li class="NavGroup__item">
-						<a href="/antenna" class="">
+						<a href={resolve('/antenna')} class="">
 							<i class="fa-fw fas fa-broadcast-tower"></i> {$_('Header.antenna')}</a
 						>
 					</li>
 				{/if}
 				<li class="NavGroup__item">
-					<a href="/" class="router-link-exact-active router-link-active" aria-current="page">
+					<a
+						href={resolve('/')}
+						class="router-link-exact-active router-link-active"
+						aria-current="page"
+					>
 						<i class="fa-fw fas fa-sparkles"></i> {$_('Header.recent')}</a
 					>
 				</li>
 				{#if loginPubkey !== undefined}
 					<li class="NavGroup__item">
-						<a href="/settings" class=""><i class="fa-fw fas fa-cog"></i> {$_('Header.settings')}</a
+						<a href={resolve('/settings')} class=""
+							><i class="fa-fw fas fa-cog"></i> {$_('Header.settings')}</a
 						>
 					</li>
 				{/if}
@@ -464,13 +471,17 @@
 						{@const ev9734 = getEvent9734(ev)}
 						{@const evFrom = ev9734 ?? ev}
 						{@const prof = profileMap.get(evFrom.pubkey)}
+						{@const linkNpub = resolve(`/${nip19.npubEncode(evFrom.pubkey)}`)}
+						{@const linkNevent = resolve(
+							`/entry/${nip19.neventEncode({ ...ev, author: ev.pubkey })}`
+						)}
 						<li
 							data-type="star"
 							data-unread={readTimeOfNotification < ev.created_at ? 'true' : 'false'}
 							class="NoticeItem"
 						>
 							<div class="NoticeItem__icon">
-								<a href="/{nip19.npubEncode(evFrom.pubkey)}">
+								<a href={linkNpub}>
 									<img
 										alt=""
 										loading="lazy"
@@ -484,7 +495,7 @@
 							</div>
 							<div class="NoticeItem__body">
 								<p>
-									<a href="/{nip19.npubEncode(evFrom.pubkey)}">
+									<a href={linkNpub}>
 										<Content
 											content={getName(evFrom.pubkey, profileMap, eventFollowList)}
 											tags={prof?.event.tags ?? []}
@@ -492,10 +503,9 @@
 										/>
 									</a>
 									{#if ev.kind === 4}
-										<a href="/entry/{nip19.neventEncode({ ...ev, author: ev.pubkey })}">📧sent DM</a
-										>
+										<a href={linkNevent}>📧sent DM</a>
 									{:else if ev.kind === 7}
-										added a <a href="/entry/{nip19.neventEncode({ ...ev, author: ev.pubkey })}"
+										added a <a href={linkNevent}
 											><Reaction
 												sendDeletion={async (targetEvent: NostrEvent) => {
 													await rc?.sendDeletion(targetEvent);
@@ -506,16 +516,11 @@
 											/></a
 										>
 									{:else if ev.kind === 8}
-										<a href="/entry/{nip19.neventEncode({ ...ev, author: ev.pubkey })}">📛awarded</a
-										>
+										<a href={linkNevent}>📛awarded</a>
 									{:else if [1, 42, 1111].includes(ev.kind)}
-										<a href="/entry/{nip19.neventEncode({ ...ev, author: ev.pubkey })}"
-											>💬mentioned</a
-										>
+										<a href={linkNevent}>💬mentioned</a>
 									{:else if [6, 16].includes(ev.kind)}
-										<a href="/entry/{nip19.neventEncode({ ...ev, author: ev.pubkey })}"
-											>🔁reposted</a
-										>
+										<a href={linkNevent}>🔁reposted</a>
 									{:else if ev.kind === 9735}
 										{@const invoice = decode(
 											ev.tags.find((tag) => tag.length >= 2 && tag[0] === 'bolt11')?.at(1) ?? ''
@@ -524,7 +529,7 @@
 											parseInt(
 												invoice.sections.find((section) => section.name === 'amount')?.value ?? '-1'
 											) / 1000}
-										<a href="/entry/{nip19.neventEncode({ ...ev, author: ev.pubkey })}"
+										<a href={linkNevent}
 											>⚡{#if sats > 0}{sats}{/if} zapped</a
 										>
 									{/if}
@@ -535,10 +540,11 @@
 										<br />
 										{@const d =
 											evTo.tags.find((tag) => tag.length >= 2 && tag[0] === 'd')?.at(1) ?? ''}
-										{@const link =
+										{@const link = resolve(
 											isReplaceableKind(evTo.kind) || isAddressableKind(evTo.kind)
 												? `/entry/${nip19.naddrEncode({ identifier: d, pubkey: evTo.pubkey, kind: evTo.kind })}`
-												: `/entry/${nip19.neventEncode({ ...evTo, author: evTo.pubkey })}`}
+												: `/entry/${nip19.neventEncode({ ...evTo, author: evTo.pubkey })}`
+										)}
 										<a href={link}>
 											{#if ev.kind === 8 && evTo.kind === 30009}
 												{@const image =
@@ -572,8 +578,9 @@
 								</p>
 								<span class="NoticeItem__foot"
 									>{#if evTo !== undefined}<a
-											href="/entry/{nip19.neventEncode({ ...evTo, author: evTo.pubkey })}"
-											><img alt="" loading="lazy" src={faviconImageUri} /></a
+											href={resolve(
+												`/entry/${nip19.neventEncode({ ...evTo, author: evTo.pubkey })}`
+											)}><img alt="" loading="lazy" src={faviconImageUri} /></a
 										>{/if}
 									<time
 										datetime={new Date(1000 * ev.created_at).toISOString()}

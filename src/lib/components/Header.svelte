@@ -517,7 +517,7 @@
 										>
 									{:else if ev.kind === 8}
 										<a href={linkNevent}>📛awarded</a>
-									{:else if [1, 42, 1111].includes(ev.kind)}
+									{:else if [1, 42, 1111, 39701].includes(ev.kind)}
 										<a href={linkNevent}>💬mentioned</a>
 									{:else if [6, 16].includes(ev.kind)}
 										<a href={linkNevent}>🔁reposted</a>

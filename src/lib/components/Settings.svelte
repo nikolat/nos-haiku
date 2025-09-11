@@ -33,6 +33,8 @@
 		setIsEnabledDarkMode,
 		isEnabledRelativeTime,
 		setIsEnabledRelativeTime,
+		isEnabledHideMutedEvents,
+		setIsEnabledHideMutedEvents,
 		isEnabledUseClientTag,
 		setIsEnabledUseClientTag,
 		isEnabledEventProtection,
@@ -68,6 +70,8 @@
 		setIsEnabledDarkMode: (value: boolean) => void;
 		isEnabledRelativeTime: boolean;
 		setIsEnabledRelativeTime: (value: boolean) => void;
+		isEnabledHideMutedEvents: boolean;
+		setIsEnabledHideMutedEvents: (value: boolean) => void;
 		isEnabledUseClientTag: boolean;
 		setIsEnabledUseClientTag: (value: boolean) => void;
 		isEnabledEventProtection: boolean;
@@ -256,6 +260,22 @@
 										bind:checked={isEnabledRelativeTime}
 										onchange={() => {
 											setIsEnabledRelativeTime(isEnabledRelativeTime);
+										}}
+									/><span class="Slider Round"></span></label
+								>
+							</div>
+						</div>
+						<div class="Settings__section">
+							<div class="Label"><span>{$_('Settings.account.hide-muted-events')}</span></div>
+							<div class="Control">
+								<label class="SliderSwitch"
+									><input
+										name="ui_theme"
+										type="checkbox"
+										disabled={loginPubkey === undefined}
+										bind:checked={isEnabledHideMutedEvents}
+										onchange={() => {
+											setIsEnabledHideMutedEvents(isEnabledHideMutedEvents);
 										}}
 									/><span class="Slider Round"></span></label
 								>

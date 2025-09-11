@@ -7,6 +7,7 @@ export const preferences = persisted<
 		lang: string;
 		isEnabledDarkMode: boolean;
 		isEnabledRelativeTime: boolean;
+		isEnabledHideMutedEvents: boolean;
 		isEnabledUseClientTag: boolean;
 		isEnabledEventProtection: boolean;
 		uploaderSelected: string;
@@ -17,6 +18,7 @@ export const preferences = persisted<
 		lang: string;
 		isEnabledDarkMode: boolean;
 		isEnabledRelativeTime: boolean;
+		isEnabledHideMutedEvents: boolean;
 		isEnabledUseClientTag: boolean;
 		isEnabledEventProtection: boolean;
 		uploaderSelected: string;
@@ -27,6 +29,7 @@ export const preferences = persisted<
 	lang: initialLocale,
 	isEnabledDarkMode: true,
 	isEnabledRelativeTime: true,
+	isEnabledHideMutedEvents: true,
 	isEnabledUseClientTag: false,
 	isEnabledEventProtection: false,
 	uploaderSelected: uploaderURLs[0],

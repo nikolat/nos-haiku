@@ -153,6 +153,7 @@
 			"language": "Language",
 			"darkmode": "ダークモード",
 			"relative-time": "相対時刻表示",
+			"hide-muted-events": "ミュートされたイベントを完全に非表示にする",
 			"client-tag": "clientタグ",
 			"event-protection": "イベント保護(NIP-70)",
 			"relays": "接続リレー",

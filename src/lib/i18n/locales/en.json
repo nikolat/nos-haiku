@@ -153,6 +153,7 @@
 			"language": "Language",
 			"darkmode": "Dark mode",
 			"relative-time": "Relative time",
+			"hide-muted-events": "Completely hide muted events",
 			"client-tag": "Client tag",
 			"event-protection": "Event protection(NIP-70)",
 			"relays": "Relays",

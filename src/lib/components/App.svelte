@@ -135,6 +135,7 @@
 	let lang: string = $state(initialLocale);
 	let isEnabledDarkMode: boolean = $state(true);
 	let isEnabledRelativeTime: boolean = $state(true);
+	let isEnabledHideMutedEvents: boolean = $state(true);
 	let isEnabledEventProtection: boolean = $state(false);
 	let uploaderSelected: string = $state(uploaderURLs[0]);
 	let kindsSelected: number[] = $state([]);
@@ -156,6 +157,10 @@
 	};
 	const setIsEnabledRelativeTime = (value: boolean): void => {
 		isEnabledRelativeTime = value;
+		saveLocalStorage();
+	};
+	const setIsEnabledHideMutedEvents = (value: boolean): void => {
+		isEnabledHideMutedEvents = value;
 		saveLocalStorage();
 	};
 	const setIsEnabledUseClientTag = (value: boolean): void => {
@@ -710,6 +715,7 @@
 			lang,
 			isEnabledDarkMode,
 			isEnabledRelativeTime,
+			isEnabledHideMutedEvents,
 			isEnabledUseClientTag,
 			isEnabledEventProtection,
 			uploaderSelected,
@@ -800,6 +806,55 @@
 			countToShow - scopeCountToShow > 0 ? countToShow - scopeCountToShow : 0,
 			countToShow
 		)
+	);
+	const getRootId = (event: NostrEvent | undefined): string | undefined => {
+		if (event === undefined) {
+			return undefined;
+		}
+		const rootIds: string[] = event.tags
+			.filter((tag) => tag.length >= 4 && tag[0] === 'e' && tag[3] === 'root')
+			.map((tag) => tag.at(1))
+			.filter((id) => id !== undefined);
+		if (rootIds.length !== 1) {
+			return undefined;
+		}
+		const rootId = rootIds[0];
+		try {
+			nip19.neventEncode({ id: rootId });
+		} catch (_error) {
+			return undefined;
+		}
+		return rootId;
+	};
+	const isMutedEvent = (event: NostrEvent): boolean => {
+		if (mutedPubkeys.includes(event.pubkey)) {
+			return true;
+		}
+		const channelId: string | undefined = event.kind === 42 ? getRootId(event) : undefined;
+		if (mutedChannelIds.includes(channelId ?? '')) {
+			return true;
+		}
+		if (mutedWords.some((word) => event.content.toLowerCase().includes(word))) {
+			return true;
+		}
+		const channel: ChannelContent | undefined = channelMap.get(channelId ?? '');
+		if (
+			event.kind !== 10000 &&
+			mutedHashtags.some(
+				(t) =>
+					event.tags
+						.filter((tag) => tag.length >= 2 && tag[0] === 't')
+						.map((tag) => tag[1].toLowerCase())
+						.includes(t) ||
+					(channel !== undefined && channel.categories.includes(t))
+			)
+		) {
+			return true;
+		}
+		return false;
+	};
+	const timelineWithMuteApplied: NostrEvent[] = $derived(
+		isEnabledHideMutedEvents ? timelineSliced.filter((ev) => !isMutedEvent(ev)) : timelineSliced
 	);
 	const eventsQuoted: NostrEvent[] = $derived(
 		rc === undefined ? [] : rc.getQuotedEvents([...timelineSliced, ...eventsPinList], 5)
@@ -928,6 +983,7 @@
 				lang: string | undefined;
 				isEnabledDarkMode: boolean | undefined;
 				isEnabledRelativeTime: boolean | undefined;
+				isEnabledHideMutedEvents: boolean | undefined;
 				isEnabledUseClientTag: boolean | undefined;
 				isEnabledEventProtection: boolean | undefined;
 				uploaderSelected: string | undefined;
@@ -938,6 +994,7 @@
 				lang = value.lang ?? initialLocale;
 				isEnabledDarkMode = value.isEnabledDarkMode ?? true;
 				isEnabledRelativeTime = value.isEnabledRelativeTime ?? true;
+				isEnabledHideMutedEvents = value.isEnabledHideMutedEvents ?? true;
 				isEnabledUseClientTag = value.isEnabledUseClientTag ?? false;
 				isEnabledEventProtection = value.isEnabledEventProtection ?? false;
 				uploaderSelected = value.uploaderSelected ?? uploaderURLs[0];
@@ -1052,6 +1109,8 @@
 			{setIsEnabledDarkMode}
 			{isEnabledRelativeTime}
 			{setIsEnabledRelativeTime}
+			{isEnabledHideMutedEvents}
+			{setIsEnabledHideMutedEvents}
 			{isEnabledUseClientTag}
 			{setIsEnabledUseClientTag}
 			{isEnabledEventProtection}
@@ -1098,7 +1157,7 @@
 			{loginPubkey}
 			{eventsMention}
 			readTimeOfNotification={eventRead?.created_at ?? 0}
-			eventsTimeline={timelineSliced}
+			eventsTimeline={timelineWithMuteApplied}
 			{eventsQuoted}
 			{eventsReaction}
 			{eventsChannelBookmark}

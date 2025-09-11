@@ -647,7 +647,11 @@
 											<!-- svelte-ignore a11y_no_static_element_interactions -->
 											<span
 												onclick={() => {
-													rc?.unmuteChannel(currentChannelPointer.id, loginPubkey, eventMuteList);
+													rc?.unmuteChannel(
+														currentChannelPointer.id,
+														loginPubkey,
+														$state.snapshot(eventMuteList)
+													);
 												}}>{$_('Page.main.unmute')}</span
 											></span
 										>
@@ -704,7 +708,7 @@
 															rc?.unmuteChannel(
 																currentChannelPointer.id,
 																loginPubkey,
-																eventMuteList
+																$state.snapshot(eventMuteList)
 															);
 														}}
 														><i class="fa-fw fas fa-eye"></i>
@@ -714,7 +718,7 @@
 													<a
 														title={$_('Page.main.mute-it').replace('{idView}', channel.name)}
 														onclick={() => {
-															rc?.muteChannel(channel, loginPubkey, eventMuteList);
+															rc?.muteChannel(channel, loginPubkey, $state.snapshot(eventMuteList));
 														}}
 														><i class="fa-fw fas fa-eye-slash"></i>
 														{$_('Page.main.mute-it').replace('{idView}', channel.name)}</a
@@ -763,7 +767,7 @@
 										<!-- svelte-ignore a11y_no_static_element_interactions -->
 										<span
 											onclick={() => {
-												rc?.unmuteHashtag(hashtag, loginPubkey, eventMuteList);
+												rc?.unmuteHashtag(hashtag, loginPubkey, $state.snapshot(eventMuteList));
 											}}>{$_('Page.main.unmute')}</span
 										></span
 									>
@@ -787,7 +791,7 @@
 												<a
 													title={$_('Page.main.unmute-it').replace('{idView}', `#${hashtag}`)}
 													onclick={() => {
-														rc?.unmuteHashtag(hashtag, loginPubkey, eventMuteList);
+														rc?.unmuteHashtag(hashtag, loginPubkey, $state.snapshot(eventMuteList));
 													}}
 													><i class="fa-fw fas fa-eye"></i>
 													{$_('Page.main.unmute-it').replace('{idView}', `#${hashtag}`)}</a
@@ -796,7 +800,7 @@
 												<a
 													title={$_('Page.main.mute-it').replace('{idView}', `#${hashtag}`)}
 													onclick={() => {
-														rc?.muteHashtag(hashtag, loginPubkey, eventMuteList);
+														rc?.muteHashtag(hashtag, loginPubkey, $state.snapshot(eventMuteList));
 													}}
 													><i class="fa-fw fas fa-eye-slash"></i>
 													{$_('Page.main.mute-it').replace('{idView}', `#${hashtag}`)}</a
@@ -820,7 +824,7 @@
 										<!-- svelte-ignore a11y_no_static_element_interactions -->
 										<span
 											onclick={() => {
-												rc?.unmuteHashtag(category, loginPubkey, eventMuteList);
+												rc?.unmuteHashtag(category, loginPubkey, $state.snapshot(eventMuteList));
 											}}>{$_('Page.main.unmute')}</span
 										></span
 									>
@@ -844,7 +848,11 @@
 												<a
 													title={$_('Page.main.unmute-it').replace('{idView}', `#${category}`)}
 													onclick={() => {
-														rc?.unmuteHashtag(category, loginPubkey, eventMuteList);
+														rc?.unmuteHashtag(
+															category,
+															loginPubkey,
+															$state.snapshot(eventMuteList)
+														);
 													}}
 													><i class="fa-fw fas fa-eye"></i>
 													{$_('Page.main.unmute-it').replace('{idView}', `#${category}`)}</a
@@ -853,7 +861,7 @@
 												<a
 													title={$_('Page.main.mute-it').replace('{idView}', `#${category}`)}
 													onclick={() => {
-														rc?.muteHashtag(category, loginPubkey, eventMuteList);
+														rc?.muteHashtag(category, loginPubkey, $state.snapshot(eventMuteList));
 													}}
 													><i class="fa-fw fas fa-eye-slash"></i>
 													{$_('Page.main.mute-it').replace('{idView}', `#${category}`)}</a

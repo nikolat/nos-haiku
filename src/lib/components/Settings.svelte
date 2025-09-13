@@ -1,7 +1,8 @@
 <script lang="ts">
 	import {
 		defaultKindsSelected,
-		uploaderURLs,
+		uploaderURLsBlossom,
+		uploaderURLsNip96,
 		urlToLinkProfileEditor,
 		urlToLinkRelayEditor
 	} from '$lib/config';
@@ -43,6 +44,7 @@
 		eventRelayList,
 		uploaderSelected,
 		setUploaderSelected,
+		setUploaderType,
 		kindsSelected,
 		setKindsSelected,
 		eventsBadge,
@@ -80,6 +82,7 @@
 		eventRelayList: NostrEvent | undefined;
 		uploaderSelected: string;
 		setUploaderSelected: (value: string) => void;
+		setUploaderType: (value: 'nip96' | 'blossom') => void;
 		kindsSelected: number[];
 		setKindsSelected: (value: number[]) => void;
 		eventsBadge: NostrEvent[];
@@ -343,11 +346,25 @@
 									bind:value={uploaderSelected}
 									onchange={() => {
 										setUploaderSelected(uploaderSelected);
+										if (uploaderURLsNip96.includes(uploaderSelected)) {
+											setUploaderType('nip96');
+										} else if (uploaderURLsBlossom.includes(uploaderSelected)) {
+											setUploaderType('blossom');
+										} else {
+											console.error(`${uploaderSelected} is unknown type of uploader`);
+										}
 									}}
 								>
-									{#each uploaderURLs as uploader (uploader)}
-										<option value={uploader}>{uploader}</option>
-									{/each}
+									<optgroup label="NIP-96">
+										{#each uploaderURLsNip96 as uploader (uploader)}
+											<option value={uploader}>{uploader}</option>
+										{/each}
+									</optgroup>
+									<optgroup label="Blossom">
+										{#each uploaderURLsBlossom as uploader (uploader)}
+											<option value={uploader}>{uploader}</option>
+										{/each}
+									</optgroup>
 								</select>
 							</div>
 						</div>

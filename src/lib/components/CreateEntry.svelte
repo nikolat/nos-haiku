@@ -13,6 +13,8 @@
 	import type { RelayConnector } from '$lib/resource';
 	import { onMount } from 'svelte';
 	import type { EventTemplate, NostrEvent, UnsignedEvent } from 'nostr-tools/pure';
+	import { BlossomClient, type BlobDescriptor } from 'nostr-tools/nipb7';
+	import type { Signer } from 'nostr-tools/signer';
 	import * as nip19 from 'nostr-tools/nip19';
 	import {
 		readServerConfig,
@@ -38,6 +40,7 @@
 		isEnabledEventProtection,
 		clientTag,
 		uploaderSelected,
+		uploaderType,
 		eventsEmojiSet,
 		eventFollowList,
 		preInput,
@@ -58,6 +61,7 @@
 		isEnabledEventProtection: boolean;
 		clientTag: string[] | undefined;
 		uploaderSelected: string;
+		uploaderType: 'nip96' | 'blossom';
 		eventsEmojiSet: NostrEvent[];
 		eventFollowList: NostrEvent | undefined;
 		preInput: string | null;
@@ -72,7 +76,19 @@
 	let pubkeysExcluded: string[] = $state([]);
 	let hashtagsExcluded: string[] = $state([]);
 	let filesToUpload: FileList | undefined = $state();
-	let imetaMap: Map<string, FileUploadResponse> = new Map<string, FileUploadResponse>();
+	let imetaMap: Map<
+		string,
+		{
+			tags: [string, string][];
+			content: string;
+		}
+	> = new Map<
+		string,
+		{
+			tags: [string, string][];
+			content: string;
+		}
+	>();
 	let inputFile: HTMLInputElement;
 	let textArea: HTMLTextAreaElement;
 	let postButton: HTMLButtonElement;
@@ -94,31 +110,79 @@
 
 	let isInProcess: boolean = $state(false);
 
+	interface MyBlobDescriptor extends BlobDescriptor {
+		nip94?: {
+			tags: [string, string][];
+			content: string;
+		};
+	}
+
 	const uploadFileExec = async () => {
-		if (filesToUpload === undefined || filesToUpload.length === 0) {
-			return;
-		}
-		const nostr = window.nostr;
-		if (nostr === undefined) {
+		let file: File | null = getFile();
+		if (file === null) {
 			return;
 		}
 		isInProcess = true;
-		const sign = (e: EventTemplate) => nostr.signEvent(e);
-		const config = await readServerConfig(uploaderSelected);
-		const token = await getToken(config.api_url, 'POST', sign, true);
+		console.info('file uploading...');
+		try {
+			if (uploaderType === 'nip96') {
+				const [uploadedFileUrl, fileUploadResponse] = await uploadByNip96(uploaderSelected, file);
+				if (fileUploadResponse.nip94_event !== undefined) {
+					imetaMap.set(uploadedFileUrl, fileUploadResponse.nip94_event);
+				}
+				insertText(uploadedFileUrl);
+			} else if (uploaderType === 'blossom') {
+				const signer: Signer | undefined = window.nostr;
+				if (signer === undefined) {
+					throw Error('window.nostr is undefined');
+				}
+				const client = new BlossomClient(uploaderSelected, signer);
+				const fileUploadResponse: MyBlobDescriptor = await client.uploadFile(file);
+				const uploadedFileUrl: string = fileUploadResponse.url;
+				if (!URL.canParse(uploadedFileUrl)) {
+					throw Error('upload url is undefined');
+				}
+				if (fileUploadResponse.nip94 !== undefined) {
+					imetaMap.set(uploadedFileUrl, fileUploadResponse.nip94);
+				}
+				insertText(uploadedFileUrl);
+			}
+			console.info('file uploading complete');
+		} catch (error) {
+			console.error(error);
+		}
+		isInProcess = false;
+	};
+
+	const getFile = (): File | null => {
+		if (filesToUpload === undefined || filesToUpload.length === 0) {
+			return null;
+		}
 		let file: File | undefined;
-		for (const f of filesToUpload ?? []) {
+		for (const f of filesToUpload) {
 			file = f;
 		}
 		if (file === undefined) {
-			isInProcess = false;
-			return;
+			return null;
 		}
+		return file;
+	};
+
+	const uploadByNip96 = async (
+		uploaderUrl: string,
+		file: File
+	): Promise<[string, FileUploadResponse]> => {
+		const nostr = window.nostr;
+		if (nostr === undefined) {
+			throw Error('window.nostr is undefined');
+		}
+		const sign = (e: EventTemplate) => nostr.signEvent(e);
+		const config = await readServerConfig(uploaderUrl);
+		const token = await getToken(config.api_url, 'POST', sign, true);
 		const option: OptionalFormDataFields = {
 			size: String(file.size),
 			content_type: file.type
 		};
-		console.info('file uploading...');
 		const fileUploadResponse: FileUploadResponse = await uploadFile(
 			file,
 			config.api_url,
@@ -126,9 +190,7 @@
 			option
 		);
 		if (fileUploadResponse.status === 'error') {
-			console.warn(fileUploadResponse.message);
-			isInProcess = false;
-			return;
+			throw Error(fileUploadResponse.message);
 		}
 		console.info(fileUploadResponse.message);
 		const processing_url = fileUploadResponse.processing_url;
@@ -148,30 +210,23 @@
 				}
 				const delayedProcessingResponse: DelayedProcessingResponse = await response.json();
 				if (delayedProcessingResponse.status === 'error') {
-					console.warn(delayedProcessingResponse.message);
-					isInProcess = false;
-					return;
+					throw Error(delayedProcessingResponse.message);
 				}
 				console.info(delayedProcessingResponse.message);
 				retry--;
 				if (retry < 0) {
-					console.warn('timeout');
-					isInProcess = false;
-					return;
+					throw Error('timeout');
 				}
 				await sleep(1000);
 			}
 		}
-		console.info('file uploading complete');
-		isInProcess = false;
 		const uploadedFileUrl = fileUploadResponse.nip94_event?.tags
 			.find((tag) => tag[0] === 'url')
 			?.at(1);
 		if (uploadedFileUrl === undefined || !URL.canParse(uploadedFileUrl)) {
-			return;
+			throw Error('upload url is undefined');
 		}
-		imetaMap.set(uploadedFileUrl, fileUploadResponse);
-		insertText(uploadedFileUrl);
+		return [uploadedFileUrl, fileUploadResponse];
 	};
 
 	const insertText = (word: string, enableNewline: boolean = true): void => {

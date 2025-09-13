@@ -10,7 +10,7 @@
 		type ProfileContentEvent,
 		type UrlParams
 	} from '$lib/utils';
-	import { defaultKindsSelected, initialLocale, uploaderURLs } from '$lib/config';
+	import { defaultKindsSelected, initialLocale, uploaderURLsNip96 } from '$lib/config';
 	import {
 		getDeadRelays,
 		getLoginPubkey,
@@ -137,7 +137,8 @@
 	let isEnabledRelativeTime: boolean = $state(true);
 	let isEnabledHideMutedEvents: boolean = $state(true);
 	let isEnabledEventProtection: boolean = $state(false);
-	let uploaderSelected: string = $state(uploaderURLs[0]);
+	let uploaderSelected: string = $state(uploaderURLsNip96[0]);
+	let uploaderType: 'nip96' | 'blossom' = $state('nip96');
 	let kindsSelected: number[] = $state([]);
 	let eventsChannel: NostrEvent[] = $state([]);
 	let eventsChannelEdit: NostrEvent[] = $state([]);
@@ -173,6 +174,10 @@
 	};
 	const setUploaderSelected = (value: string): void => {
 		uploaderSelected = value;
+		saveLocalStorage();
+	};
+	const setUploaderType = (value: 'nip96' | 'blossom'): void => {
+		uploaderType = value;
 		saveLocalStorage();
 	};
 	const setKindsSelected = (value: number[]): void => {
@@ -719,6 +724,7 @@
 			isEnabledUseClientTag,
 			isEnabledEventProtection,
 			uploaderSelected,
+			uploaderType,
 			kindsSelected
 		});
 	};
@@ -987,6 +993,7 @@
 				isEnabledUseClientTag: boolean | undefined;
 				isEnabledEventProtection: boolean | undefined;
 				uploaderSelected: string | undefined;
+				uploaderType: 'nip96' | 'blossom' | undefined;
 				kindsSelected: number[] | undefined;
 			}) => {
 				loginPubkey = value.loginPubkey;
@@ -997,7 +1004,8 @@
 				isEnabledHideMutedEvents = value.isEnabledHideMutedEvents ?? true;
 				isEnabledUseClientTag = value.isEnabledUseClientTag ?? false;
 				isEnabledEventProtection = value.isEnabledEventProtection ?? false;
-				uploaderSelected = value.uploaderSelected ?? uploaderURLs[0];
+				uploaderSelected = value.uploaderSelected ?? uploaderURLsNip96[0];
+				uploaderType = value.uploaderType ?? 'nip96';
 				kindsSelected = value.kindsSelected ?? defaultKindsSelected;
 			}
 		);
@@ -1119,6 +1127,7 @@
 			{eventRelayList}
 			{uploaderSelected}
 			{setUploaderSelected}
+			{setUploaderType}
 			{kindsSelected}
 			{setKindsSelected}
 			{eventsBadge}
@@ -1186,6 +1195,7 @@
 			{mutedHashtags}
 			{followingPubkeys}
 			{uploaderSelected}
+			{uploaderType}
 			{isEnabledEventProtection}
 			{isEnabledUseClientTag}
 			{isEnabledRelativeTime}

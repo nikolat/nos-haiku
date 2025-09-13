@@ -39,6 +39,7 @@
 		eventsChannelBookmark = [],
 		getSeenOn = () => [],
 		uploaderSelected = '',
+		uploaderType = 'nip96',
 		channelToPost = $bindable(),
 		currentChannelId,
 		level = 0,
@@ -75,6 +76,7 @@
 		eventsChannelBookmark?: NostrEvent[];
 		getSeenOn?: (id: string, excludeWs: boolean) => string[];
 		uploaderSelected?: string;
+		uploaderType?: 'nip96' | 'blossom';
 		channelToPost?: ChannelContent;
 		currentChannelId?: string;
 		level?: number;
@@ -383,6 +385,7 @@
 					{eventsChannelBookmark}
 					{getSeenOn}
 					{uploaderSelected}
+					{uploaderType}
 					bind:channelToPost
 					{currentChannelId}
 					{isEnabledRelativeTime}

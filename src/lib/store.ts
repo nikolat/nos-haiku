@@ -1,5 +1,5 @@
 import { persisted } from 'svelte-persisted-store';
-import { defaultKindsSelected, initialLocale, uploaderURLs } from '$lib/config';
+import { defaultKindsSelected, initialLocale, uploaderURLsNip96 } from '$lib/config';
 
 export const preferences = persisted<
 	{
@@ -11,6 +11,7 @@ export const preferences = persisted<
 		isEnabledUseClientTag: boolean;
 		isEnabledEventProtection: boolean;
 		uploaderSelected: string;
+		uploaderType: 'nip96' | 'blossom';
 		kindsSelected: number[];
 	},
 	{
@@ -22,6 +23,7 @@ export const preferences = persisted<
 		isEnabledUseClientTag: boolean;
 		isEnabledEventProtection: boolean;
 		uploaderSelected: string;
+		uploaderType: 'nip96' | 'blossom';
 		kindsSelected: number[];
 	}
 >('preferences', {
@@ -32,6 +34,7 @@ export const preferences = persisted<
 	isEnabledHideMutedEvents: true,
 	isEnabledUseClientTag: false,
 	isEnabledEventProtection: false,
-	uploaderSelected: uploaderURLs[0],
+	uploaderSelected: uploaderURLsNip96[0],
+	uploaderType: 'nip96',
 	kindsSelected: defaultKindsSelected
 });

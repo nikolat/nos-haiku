@@ -64,6 +64,7 @@
 		mutedHashtags,
 		followingPubkeys,
 		uploaderSelected,
+		uploaderType,
 		isEnabledEventProtection,
 		isEnabledUseClientTag,
 		isEnabledRelativeTime,
@@ -103,6 +104,7 @@
 		mutedHashtags: string[];
 		followingPubkeys: string[];
 		uploaderSelected: string;
+		uploaderType: 'nip96' | 'blossom';
 		isEnabledEventProtection: boolean;
 		isEnabledUseClientTag: boolean;
 		isEnabledRelativeTime: boolean;
@@ -905,6 +907,7 @@
 						{isEnabledEventProtection}
 						clientTag={isEnabledUseClientTag ? clientTag : undefined}
 						{uploaderSelected}
+						{uploaderType}
 						{eventsEmojiSet}
 						{eventFollowList}
 						preInput={urlSearchParams.get('content')}
@@ -940,6 +943,7 @@
 							{eventsChannelBookmark}
 							{getSeenOn}
 							{uploaderSelected}
+							{uploaderType}
 							bind:channelToPost
 							currentChannelId={currentChannelPointer?.id}
 							{isEnabledRelativeTime}
@@ -977,6 +981,7 @@
 							{eventsChannelBookmark}
 							{getSeenOn}
 							{uploaderSelected}
+							{uploaderType}
 							bind:channelToPost
 							currentChannelId={currentChannelPointer?.id}
 							{isEnabledRelativeTime}
@@ -1014,6 +1019,7 @@
 							{eventsChannelBookmark}
 							{getSeenOn}
 							{uploaderSelected}
+							{uploaderType}
 							bind:channelToPost
 							currentChannelId={currentChannelPointer?.id}
 							{isEnabledRelativeTime}

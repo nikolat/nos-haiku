@@ -13,7 +13,6 @@ import {
 	type ProfileContent
 } from 'applesauce-core/helpers';
 import data from '@emoji-mart/data';
-import type { FileUploadResponse } from '$lib/nip96';
 // @ts-expect-error なんもわからんかも
 import type { BaseEmoji } from '@types/emoji-mart';
 import { _ } from 'svelte-i18n';
@@ -535,7 +534,13 @@ export const getTagsForContent = (
 	getRelayHintAuhor: (pubkey: string, relays?: string[]) => string | undefined,
 	getEventsByFilter: (filters: Filter | Filter[]) => NostrEvent[],
 	getReplaceableEvent: (kind: number, pubkey: string, d?: string) => NostrEvent | undefined,
-	imetaMap?: Map<string, FileUploadResponse>
+	imetaMap?: Map<
+		string,
+		{
+			tags: [string, string][];
+			content: string;
+		}
+	>
 ): string[][] => {
 	const tags: string[][] = [];
 	const ppMap: Map<string, nip19.ProfilePointer> = new Map<string, nip19.ProfilePointer>();
@@ -600,13 +605,13 @@ export const getTagsForContent = (
 	}
 	const imetaTags: string[][] = [];
 	if (imetaMap !== undefined) {
-		for (const [url, fr] of imetaMap) {
-			if (!links.has(url) || fr.nip94_event === undefined) {
+		for (const [url, imeta] of imetaMap) {
+			if (!links.has(url)) {
 				continue;
 			}
 			imetaTags.push([
 				'imeta',
-				...fr.nip94_event.tags
+				...imeta.tags
 					.filter((tag) => tag.length >= 2 && tag[0].length > 0 && tag[1].length > 0)
 					.map((tag) => `${tag[0]} ${tag[1]}`)
 			]);

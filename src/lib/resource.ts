@@ -63,7 +63,6 @@ import {
 	profileRelays,
 	searchRelays
 } from '$lib/config';
-import type { FileUploadResponse } from '$lib/nip96';
 import {
 	getAddressPointerFromAId,
 	getChannelContent,
@@ -2593,7 +2592,13 @@ export class RelayConnector {
 		targetEventToReply?: NostrEvent,
 		targetBitchatGTag?: string,
 		nameForBitchat?: string,
-		imetaMap?: Map<string, FileUploadResponse>,
+		imetaMap?: Map<
+			string,
+			{
+				tags: [string, string][];
+				content: string;
+			}
+		>,
 		contentWarningReason?: string | null | undefined,
 		pollItems?: string[],
 		pollEndsAt?: number,
@@ -2867,7 +2872,13 @@ export class RelayConnector {
 		targetEventToReply?: NostrEvent,
 		targetBitchatGTag?: string,
 		nameForBitchat?: string,
-		imetaMap?: Map<string, FileUploadResponse>,
+		imetaMap?: Map<
+			string,
+			{
+				tags: [string, string][];
+				content: string;
+			}
+		>,
 		contentWarningReason?: string | null | undefined,
 		pollItems?: string[],
 		pollEndsAt?: number,

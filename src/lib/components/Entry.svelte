@@ -63,6 +63,7 @@
 		eventsChannelBookmark,
 		getSeenOn,
 		uploaderSelected,
+		uploaderType,
 		channelToPost = $bindable(),
 		currentChannelId,
 		isEnabledRelativeTime,
@@ -97,6 +98,7 @@
 		eventsChannelBookmark: NostrEvent[];
 		getSeenOn: (id: string, excludeWs: boolean) => string[];
 		uploaderSelected: string;
+		uploaderType: 'nip96' | 'blossom';
 		channelToPost: ChannelContent | undefined;
 		currentChannelId: string | undefined;
 		isEnabledRelativeTime: boolean;
@@ -795,6 +797,7 @@
 												{eventsChannelBookmark}
 												{getSeenOn}
 												{uploaderSelected}
+												{uploaderType}
 												bind:channelToPost
 												{currentChannelId}
 												{isEnabledRelativeTime}
@@ -906,6 +909,7 @@
 											{eventsChannelBookmark}
 											{getSeenOn}
 											{uploaderSelected}
+											{uploaderType}
 											bind:channelToPost
 											{currentChannelId}
 											{isEnabledRelativeTime}
@@ -1032,6 +1036,7 @@
 												{eventsChannelBookmark}
 												{getSeenOn}
 												{uploaderSelected}
+												{uploaderType}
 												bind:channelToPost
 												{currentChannelId}
 												{isEnabledRelativeTime}
@@ -1094,6 +1099,7 @@
 											{eventsChannelBookmark}
 											{getSeenOn}
 											{uploaderSelected}
+											{uploaderType}
 											bind:channelToPost
 											{currentChannelId}
 											{isEnabledRelativeTime}
@@ -1156,6 +1162,7 @@
 											{eventsChannelBookmark}
 											{getSeenOn}
 											{uploaderSelected}
+											{uploaderType}
 											{channelToPost}
 											{currentChannelId}
 											{isEnabledRelativeTime}
@@ -1195,6 +1202,7 @@
 											{eventsChannelBookmark}
 											{getSeenOn}
 											{uploaderSelected}
+											{uploaderType}
 											bind:channelToPost
 											{currentChannelId}
 											{isEnabledRelativeTime}
@@ -1249,6 +1257,7 @@
 											{eventsChannelBookmark}
 											{getSeenOn}
 											{uploaderSelected}
+											{uploaderType}
 											bind:channelToPost
 											{currentChannelId}
 											{isEnabledRelativeTime}
@@ -1296,6 +1305,7 @@
 											{eventsChannelBookmark}
 											{getSeenOn}
 											{uploaderSelected}
+											{uploaderType}
 											{channelToPost}
 											{currentChannelId}
 											{isEnabledRelativeTime}
@@ -1335,6 +1345,7 @@
 											{eventsChannelBookmark}
 											{getSeenOn}
 											{uploaderSelected}
+											{uploaderType}
 											{channelToPost}
 											{currentChannelId}
 											{isEnabledRelativeTime}
@@ -1390,6 +1401,7 @@
 												{eventsChannelBookmark}
 												{getSeenOn}
 												{uploaderSelected}
+												{uploaderType}
 												bind:channelToPost
 												{currentChannelId}
 												{isEnabledRelativeTime}
@@ -1428,6 +1440,7 @@
 												{eventsChannelBookmark}
 												{getSeenOn}
 												{uploaderSelected}
+												{uploaderType}
 												{channelToPost}
 												{currentChannelId}
 												{isEnabledRelativeTime}
@@ -1468,6 +1481,7 @@
 													{eventsChannelBookmark}
 													{getSeenOn}
 													{uploaderSelected}
+													{uploaderType}
 													bind:channelToPost
 													{currentChannelId}
 													{isEnabledRelativeTime}
@@ -1529,6 +1543,7 @@
 											{eventsChannelBookmark}
 											{getSeenOn}
 											{uploaderSelected}
+											{uploaderType}
 											bind:channelToPost
 											{currentChannelId}
 											{isEnabledRelativeTime}
@@ -1581,6 +1596,7 @@
 															{eventsChannelBookmark}
 															{getSeenOn}
 															{uploaderSelected}
+															{uploaderType}
 															bind:channelToPost
 															{currentChannelId}
 															{isEnabledRelativeTime}
@@ -1630,6 +1646,7 @@
 															{eventsChannelBookmark}
 															{getSeenOn}
 															{uploaderSelected}
+															{uploaderType}
 															bind:channelToPost
 															{currentChannelId}
 															{isEnabledRelativeTime}
@@ -1703,6 +1720,7 @@
 												{eventsChannelBookmark}
 												{getSeenOn}
 												{uploaderSelected}
+												{uploaderType}
 												{channelToPost}
 												{currentChannelId}
 												{isEnabledRelativeTime}
@@ -1748,6 +1766,7 @@
 											{eventsChannelBookmark}
 											{getSeenOn}
 											{uploaderSelected}
+											{uploaderType}
 											bind:channelToPost
 											{currentChannelId}
 											{isEnabledRelativeTime}
@@ -1828,6 +1847,7 @@
 											{eventsChannelBookmark}
 											{getSeenOn}
 											{uploaderSelected}
+											{uploaderType}
 											bind:channelToPost
 											{currentChannelId}
 											{isEnabledRelativeTime}
@@ -1986,6 +2006,7 @@
 											{eventsChannelBookmark}
 											{getSeenOn}
 											{uploaderSelected}
+											{uploaderType}
 											bind:channelToPost
 											{currentChannelId}
 											{isEnabledRelativeTime}
@@ -2024,6 +2045,7 @@
 											{eventsChannelBookmark}
 											{getSeenOn}
 											{uploaderSelected}
+											{uploaderType}
 											bind:channelToPost
 											{currentChannelId}
 											{isEnabledRelativeTime}
@@ -2510,6 +2532,7 @@
 								{isEnabledEventProtection}
 								{clientTag}
 								{uploaderSelected}
+								{uploaderType}
 								{eventsEmojiSet}
 								{eventFollowList}
 								preInput={null}
@@ -2546,6 +2569,7 @@
 								{eventsChannelBookmark}
 								{getSeenOn}
 								{uploaderSelected}
+								{uploaderType}
 								{channelToPost}
 								{currentChannelId}
 								{isEnabledRelativeTime}
@@ -2584,6 +2608,7 @@
 									{eventsChannelBookmark}
 									{getSeenOn}
 									{uploaderSelected}
+									{uploaderType}
 									{channelToPost}
 									{currentChannelId}
 									{isEnabledRelativeTime}

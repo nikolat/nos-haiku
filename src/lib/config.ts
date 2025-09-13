@@ -42,13 +42,20 @@ export const clientTag = [
 	'wss://nrelay.c-stellar.net/'
 ];
 export const zapRelays = ['wss://relay-jp.nostr.wirednet.jp/', 'wss://yabu.me/'];
-export const uploaderURLs = [
+export const uploaderURLsNip96 = [
 	'https://yabu.me',
 	'https://nostpic.com',
 	'https://nostr.build',
 	'https://nostrcheck.me',
 	'https://void.cat',
 	'https://files.sovbit.host'
+];
+export const uploaderURLsBlossom = [
+	'https://blossom.band',
+	'https://cdn.nostrcheck.me',
+	'https://nostr.download',
+	'https://blossom.primal.net',
+	'https://cdn.satellite.earth'
 ];
 export const getUrlToLinkProfile = (npub: string) => `https://yabu.me/${npub}`;
 export const getRoboHashURL = (str: string) => `https://robohash.org/${str}?set=set4`;

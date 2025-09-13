@@ -111,10 +111,7 @@
 	let isInProcess: boolean = $state(false);
 
 	interface MyBlobDescriptor extends BlobDescriptor {
-		nip94?: {
-			tags: [string, string][];
-			content: string;
-		};
+		nip94?: [string, string][];
 	}
 
 	const uploadFileExec = async () => {
@@ -143,7 +140,7 @@
 					throw Error('upload url is undefined');
 				}
 				if (fileUploadResponse.nip94 !== undefined) {
-					imetaMap.set(uploadedFileUrl, fileUploadResponse.nip94);
+					imetaMap.set(uploadedFileUrl, { content: '', tags: fileUploadResponse.nip94 });
 				}
 				insertText(uploadedFileUrl);
 			}

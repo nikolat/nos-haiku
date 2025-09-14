@@ -37,6 +37,7 @@ This is a mini-blog modeled after [Sudo Haiku](https://h.sudo.ne.jp/), built usi
 - [NIP-96: HTTP File Storage Integration](https://github.com/nostr-protocol/nips/blob/master/96.md)
 - [NIP-98: HTTP Auth](https://github.com/nostr-protocol/nips/blob/master/98.md)
 - [NIP-B0: Web Bookmarks](https://github.com/nostr-protocol/nips/blob/master/B0.md)
+- [NIP-B7: Blossom](https://github.com/nostr-protocol/nips/blob/master/B7.md)
 
 ## Libraries
 

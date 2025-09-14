@@ -10,7 +10,7 @@
 		type ProfileContentEvent,
 		type UrlParams
 	} from '$lib/utils';
-	import { defaultKindsSelected, initialLocale, uploaderURLsNip96 } from '$lib/config';
+	import { defaultKindsSelected, initialLocale, defaultUploaderURLsNip96 } from '$lib/config';
 	import {
 		getDeadRelays,
 		getLoginPubkey,
@@ -93,6 +93,8 @@
 	let eventRelayList: NostrEvent | undefined = $state();
 	let eventMyPublicChatsList: NostrEvent | undefined = $state();
 	let eventBlockedRelaysList: NostrEvent | undefined = $state();
+	let eventNip96ServerList: NostrEvent | undefined = $state();
+	let eventBlossomServerList: NostrEvent | undefined = $state();
 	let eventEmojiSetList: NostrEvent | undefined = $state();
 	let eventRead: NostrEvent | undefined = $state();
 	let mutedPubkeys: string[] = $state([]);
@@ -137,7 +139,7 @@
 	let isEnabledRelativeTime: boolean = $state(true);
 	let isEnabledHideMutedEvents: boolean = $state(true);
 	let isEnabledEventProtection: boolean = $state(false);
-	let uploaderSelected: string = $state(uploaderURLsNip96[0]);
+	let uploaderSelected: string = $state(defaultUploaderURLsNip96[0]);
 	let uploaderType: 'nip96' | 'blossom' = $state('nip96');
 	let kindsSelected: number[] = $state([]);
 	let eventsChannel: NostrEvent[] = $state([]);
@@ -350,7 +352,7 @@
 				break;
 			}
 			case 3: {
-				if (loginPubkey !== undefined && (event?.pubkey === loginPubkey || event === undefined)) {
+				if (loginPubkey !== undefined && (event === undefined || event.pubkey === loginPubkey)) {
 					eventFollowList = rc.getReplaceableEvent(kind, loginPubkey);
 				}
 				break;
@@ -387,7 +389,7 @@
 				break;
 			}
 			case 10000: {
-				if (loginPubkey !== undefined && (event?.pubkey === loginPubkey || event === undefined)) {
+				if (loginPubkey !== undefined && (event === undefined || event.pubkey === loginPubkey)) {
 					eventMuteList = rc.getReplaceableEvent(kind, loginPubkey);
 				}
 				break;
@@ -397,7 +399,7 @@
 				break;
 			}
 			case 10002: {
-				if (loginPubkey !== undefined && (event?.pubkey === loginPubkey || event === undefined)) {
+				if (loginPubkey !== undefined && (event === undefined || event.pubkey === loginPubkey)) {
 					eventRelayList = rc.getReplaceableEvent(kind, loginPubkey);
 					rc.setRelays(eventRelayList);
 				}
@@ -405,14 +407,26 @@
 			}
 			case 10005: {
 				eventsChannelBookmark = rc.getEventsByFilter({ kinds: [kind] });
-				if (loginPubkey !== undefined && (event?.pubkey === loginPubkey || event === undefined)) {
+				if (loginPubkey !== undefined && (event === undefined || event.pubkey === loginPubkey)) {
 					eventMyPublicChatsList = rc.getReplaceableEvent(kind, loginPubkey);
 				}
 				break;
 			}
 			case 10006: {
-				if (loginPubkey !== undefined && (event?.pubkey === loginPubkey || event === undefined)) {
+				if (loginPubkey !== undefined && (event === undefined || event.pubkey === loginPubkey)) {
 					eventBlockedRelaysList = rc.getReplaceableEvent(kind, loginPubkey);
+				}
+				break;
+			}
+			case 10063: {
+				if (loginPubkey !== undefined && (event === undefined || event.pubkey === loginPubkey)) {
+					eventBlossomServerList = rc.getReplaceableEvent(kind, loginPubkey);
+				}
+				break;
+			}
+			case 10096: {
+				if (loginPubkey !== undefined && (event === undefined || event.pubkey === loginPubkey)) {
+					eventNip96ServerList = rc.getReplaceableEvent(kind, loginPubkey);
 				}
 				break;
 			}
@@ -613,6 +627,9 @@
 		eventMuteList = undefined;
 		eventRelayList = undefined;
 		eventMyPublicChatsList = undefined;
+		eventBlockedRelaysList = undefined;
+		eventNip96ServerList = undefined;
+		eventBlossomServerList = undefined;
 		eventEmojiSetList = undefined;
 		eventRead = undefined;
 		eventsBadge = [];
@@ -648,7 +665,8 @@
 			setSubscription(sub);
 			//kind1は最後にしないと遅延セットしてるtimelineが虚無で上書きされてしまうので
 			const kinds = [
-				0, 3, 7, 8, 40, 41, 1018, 1068, 10000, 10001, 10002, 10005, 10006, 10030, 30078, 1
+				0, 3, 7, 8, 40, 41, 1018, 1068, 10000, 10001, 10002, 10005, 10006, 10030, 10063, 10096,
+				30078, 1
 			];
 			for (const k of kinds) {
 				callback(k);
@@ -1004,7 +1022,7 @@
 				isEnabledHideMutedEvents = value.isEnabledHideMutedEvents ?? true;
 				isEnabledUseClientTag = value.isEnabledUseClientTag ?? false;
 				isEnabledEventProtection = value.isEnabledEventProtection ?? false;
-				uploaderSelected = value.uploaderSelected ?? uploaderURLsNip96[0];
+				uploaderSelected = value.uploaderSelected ?? defaultUploaderURLsNip96[0];
 				uploaderType = value.uploaderType ?? 'nip96';
 				kindsSelected = value.kindsSelected ?? defaultKindsSelected;
 			}
@@ -1125,6 +1143,8 @@
 			{setIsEnabledEventProtection}
 			{eventMuteList}
 			{eventRelayList}
+			{eventNip96ServerList}
+			{eventBlossomServerList}
 			{uploaderSelected}
 			{setUploaderSelected}
 			{setUploaderType}

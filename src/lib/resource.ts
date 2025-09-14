@@ -994,7 +994,7 @@ export class RelayConnector {
 		};
 		const filter: LazyFilter = {
 			...filterBase,
-			kinds: [0, 3, 10000, 10002, 10005, 10006, 10030, 30008]
+			kinds: [0, 3, 10000, 10002, 10005, 10006, 10030, 10063, 10096, 30008]
 		};
 		const relays = this.#getRelays('write').filter(this.#relayFilter).slice(0, this.#limitRelay);
 		const options = relays.length > 0 ? { relays } : undefined;
@@ -1446,7 +1446,7 @@ export class RelayConnector {
 			filtersF.push({
 				kinds: [
 					0, 1, 3, 4, 5, 6, 7, 16, 40, 41, 42, 1018, 1068, 1111, 10000, 10001, 10002, 10005, 10006,
-					10030, 30008, 39701
+					10030, 10063, 10096, 30008, 39701
 				],
 				authors: [loginPubkey],
 				since

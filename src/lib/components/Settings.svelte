@@ -1,8 +1,8 @@
 <script lang="ts">
 	import {
 		defaultKindsSelected,
-		uploaderURLsBlossom,
-		uploaderURLsNip96,
+		defaultUploaderURLsBlossom,
+		defaultUploaderURLsNip96,
 		urlToLinkProfileEditor,
 		urlToLinkRelayEditor
 	} from '$lib/config';
@@ -42,6 +42,8 @@
 		setIsEnabledEventProtection,
 		eventMuteList,
 		eventRelayList,
+		eventNip96ServerList,
+		eventBlossomServerList,
 		uploaderSelected,
 		setUploaderSelected,
 		setUploaderType,
@@ -80,6 +82,8 @@
 		setIsEnabledEventProtection: (value: boolean) => void;
 		eventMuteList: NostrEvent | undefined;
 		eventRelayList: NostrEvent | undefined;
+		eventNip96ServerList: NostrEvent | undefined;
+		eventBlossomServerList: NostrEvent | undefined;
 		uploaderSelected: string;
 		setUploaderSelected: (value: string) => void;
 		setUploaderType: (value: 'nip96' | 'blossom') => void;
@@ -97,6 +101,27 @@
 		followingPubkeys: string[];
 		nowRealtime: number;
 	} = $props();
+
+	const getServetList = (event: NostrEvent | undefined): string[] | undefined => {
+		return event?.tags
+			.filter((tag) => tag.length >= 2 && tag[0] === 'server' && URL.canParse(tag[1]))
+			.map((tag) => tag[1]);
+	};
+	const uploaderURLsNip96: string[] = $derived(
+		getServetList(eventNip96ServerList) ?? defaultUploaderURLsNip96
+	);
+	const uploaderURLsBlossom: string[] = $derived(
+		getServetList(eventBlossomServerList) ?? defaultUploaderURLsBlossom
+	);
+	$effect(() => {
+		if (
+			uploaderSelected !== '' &&
+			!uploaderURLsNip96.includes(uploaderSelected) &&
+			!uploaderURLsBlossom.includes(uploaderSelected)
+		) {
+			uploaderSelected = [...uploaderURLsNip96, ...uploaderURLsBlossom].at(0) ?? '';
+		}
+	});
 
 	const isTooManyRelays = (eventRelayList: NostrEvent | undefined): boolean => {
 		const limit: number = 4;

@@ -42,7 +42,7 @@ export const clientTag = [
 	'wss://nrelay.c-stellar.net/'
 ];
 export const zapRelays = ['wss://relay-jp.nostr.wirednet.jp/', 'wss://yabu.me/'];
-export const uploaderURLsNip96 = [
+export const defaultUploaderURLsNip96 = [
 	'https://yabu.me',
 	'https://nostpic.com',
 	'https://nostr.build',
@@ -50,7 +50,7 @@ export const uploaderURLsNip96 = [
 	'https://void.cat',
 	'https://files.sovbit.host'
 ];
-export const uploaderURLsBlossom = [
+export const defaultUploaderURLsBlossom = [
 	'https://blossom.band',
 	'https://cdn.nostrcheck.me',
 	'https://nostr.download',

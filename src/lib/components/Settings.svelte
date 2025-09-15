@@ -103,9 +103,16 @@
 	} = $props();
 
 	const getServetList = (event: NostrEvent | undefined): string[] | undefined => {
-		return event?.tags
-			.filter((tag) => tag.length >= 2 && tag[0] === 'server' && URL.canParse(tag[1]))
-			.map((tag) => tag[1]);
+		if (event === undefined) {
+			return undefined;
+		}
+		return Array.from(
+			new Set<string>(
+				event.tags
+					.filter((tag) => tag.length >= 2 && tag[0] === 'server' && URL.canParse(tag[1]))
+					.map((tag) => tag[1])
+			)
+		);
 	};
 	const uploaderURLsNip96: string[] = $derived(
 		getServetList(eventNip96ServerList) ?? defaultUploaderURLsNip96

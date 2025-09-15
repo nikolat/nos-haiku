@@ -339,16 +339,18 @@
 			{@const enc = ct.encoded}
 			{@const prof = profileMap.get(hex)}
 			{@const nameToShow = getName(hex, profileMap, eventFollowList, false, true)}
-			<a href={resolve(`/${enc}`)}
-				><img
-					src={prof !== undefined && URL.canParse(prof.picture ?? '')
-						? prof.picture
-						: getRoboHashURL(nip19.npubEncode(hex))}
-					alt={nameToShow}
-					title={nameToShow}
-					class="Avatar"
-				/>{nameToShow}</a
-			>
+			<div class="name">
+				<a href={resolve(`/${enc}`)}
+					><img
+						src={prof !== undefined && URL.canParse(prof.picture ?? '')
+							? prof.picture
+							: getRoboHashURL(nip19.npubEncode(hex))}
+						alt={nameToShow}
+						title={nameToShow}
+						class="Avatar"
+					/>{nameToShow}</a
+				>
+			</div>
 		{:else if ['note', 'nevent', 'naddr'].includes(d.type)}
 			{@const event =
 				d.type === 'naddr'
@@ -427,5 +429,8 @@
 	.emoji {
 		height: 1.5em;
 		vertical-align: top;
+	}
+	div.name {
+		display: inline;
 	}
 </style>

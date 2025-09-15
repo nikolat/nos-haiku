@@ -1109,6 +1109,7 @@ export const getName = (
 	if (nameToShow.length > 20) {
 		nameToShow = `${nameToShow.slice(0, 20)}...`;
 	}
+	nameToShow = nameToShow.replace(/[\p{C}]/gu, ''); //制御文字を除去
 	return nameToShow;
 };
 
@@ -1117,7 +1118,7 @@ export const getProfileId = (prof: ProfileContent | undefined) => {
 	if (name.length > 30) {
 		name = `${name.slice(0, 25)}...`;
 	}
-	return name;
+	return name.replace(/[\p{C}]/gu, ''); //制御文字を除去
 };
 
 export const getNameOfKind = (kind: number): string => {

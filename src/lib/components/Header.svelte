@@ -570,6 +570,7 @@
 												<Content
 													content={sp.length >= 2 ? `${sp[0]}...` : sp[0]}
 													tags={evTo.tags}
+													{profileMap}
 													enableAutoLink={false}
 												/>
 											{/if}

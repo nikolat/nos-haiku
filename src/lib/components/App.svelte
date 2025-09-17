@@ -880,6 +880,9 @@
 	const timelineWithMuteApplied: NostrEvent[] = $derived(
 		isEnabledHideMutedEvents ? timelineSliced.filter((ev) => !isMutedEvent(ev)) : timelineSliced
 	);
+	const reactionsWithMuteApplied: NostrEvent[] = $derived(
+		eventsReaction.filter((ev) => !isMutedEvent(ev))
+	);
 	const eventsQuoted: NostrEvent[] = $derived(
 		rc === undefined ? [] : rc.getQuotedEvents([...timelineSliced, ...eventsPinList], 5)
 	);
@@ -1188,7 +1191,7 @@
 			readTimeOfNotification={eventRead?.created_at ?? 0}
 			eventsTimeline={timelineWithMuteApplied}
 			{eventsQuoted}
-			{eventsReaction}
+			eventsReaction={reactionsWithMuteApplied}
 			{eventsChannelBookmark}
 			{eventsBadge}
 			{eventsPoll}

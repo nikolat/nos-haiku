@@ -46,7 +46,7 @@ export const defaultUploaderURLsNip96 = [
 	'https://nostpic.com',
 	'https://nostr.build',
 	'https://nostrcheck.me',
-	'https://void.cat',
+	'https://nostr.download',
 	'https://files.sovbit.host'
 ];
 export const defaultUploaderURLsBlossom = [

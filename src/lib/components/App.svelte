@@ -85,10 +85,22 @@
 	let eventsTimeline: NostrEvent[] = $state([]);
 	let eventsReaction: NostrEvent[] = $state([]);
 	let eventFollowList: NostrEvent | undefined = $state();
-	const followingPubkeys: string[] = $derived(
-		eventFollowList?.tags.filter((tag) => tag.length >= 2 && tag[0] === 'p').map((tag) => tag[1]) ??
-			[]
-	);
+	const followingPubkeys: string[] = $derived.by(() => {
+		const followingPubkeysFromEvent =
+			eventFollowList?.tags
+				.filter((tag) => tag.length >= 2 && tag[0] === 'p')
+				.map((tag) => tag[1]) ?? [];
+		const followingPubkeySet = new Set<string>();
+		for (const pubkey of followingPubkeysFromEvent) {
+			try {
+				nip19.npubEncode(pubkey);
+			} catch (_error) {
+				continue;
+			}
+			followingPubkeySet.add(pubkey);
+		}
+		return Array.from(followingPubkeySet);
+	});
 	let eventMuteList: NostrEvent | undefined = $state();
 	let eventRelayList: NostrEvent | undefined = $state();
 	let eventMyPublicChatsList: NostrEvent | undefined = $state();
@@ -711,10 +723,22 @@
 						//被メンションを取得
 						rc.fetchEventsMention(loginPubkey, unixNow(), 10);
 						//フォローイーのkind:10002を全取得
-						const pubkeysSecond: string[] =
+						const followingPubkeysFromEvent =
 							eventFollowList?.tags
 								.filter((tag) => tag.length >= 2 && tag[0] === 'p')
 								.map((tag) => tag[1]) ?? [];
+						const followingPubkeySet = new Set<string>();
+						for (const pubkey of followingPubkeysFromEvent) {
+							try {
+								nip19.npubEncode(pubkey);
+							} catch (error) {
+								console.info(`pubkey: ${pubkey}`);
+								console.warn(error);
+								continue;
+							}
+							followingPubkeySet.add(pubkey);
+						}
+						const pubkeysSecond: string[] = Array.from(followingPubkeySet);
 						if (pubkeysSecond.length > 0) {
 							rc.fetchKind10002(pubkeysSecond, () => {
 								fetchTimeline();

@@ -598,11 +598,21 @@ export const getTagsForContent = (
 	for (const match of matchesIteratorHashTag) {
 		hashtags.add(match[2].toLowerCase());
 	}
-	const matchesIteratorLink = content.matchAll(/https?:\/\/[\w!?/=+\-_~:;.,*&@#$%()[\]]+/g);
-	const links: Set<string> = new Set<string>();
-	for (const match of matchesIteratorLink) {
-		links.add(urlLinkString(match[0])[0]);
-	}
+	const getUrlsFromContent = (content: string): Set<string> => {
+		const matchesIteratorLink = content.matchAll(/https?:\/\/[\w!?/=+\-_~:;.,*&@#$%()[\]]+/g);
+		const links: Set<string> = new Set<string>();
+		for (const match of matchesIteratorLink) {
+			const [url, rest] = urlLinkString(match[0]);
+			if (URL.canParse(url)) {
+				links.add(url);
+			}
+			for (const link of getUrlsFromContent(rest)) {
+				links.add(link);
+			}
+		}
+		return links;
+	};
+	const links: Set<string> = getUrlsFromContent(content);
 	const imetaTags: string[][] = [];
 	if (imetaMap !== undefined) {
 		for (const [url, imeta] of imetaMap) {

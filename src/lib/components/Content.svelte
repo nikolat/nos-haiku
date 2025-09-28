@@ -123,7 +123,14 @@
 				url: string;
 		  };
 
-	const getExpandTagsList = (content: string, tags: string[][]) => {
+	const getExpandTagsList = (
+		content: string,
+		tags: string[][]
+	): {
+		type: string;
+		event: undefined;
+		children: [Token];
+	} => {
 		const regMatchArray = [
 			'https?://[\\w!?/=+\\-_~:;.,*&@#$%()[\\]]+',
 			'wss?://[\\w!?/=+\\-_~:;.,*&@#$%()[\\]]+',
@@ -163,12 +170,23 @@
 			const mShortcode = m.at(9);
 			const mMentionDecoded: nip19.DecodedResult | null =
 				mMention === undefined ? null : nip19decode(mMention.replace(/nostr:/, ''));
-			if (mLink !== undefined && /^https?:\/\/\S+/.test(mLink) && URL.canParse(mLink)) {
-				children.push({
-					type: 'link',
-					href: new URL(mLink).toString(),
-					value: mLink
-				});
+			if (mLink !== undefined && /^https?:\/\/\S+/.test(mLink)) {
+				const [url, rest] = urlLinkString(mLink);
+				if (URL.canParse(url)) {
+					children.push({
+						type: 'link',
+						href: new URL(url).toString(),
+						value: url
+					});
+				} else {
+					children.push({
+						type: 'text',
+						value: url
+					});
+				}
+				for (const child of getExpandTagsList(rest, tags).children) {
+					children.push(child);
+				}
 			} else if (mRelay !== undefined && /^wss?:\/\/\S+/.test(mRelay) && URL.canParse(mRelay)) {
 				children.push({
 					type: 'relay',
@@ -244,7 +262,7 @@
 		const rMap = new Map<string, Response | null>();
 		for (const ct of ats.children) {
 			if (ct.type === 'link') {
-				const [url, _rest] = urlLinkString(ct.value);
+				const url = ct.value;
 				let response: Response | null;
 				try {
 					response = await fetch(url, { method: 'HEAD' });
@@ -260,7 +278,7 @@
 
 {#each ats.children as ct, i (i)}
 	{#if ct.type === 'link'}
-		{@const [url, rest] = urlLinkString(ct.value)}
+		{@const url = ct.value}
 		{@const ytb1 = url.match(/^https?:\/\/(www|m)\.youtube\.com\/watch\?v=([\w-]+)/i)}
 		{@const ytb2 = url.match(/^https?:\/\/youtu\.be\/([\w-]+)(\?\w+)?/i)}
 		{@const ytb3 = url.match(/^https?:\/\/(www\.)?youtube\.com\/(shorts|live)\/([\w-]+)(\?\w+)?/i)}
@@ -328,7 +346,7 @@
 			{:else}
 				<a href={url} target="_blank" rel="noopener noreferrer">{url}</a>
 			{/if}
-		{/if}{rest}
+		{/if}
 	{:else if ct.type === 'relay'}
 		{@const url = appendRelay(location.href, ct.href)}
 		<a href={url}>{ct.value}</a>

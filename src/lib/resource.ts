@@ -977,14 +977,25 @@ export class RelayConnector {
 	};
 
 	fetchKind10002 = (pubkeys: string[], completeCustom: () => void) => {
-		const filter: LazyFilter = {
-			kinds: [10002],
-			authors: pubkeys,
-			until: unixNow()
+		const fetchLimit = 500;
+		const sliceByNumber = (array: string[], number: number): string[][] => {
+			const length = Math.ceil(array.length / number);
+			return new Array(length)
+				.fill(undefined)
+				.map((_, i) => array.slice(i * number, (i + 1) * number));
 		};
+		const filters: LazyFilter[] = [];
+		for (const authors of sliceByNumber(pubkeys, fetchLimit)) {
+			const filter: LazyFilter = {
+				kinds: [10002],
+				authors,
+				until: unixNow()
+			};
+			filters.push(filter);
+		}
 		const relays = indexerRelays.filter(this.#relayFilter);
 		const options = relays.length > 0 ? { relays } : undefined;
-		this.#fetchRpCustom(filter, completeCustom, options);
+		this.#fetchRpCustom(filters, completeCustom, options);
 	};
 
 	fetchUserSettings = (pubkey: string, completeCustom: () => void) => {
@@ -998,13 +1009,14 @@ export class RelayConnector {
 		};
 		const relays = this.#getRelays('write').filter(this.#relayFilter).slice(0, this.#limitRelay);
 		const options = relays.length > 0 ? { relays } : undefined;
-		this.#fetchRpCustom(filter, completeCustom, options);
+		this.#fetchRpCustom(filter, completeCustom, options, 3000);
 	};
 
 	#fetchRpCustom = (
-		filter: LazyFilter,
+		filters: LazyFilter | LazyFilter[],
 		completeCustom: () => void,
-		options?: Partial<RxNostrUseOptions>
+		options?: Partial<RxNostrUseOptions>,
+		timeout?: number
 	) => {
 		const rxReqBRpCustom = createRxBackwardReq();
 		this.#rxNostr
@@ -1012,13 +1024,13 @@ export class RelayConnector {
 			.pipe(
 				this.#tie,
 				latestEach(({ event }) => `${event.kind}:${event.pubkey}`),
-				completeOnTimeout(this.#secOnCompleteTimeout)
+				completeOnTimeout(timeout ?? this.#secOnCompleteTimeout)
 			)
 			.subscribe({
 				next: this.#next,
 				complete: completeCustom
 			});
-		rxReqBRpCustom.emit(filter);
+		rxReqBRpCustom.emit(filters);
 		rxReqBRpCustom.over();
 	};
 

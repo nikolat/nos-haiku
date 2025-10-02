@@ -215,7 +215,9 @@
 				break;
 			}
 			case 1:
+			case 4:
 			case 6:
+			case 8:
 			case 16:
 			case 20:
 			case 40:
@@ -224,6 +226,9 @@
 			case 1111:
 			case 20000:
 			case 39701: {
+				if (kind === 8) {
+					eventsBadge = sortEvents(rc.getEventsByFilter({ kinds: [8, 30008, 30009] }));
+				}
 				if (kind === 40) {
 					eventsChannel = rc.getEventsByFilter({ kinds: [kind] });
 				}
@@ -231,6 +236,7 @@
 					eventsPoll = sortEvents(rc.getEventsByFilter({ kinds: [1018, 1068] }));
 				}
 				const kinds: number[] = kindsSelected;
+				const kindsMentioned: number[] = [4, 8];
 				let tl: NostrEvent[] = [];
 				if (up.isAntenna && loginPubkey !== undefined) {
 					const authors: string[] =
@@ -240,7 +246,10 @@
 							.map((tag) => tag[1]) ?? [];
 					if (authors.length > 0) {
 						if (kindSet.size === 0) {
-							tl = rc.getEventsByFilter({ kinds, authors });
+							tl = rc.getEventsByFilter([
+								{ kinds, authors },
+								{ kinds: kindsMentioned, '#p': [loginPubkey] }
+							]);
 						} else {
 							tl = rc.getEventsByFilter({
 								kinds: Array.from(kindSet),
@@ -264,7 +273,15 @@
 					tl = rc.getEventsByFilter(filter);
 				} else if (up.currentProfilePointer !== undefined) {
 					if (kindSet.size === 0) {
-						tl = rc.getEventsByFilter({ kinds, authors: [up.currentProfilePointer.pubkey] });
+						const filters: Filter[] = [{ kinds, authors: [up.currentProfilePointer.pubkey] }];
+						if (loginPubkey !== undefined) {
+							filters.push({
+								kinds: kindsMentioned,
+								authors: [up.currentProfilePointer.pubkey],
+								'#p': [loginPubkey]
+							});
+						}
+						tl = rc.getEventsByFilter(filters);
 					} else {
 						tl = rc.getEventsByFilter({
 							kinds: Array.from(kindSet),
@@ -386,12 +403,6 @@
 				setNewEventsReaction();
 				break;
 			}
-			case 8:
-			case 30008:
-			case 30009: {
-				eventsBadge = sortEvents(rc.getEventsByFilter({ kinds: [8, 30008, 30009] }));
-				break;
-			}
 			case 41: {
 				eventsChannelEdit = rc.getEventsByFilter({ kinds: [kind] });
 				break;
@@ -466,6 +477,11 @@
 						);
 					}
 				}
+				break;
+			}
+			case 30008:
+			case 30009: {
+				eventsBadge = sortEvents(rc.getEventsByFilter({ kinds: [8, 30008, 30009] }));
 				break;
 			}
 			case 30078: {

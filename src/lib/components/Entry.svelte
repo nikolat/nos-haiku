@@ -883,6 +883,7 @@
 										currentPubkey={event.pubkey}
 										{loginPubkey}
 										{pubkeyToSend}
+										{isPreview}
 									/>
 								{:else if event.kind === 7}
 									{#if repostedEvent !== undefined}

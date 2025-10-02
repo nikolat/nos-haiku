@@ -24,6 +24,7 @@
 		type OptionalFormDataFields
 	} from '$lib/nip96';
 	import { getToken } from 'nostr-tools/nip98';
+	import type { RxNostrSendOptions } from 'rx-nostr';
 	import { unixNow } from 'applesauce-core/helpers';
 	import confetti from 'canvas-confetti';
 	import { _ } from 'svelte-i18n';
@@ -272,7 +273,7 @@
 		}
 	});
 
-	const previewEvents = $derived.by(() => {
+	const previewEventsPromise = $derived.by(async () => {
 		const targetEventToReply =
 			channelToPost?.eventkind40 ??
 			eventToReply ??
@@ -296,6 +297,7 @@
 			clientTag,
 			channelMap,
 			eventsEmojiSet, //同上
+			true,
 			addPoll ? undefined : targetEventToReply,
 			currentBitchatGTag,
 			nameForBitchat,
@@ -307,6 +309,19 @@
 			baseEventToEdit?.kind
 		);
 	});
+	let previewEvents:
+		| {
+				eventToSend: UnsignedEvent;
+				eventChannelToSend: UnsignedEvent | undefined;
+				options: Partial<RxNostrSendOptions>;
+		  }
+		| undefined = $state();
+	$effect(() => {
+		previewEventsPromise.then((value) => {
+			previewEvents = value;
+		});
+	});
+
 	const canSendNote: boolean = $derived(
 		!(
 			contentToSend.length === 0 ||
@@ -399,6 +414,7 @@
 			clientTag,
 			channelMap,
 			isCustomEmojiEnabled ? eventsEmojiSet : [],
+			false,
 			addPoll ? undefined : targetEventToReply,
 			currentBitchatGTag,
 			nameForBitchat,
@@ -656,7 +672,7 @@
 									</svg>
 								</button>
 							{/if}
-							{#if pubkeysMentioningTo.length > 0}
+							{#if pubkeysMentioningTo.length > 0 && previewEventLocal !== undefined && previewEventLocal.kind !== 4}
 								mention to:
 								{#each pubkeysMentioningTo as p (p)}
 									{@const prof = profileMap.get(p)}

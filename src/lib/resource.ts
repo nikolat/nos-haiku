@@ -2591,7 +2591,7 @@ export class RelayConnector {
 		return this.sendEventWithInboxRelays(eventToSend, targetEvent);
 	};
 
-	makeEvent = (
+	makeEvent = async (
 		loginPubkey: string,
 		content: string,
 		channelNameToCreate: string,
@@ -2601,6 +2601,7 @@ export class RelayConnector {
 		clientTag: string[] | undefined,
 		channelMap: Map<string, ChannelContent>,
 		eventsEmojiSet: NostrEvent[],
+		isPreview: boolean,
 		targetEventToReply?: NostrEvent,
 		targetBitchatGTag?: string,
 		nameForBitchat?: string,
@@ -2616,11 +2617,11 @@ export class RelayConnector {
 		pollEndsAt?: number,
 		pollType?: 'singlechoice' | 'multiplechoice',
 		kindForEdit?: number
-	): {
+	): Promise<{
 		eventToSend: UnsignedEvent;
 		eventChannelToSend: UnsignedEvent | undefined;
 		options: Partial<RxNostrSendOptions>;
-	} => {
+	}> => {
 		const relaysToAdd: Set<string> = new Set<string>();
 		const created_at = unixNow();
 		const relaysToWrite = this.#getRelays('write').filter(this.#relayFilter);
@@ -2696,7 +2697,7 @@ export class RelayConnector {
 		} else if (targetEventToReply.kind === 40) {
 			kind = 42;
 		} else {
-			if ([1, 42, 20000].includes(targetEventToReply.kind)) {
+			if ([1, 4, 42, 20000].includes(targetEventToReply.kind)) {
 				kind = targetEventToReply.kind;
 			} else {
 				kind = 1111;
@@ -2705,7 +2706,7 @@ export class RelayConnector {
 		let pTagToReply: string[] | undefined;
 		if (targetEventToReply === undefined) {
 			//do nothing
-		} else if ([1, 40, 42, 20000].includes(targetEventToReply.kind)) {
+		} else if ([1, 4, 40, 42, 20000].includes(targetEventToReply.kind)) {
 			const rootTag = targetEventToReply.tags.find(
 				(tag) => tag.length >= 4 && tag[0] === 'e' && tag[3] === 'root'
 			);
@@ -2834,6 +2835,24 @@ export class RelayConnector {
 		if (clientTag !== undefined) {
 			tags.push(clientTag);
 		}
+		if (kind === 4) {
+			if (targetEventToReply !== undefined) {
+				tags = tags.filter((tag) => !(tag[0] === 'p' && tag[1] !== targetEventToReply.pubkey));
+				if (
+					!tags.some((tag) => tag[0] === 'p' && tag[1] === targetEventToReply.pubkey) &&
+					pTagToReply !== undefined
+				) {
+					tags.push(pTagToReply);
+				}
+			}
+			if (!isPreview) {
+				if (window.nostr?.nip04 !== undefined && pTagToReply !== undefined) {
+					content = await window.nostr.nip04.encrypt(pTagToReply[1], content);
+				} else {
+					throw Error('cannot encrypt');
+				}
+			}
+		}
 		if (kindForEdit === 10001) {
 			content = '';
 			tags = tags
@@ -2881,6 +2900,7 @@ export class RelayConnector {
 		clientTag: string[] | undefined,
 		channelMap: Map<string, ChannelContent>,
 		eventsEmojiSet: NostrEvent[],
+		isPreview: boolean,
 		targetEventToReply?: NostrEvent,
 		targetBitchatGTag?: string,
 		nameForBitchat?: string,
@@ -2900,7 +2920,7 @@ export class RelayConnector {
 		if (window.nostr === undefined) {
 			return null;
 		}
-		const { eventToSend, eventChannelToSend, options } = this.makeEvent(
+		const { eventToSend, eventChannelToSend, options } = await this.makeEvent(
 			loginPubkey,
 			content,
 			channelNameToCreate,
@@ -2910,6 +2930,7 @@ export class RelayConnector {
 			clientTag,
 			channelMap,
 			eventsEmojiSet,
+			isPreview,
 			targetEventToReply,
 			targetBitchatGTag,
 			nameForBitchat,

@@ -6,18 +6,20 @@
 		content,
 		loginPubkey,
 		currentPubkey,
-		pubkeyToSend
+		pubkeyToSend,
+		isPreview
 	}: {
 		content: string;
 		loginPubkey: string | undefined;
 		currentPubkey: string;
 		pubkeyToSend: string | undefined;
+		isPreview: boolean;
 	} = $props();
 
 	let decryptedContent: string | undefined = $state();
 </script>
 
-{#if loginPubkey !== undefined && pubkeyToSend !== undefined && [currentPubkey, pubkeyToSend].includes(loginPubkey)}
+{#if loginPubkey !== undefined && pubkeyToSend !== undefined && [currentPubkey, pubkeyToSend].includes(loginPubkey) && !isPreview}
 	<button
 		class="Button"
 		disabled={decryptedContent !== undefined}

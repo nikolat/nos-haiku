@@ -337,7 +337,7 @@ export class RelayConnector {
 				if (ap.identifier.length > 0) {
 					filter['#d'] = [ap.identifier];
 				}
-				const evs: Set<NostrEvent> = this.#eventStore.getByFilters(filter);
+				const evs: NostrEvent[] = this.#eventStore.getByFilters(filter);
 				for (const ev of evs) {
 					for (const relay of this.getSeenOn(ev.id, true)) {
 						relaysSeenOnSet.add(relay);

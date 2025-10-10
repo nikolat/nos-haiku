@@ -432,7 +432,7 @@ export const getPubkeysForFilter = (
 	for (const ev of events) {
 		let content: string | undefined = undefined;
 		if (ev.kind === 0) {
-			content = getProfileContent(ev).about;
+			content = getProfileContent(ev)?.about;
 		} else if (kindsForParse.includes(ev.kind)) {
 			content = ev.content;
 		}
@@ -487,7 +487,7 @@ export const getIdsForFilter = (
 	for (const ev of events) {
 		let content: string | undefined = undefined;
 		if (ev.kind === 0) {
-			content = getProfileContent(ev).about;
+			content = getProfileContent(ev)?.about;
 		} else if (kindsForParse.includes(ev.kind)) {
 			content = ev.content;
 		}

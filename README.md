@@ -54,13 +54,11 @@ This is a mini-blog modeled after [Sudo Haiku](https://h.sudo.ne.jp/), built usi
 - [svelte-persisted-store](https://github.com/joshnuss/svelte-persisted-store)
 - [svelte-i18n](https://github.com/kaisermann/svelte-i18n)
 
-### Emoji
+### Others
 
 - [emoji-mart](https://github.com/missive/emoji-mart)
-
-### Effect
-
 - [canvas-confetti](https://github.com/catdad/canvas-confetti)
+- [mediabunny](https://github.com/Vanilagy/mediabunny)
 
 ## License
 

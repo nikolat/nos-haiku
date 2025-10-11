@@ -26,6 +26,7 @@
 	import { getToken } from 'nostr-tools/nip98';
 	import type { RxNostrSendOptions } from 'rx-nostr';
 	import { unixNow } from 'applesauce-core/helpers';
+	import * as mediabunny from 'mediabunny';
 	import confetti from 'canvas-confetti';
 	import { _ } from 'svelte-i18n';
 
@@ -93,6 +94,7 @@
 	let inputFile: HTMLInputElement;
 	let textArea: HTMLTextAreaElement;
 	let postButton: HTMLButtonElement;
+	let logMessage: string | undefined = $state();
 
 	let emojiPickerContainer: HTMLElement | undefined = $state();
 	const callGetEmoji = () => {
@@ -116,12 +118,18 @@
 	}
 
 	const uploadFileExec = async () => {
+		logMessage = undefined;
 		let file: File | null = getFile();
 		if (file === null) {
 			return;
 		}
 		isInProcess = true;
 		console.info('file uploading...');
+		logMessage = 'file uploading...';
+		//圧縮
+		if (/^(video|audio)/.test(file.type)) {
+			file = await compress(file);
+		}
 		try {
 			if (uploaderType === 'nip96') {
 				const [uploadedFileUrl, fileUploadResponse] = await uploadByNip96(uploaderSelected, file);
@@ -146,8 +154,10 @@
 				insertText(uploadedFileUrl);
 			}
 			console.info('file uploading complete');
+			logMessage = undefined;
 		} catch (error) {
 			console.error(error);
+			logMessage = (error as Error).message;
 		}
 		isInProcess = false;
 	};
@@ -163,6 +173,50 @@
 		if (file === undefined) {
 			return null;
 		}
+		return file;
+	};
+
+	// https://gihyo.jp/article/2025/10/misskey-20
+	const compress = async (source: File): Promise<File> => {
+		// 入力を準備
+		const input = new mediabunny.Input({
+			source: new mediabunny.BlobSource(source),
+			formats: mediabunny.ALL_FORMATS
+		});
+
+		// 出力を準備。今回はmp4で出力
+		const output = new mediabunny.Output({
+			target: new mediabunny.BufferTarget(),
+			format: new mediabunny.Mp4OutputFormat()
+		});
+
+		// 変換を行うインスタンス。今回はビットレートのクオリティをLOWにすることで、圧縮を行うように指定
+		const conversion = await mediabunny.Conversion.init({
+			input,
+			output,
+			video: {
+				bitrate: mediabunny.QUALITY_LOW
+			},
+			audio: {
+				bitrate: mediabunny.QUALITY_LOW
+			}
+		});
+
+		// 処理の進捗が更新されたときのコールバック。進捗率は 0.0~1.0 で渡される
+		conversion.onProgress = (p) => (logMessage = `${Math.round(p * 100)}%`);
+
+		// 圧縮処理を実行 (注: 時間がかかる場合あり)
+		console.info('file converting...');
+		await conversion.execute();
+		console.info('file converting complete');
+
+		// 圧縮したデータを返す
+		const file = new File([output.target.buffer!], source.name, { type: output.format.mimeType });
+
+		const getSize = (file: File): number => Math.round((100 * file.size) / 1024 / 1024) / 100;
+		console.info(`original file size: ${getSize(source)} MB`);
+		console.info(`compressed file size: ${getSize(file)} MB`);
+
 		return file;
 	};
 
@@ -786,6 +840,9 @@
 				>
 					<span>{$_('CreateEntry.cancel')}</span>
 				</button>
+			{/if}
+			{#if logMessage !== undefined}
+				<span>{logMessage}</span>
 			{/if}
 		</div>
 	</div>

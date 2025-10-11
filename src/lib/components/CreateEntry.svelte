@@ -124,12 +124,12 @@
 			return;
 		}
 		isInProcess = true;
-		console.info('file uploading...');
-		logMessage = 'file uploading...';
 		//圧縮
 		if (/^(video|audio)/.test(file.type)) {
 			file = await compress(file);
 		}
+		console.info('file uploading...');
+		logMessage = 'file uploading...';
 		try {
 			if (uploaderType === 'nip96') {
 				const [uploadedFileUrl, fileUploadResponse] = await uploadByNip96(uploaderSelected, file);

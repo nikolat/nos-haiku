@@ -279,7 +279,7 @@
 {#each ats.children as ct, i (i)}
 	{#if ct.type === 'link'}
 		{@const url = ct.value}
-		{@const ytb1 = url.match(/^https?:\/\/(www|m)\.youtube\.com\/watch\?v=([\w-]+)/i)}
+		{@const ytb1 = url.match(/^https?:\/\/(www\.|m\.)?youtube\.com\/watch\?v=([\w-]+)/i)}
 		{@const ytb2 = url.match(/^https?:\/\/youtu\.be\/([\w-]+)(\?\w+)?/i)}
 		{@const ytb3 = url.match(/^https?:\/\/(www\.)?youtube\.com\/(shorts|live)\/([\w-]+)(\?\w+)?/i)}
 		{#if !enableAutoLink}

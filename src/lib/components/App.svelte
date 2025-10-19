@@ -735,7 +735,13 @@
 				if (loginPubkey !== undefined && eventFollowList === undefined) {
 					rc.fetchUserSettings(loginPubkey, () => {
 						//ミュートリスト対象情報を取得
-						rc.fetchMutedInfo(mutedChannelIds, mutedPubkeys, loginPubkey);
+						setTimeout(() => {
+							rc.fetchMutedInfo(
+								$state.snapshot(mutedChannelIds),
+								$state.snapshot(mutedPubkeys),
+								loginPubkey
+							);
+						}, 1000);
 						//被メンションを取得
 						rc.fetchEventsMention(loginPubkey, unixNow(), 10);
 						//フォローイーのkind:10002を全取得

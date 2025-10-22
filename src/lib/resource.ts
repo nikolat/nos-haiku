@@ -2729,10 +2729,13 @@ export class RelayConnector {
 					targetEventToReply.pubkey
 				]);
 			}
-			for (const pTag of targetEventToReply.tags.filter(
+			const pTags: string[][] = targetEventToReply.tags.filter(
 				(tag) => tag.length >= 2 && tag[0] === 'p' && tag[1] !== targetEventToReply?.pubkey
-			)) {
-				tags.push(pTag);
+			);
+			for (const pTag of pTags) {
+				if (!tags.some((tag) => tag.length >= 2 && tag[0] === pTag[0] && tag[1] === pTag[1])) {
+					tags.push(pTag);
+				}
 			}
 			const relayHintAuthor: string | undefined = this.#getRelayHintAuhor(
 				targetEventToReply.pubkey
@@ -2808,14 +2811,27 @@ export class RelayConnector {
 			this.getEventsByFilter,
 			this.getReplaceableEvent,
 			imetaMap
-		).filter((tag) => !(tag[0] === 'p' && tag[1] === targetEventToReply?.pubkey));
+		).filter(
+			(tag) =>
+				!(
+					tag[0] === 'p' &&
+					(tag[1] === targetEventToReply?.pubkey ||
+						tags
+							.filter((tag2) => tag2.length >= 2 && tag2[0] === 'p')
+							.map((tag2) => tag2[1])
+							.includes(tag[1]))
+				)
+		);
 		tags.push(...tagsForContent);
 		if (pTagToReply !== undefined) {
 			tags.push(pTagToReply);
 		}
 		if (targetBitchatGTag !== undefined && nameForBitchat !== undefined) {
 			kind = 20000;
-			tags.push(['g', targetBitchatGTag], ['n', nameForBitchat], ['t', 'teleport']);
+			tags.push(['g', targetBitchatGTag], ['n', nameForBitchat]);
+			if (!tags.some((tag) => tag.length >= 2 && tag[0] === 't' && tag[1] === 'teleport')) {
+				tags.push(['t', 'teleport']);
+			}
 		}
 		tags = tags.filter(
 			(tag) =>

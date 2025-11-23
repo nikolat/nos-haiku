@@ -678,6 +678,8 @@
 								Emoji set
 							{:else if event.kind === 31990}
 								Handler information
+							{:else if event.kind === 34236}
+								Addressable Short Video Event
 							{:else if event.kind === 39701}
 								Web Bookmarking
 							{:else}
@@ -1060,7 +1062,7 @@
 									{#each new Set<string>(is) as i (i)}
 										<p><Content content={i} tags={[]} /></p>
 									{/each}
-								{:else if event.kind === 20}
+								{:else if [20, 34236].includes(event.kind)}
 									{@const title = event.tags
 										.find((tag) => tag.length >= 2 && tag[0] === 'title')
 										?.at(1)}

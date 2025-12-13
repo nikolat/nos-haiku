@@ -676,6 +676,8 @@
 								Long-form Content
 							{:else if event.kind === 30030}
 								Emoji set
+							{:else if event.kind === 30311}
+								Live Activities
 							{:else if event.kind === 31990}
 								Handler information
 							{:else if event.kind === 34236}
@@ -1922,6 +1924,54 @@
 											/>
 										{/each}
 									</div>
+								{:else if event.kind === 30311}
+									{@const title = event.tags
+										.find((tag) => tag.length >= 2 && tag[0] === 'title')
+										?.at(1)}
+									{@const streaming =
+										event.tags
+											.find(
+												(tag) => tag.length >= 2 && tag[0] === 'streaming' && URL.canParse(tag[1])
+											)
+											?.at(1) ?? ''}
+									{#if title !== undefined}<h2 class="title">{title}</h2>{/if}
+									<p>
+										<Content
+											{rc}
+											content={streaming}
+											tags={event.tags}
+											{channelMap}
+											{profileMap}
+											{loginPubkey}
+											{mutedPubkeys}
+											{mutedChannelIds}
+											{mutedWords}
+											{followingPubkeys}
+											{eventFollowList}
+											{eventEmojiSetList}
+											{eventMuteList}
+											{eventsTimeline}
+											{eventsQuoted}
+											{eventsReaction}
+											{eventsBadge}
+											{eventsPoll}
+											{eventsEmojiSet}
+											{eventsChannelBookmark}
+											{getSeenOn}
+											{uploaderSelected}
+											{uploaderType}
+											bind:channelToPost
+											{currentChannelId}
+											{isEnabledRelativeTime}
+											{isEnabledEventProtection}
+											{clientTag}
+											{nowRealtime}
+											{level}
+											isPreview={false}
+											{callInsertText}
+											bind:baseEventToEdit
+										/>
+									</p>
 								{:else if event.kind === 31990}
 									{@const obj = getHandlerInformation(event.content)}
 									{#if obj === null}

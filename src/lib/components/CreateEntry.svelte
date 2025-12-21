@@ -305,7 +305,7 @@
 	let pollItems: string[] = $state([]);
 	let pollPeriod: number = $state(1 * 24 * 60 * 60);
 	let pollType: 'singlechoice' | 'multiplechoice' = $state('singlechoice');
-	let contentToSend: string = $state(preInput ?? '');
+	let contentToSend: string = $derived(preInput ?? '');
 	$effect(() => {
 		if (baseEventToEdit !== undefined) {
 			channelNameToCreate = `kind:${baseEventToEdit.kind}`;

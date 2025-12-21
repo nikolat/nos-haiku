@@ -398,7 +398,7 @@
 		}
 		return nip19.naddrEncode(ap);
 	};
-	const naddrOfThisEvent: nip19.NAddr | null = $state(getNaddrOfThisEvent(event));
+	const naddrOfThisEvent: nip19.NAddr | null = $derived(getNaddrOfThisEvent(event));
 
 	let zapWindowContainer: HTMLElement | undefined = $state();
 

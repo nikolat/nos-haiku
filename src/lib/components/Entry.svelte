@@ -390,10 +390,13 @@
 		return undefined;
 	});
 	const getNaddrOfThisEvent = (event: NostrEvent): nip19.NAddr | null => {
-		let ap: nip19.AddressPointer;
+		let ap: nip19.AddressPointer | null;
 		try {
 			ap = getAddressPointerForEvent(event, getSeenOn(event.id, true));
 		} catch (_error) {
+			return null;
+		}
+		if (ap === null) {
 			return null;
 		}
 		return nip19.naddrEncode(ap);

@@ -6,7 +6,7 @@ import { normalizeURL } from 'nostr-tools/utils';
 import * as nip19 from 'nostr-tools/nip19';
 import type { LazyFilter } from 'rx-nostr';
 import {
-	getCoordinateFromAddressPointer,
+	getReplaceableAddressFromPointer,
 	getOutboxes,
 	getProfileContent,
 	getTagValue,
@@ -71,7 +71,7 @@ export const getEventsAddressableLatest = (events: NostrEvent[]): NostrEvent[] =
 			...ev,
 			identifier: isAddressableKind(ev.kind) ? (getTagValue(ev, 'd') ?? '') : ''
 		};
-		const s: string = getCoordinateFromAddressPointer(ap);
+		const s: string = getReplaceableAddressFromPointer(ap);
 		const event: NostrEvent | undefined = eventMap.get(s);
 		if (event === undefined || ev.created_at > event.created_at) {
 			eventMap.set(s, ev);
@@ -510,7 +510,7 @@ export const getIdsForFilter = (
 						}
 					}
 				} else if (d.type === 'naddr') {
-					const str = getCoordinateFromAddressPointer(d.data);
+					const str = getReplaceableAddressFromPointer(d.data);
 					if (!apsSet.has(str)) {
 						aps.push(d.data);
 						apsSet.add(str);
@@ -566,7 +566,7 @@ export const getTagsForContent = (
 				ppMap.set(d.data.author, { pubkey: d.data.author });
 			}
 		} else if (d.type === 'naddr') {
-			const c = getCoordinateFromAddressPointer(d.data);
+			const c = getReplaceableAddressFromPointer(d.data);
 			if (!apMap.has(c) || d.data.relays !== undefined) {
 				apMap.set(c, d.data);
 			}

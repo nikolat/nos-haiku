@@ -35,13 +35,12 @@ import { EventStore } from 'applesauce-core';
 import {
 	getAddressPointerForEvent,
 	getAddressPointerFromATag,
-	getCoordinateFromAddressPointer,
-	getDeleteCoordinates,
+	getReplaceableAddressFromPointer,
+	getDeleteAddressPointers,
 	getDeleteIds,
 	getInboxes,
 	getOutboxes,
 	getTagValue,
-	parseCoordinate,
 	unixNow
 } from 'applesauce-core/helpers';
 import {
@@ -198,8 +197,14 @@ export class RelayConnector {
 
 	#defineSubscription = () => {
 		const getRpId = ({ event }: { event: NostrEvent }) => `${event.kind}:${event.pubkey}`;
-		const getAdId = ({ event }: { event: NostrEvent }) =>
-			getCoordinateFromAddressPointer(getAddressPointerForEvent(event));
+		const getAdId = ({ event }: { event: NostrEvent }) => {
+			const ap = getAddressPointerForEvent(event);
+			if (ap === null) {
+				return '';
+			} else {
+				return getReplaceableAddressFromPointer(ap);
+			}
+		};
 		const next = this.#next;
 		const complete = this.#complete;
 		const bt: OperatorFunction<ReqPacket, ReqPacket[]> = bufferTime(this.#secBufferTime);
@@ -314,7 +319,7 @@ export class RelayConnector {
 		console.info('kind', event.kind);
 		if (event.kind === 5) {
 			const ids: string[] = getDeleteIds(event);
-			const aids: string[] = getDeleteCoordinates(event);
+			const aps: nip19.AddressPointer[] = getDeleteAddressPointers(event);
 			const relaysSeenOnSet = new Set<string>();
 			for (const id of ids) {
 				if (this.#eventStore.hasEvent(id)) {
@@ -324,11 +329,7 @@ export class RelayConnector {
 					this.#eventStore.database.remove(id);
 				}
 			}
-			for (const aid of aids) {
-				const ap: nip19.AddressPointer | null = parseCoordinate(aid, true, true);
-				if (ap === null) {
-					continue;
-				}
+			for (const ap of aps) {
 				const filter: Filter = {
 					kinds: [ap.kind],
 					authors: [ap.pubkey],
@@ -754,7 +755,7 @@ export class RelayConnector {
 			};
 			filter = {
 				kinds: [7],
-				'#a': [getCoordinateFromAddressPointer(ap)],
+				'#a': [getReplaceableAddressFromPointer(ap)],
 				limit: this.#limitReaction,
 				until
 			};
@@ -808,7 +809,7 @@ export class RelayConnector {
 			};
 			filter = {
 				kinds: [1111],
-				'#A': [getCoordinateFromAddressPointer(ap)],
+				'#A': [getReplaceableAddressFromPointer(ap)],
 				limit: this.#limitComment,
 				until
 			};
@@ -874,10 +875,12 @@ export class RelayConnector {
 				aTags = [aTagLast];
 			}
 			for (const aTag of aTags) {
-				let ap: nip19.AddressPointer;
+				let ap: nip19.AddressPointer | null;
 				try {
 					ap = getAddressPointerFromATag(aTag);
-					nip19.naddrEncode(ap);
+					if (ap !== null) {
+						nip19.naddrEncode(ap);
+					}
 				} catch (_error) {
 					continue;
 				}
@@ -1479,7 +1482,7 @@ export class RelayConnector {
 		} else if (currentAddressPointer !== undefined) {
 			filtersF.push({
 				kinds: [7],
-				'#a': [getCoordinateFromAddressPointer(currentAddressPointer)],
+				'#a': [getReplaceableAddressFromPointer(currentAddressPointer)],
 				since
 			});
 		} else if (isAntenna && followingPubkeys.length > 0) {
@@ -1598,15 +1601,18 @@ export class RelayConnector {
 		const filters: LazyFilter[] = [];
 		const until = unixNow();
 		for (const aTag of aTags) {
-			let ap: nip19.AddressPointer;
+			let ap: nip19.AddressPointer | null;
 			try {
 				ap = getAddressPointerFromATag(aTag);
-				nip19.naddrEncode(ap);
+				if (ap !== null) {
+					nip19.naddrEncode(ap);
+				}
 			} catch (error) {
 				console.warn(error);
 				continue;
 			}
 			if (
+				ap !== null &&
 				!this.#eventStore.hasReplaceable(
 					ap.kind,
 					ap.pubkey,
@@ -2176,9 +2182,11 @@ export class RelayConnector {
 		const aTagStrs = eventEmojiSetList?.tags
 			.filter((tag) => tag.length >= 2 && tag[0] === 'a')
 			.map((tag) => tag[1]);
-		const aTagStr: string = getCoordinateFromAddressPointer(
-			getAddressPointerForEvent(eventEmojiSet)
-		);
+		const ap: nip19.AddressPointer | null = getAddressPointerForEvent(eventEmojiSet);
+		if (ap === null) {
+			throw new Error('address pointer is null');
+		}
+		const aTagStr: string = getReplaceableAddressFromPointer(ap);
 		const aTag = ['a', aTagStr];
 		const recommendedRelay: string | undefined = this.#getRelayHintEvent(eventEmojiSet);
 		if (recommendedRelay !== undefined) {
@@ -2292,9 +2300,11 @@ export class RelayConnector {
 		const aTagStrs = profileBadgesEvent?.tags
 			.filter((tag) => tag.length >= 2 && tag[0] === 'a')
 			.map((tag) => tag[1]);
-		const aTagStr: string = getCoordinateFromAddressPointer(
-			getAddressPointerForEvent(badgeDefinitionEvent)
-		);
+		const ap: nip19.AddressPointer | null = getAddressPointerForEvent(badgeDefinitionEvent);
+		if (ap === null) {
+			throw new Error('address pointer is null');
+		}
+		const aTagStr: string = getReplaceableAddressFromPointer(ap);
 		const aTag: string[] = ['a', aTagStr];
 		const recommendedRelayATag: string | undefined = this.#getRelayHintEvent(badgeDefinitionEvent);
 		if (recommendedRelayATag !== undefined) {
@@ -2473,7 +2483,7 @@ export class RelayConnector {
 				...targetEvent,
 				identifier: isAddressableKind(targetEvent.kind) ? (getTagValue(targetEvent, 'd') ?? '') : ''
 			};
-			const a: string = getCoordinateFromAddressPointer(ap);
+			const a: string = getReplaceableAddressFromPointer(ap);
 			const aTag: string[] = ['a', a];
 			if (relayHintEvent !== undefined) {
 				aTag.push(relayHintEvent);
@@ -2532,7 +2542,7 @@ export class RelayConnector {
 						? (getTagValue(targetEvent, 'd') ?? '')
 						: ''
 				};
-				const a: string = getCoordinateFromAddressPointer(ap);
+				const a: string = getReplaceableAddressFromPointer(ap);
 				const aTag: string[] = ['a', a];
 				if (relayHintEvent !== undefined) {
 					aTag.push(relayHintEvent);
@@ -2791,7 +2801,7 @@ export class RelayConnector {
 						? (getTagValue(targetEventToReply, 'd') ?? '')
 						: ''
 				};
-				const a: string = getCoordinateFromAddressPointer(ap);
+				const a: string = getReplaceableAddressFromPointer(ap);
 				const aTag: string[] = ['a', a];
 				const ATag: string[] = ['A', a];
 				if (relayHintEvent !== undefined) {

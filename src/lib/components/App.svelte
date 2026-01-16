@@ -461,9 +461,9 @@
 						const aTags: string[][] = ev10030.tags.filter(
 							(tag) => tag.length >= 2 && tag[0] === 'a'
 						);
-						const aps: nip19.AddressPointer[] = aTags.map((aTag) =>
-							getAddressPointerFromATag(aTag)
-						);
+						const aps: nip19.AddressPointer[] = aTags
+							.map((aTag) => getAddressPointerFromATag(aTag))
+							.filter((ap) => ap !== null);
 						const filters: Filter[] = mergeFilterForAddressableEvents(
 							aps
 								.filter((ap) => isAddressableKind(ap.kind))

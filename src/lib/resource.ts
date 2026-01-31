@@ -425,7 +425,7 @@ export class RelayConnector {
 						}
 					}
 					if ([1, 42].includes(event.kind)) {
-						this.#fetchEventsByETags(event, 'e', false, undefined, 0);
+						this.#fetchEventsByETags(event, 'e', false);
 					}
 					this.#fetchEventsQuoted(event);
 				};
@@ -1544,16 +1544,12 @@ export class RelayConnector {
 		event: NostrEvent,
 		tagName: string,
 		onlyLastOne: boolean = false,
-		pubkeyHint?: string,
-		limit?: number
+		pubkeyHint?: string
 	) => {
 		let ids = event.tags
 			.filter((tag) => tag.length >= 2 && tag[0] === tagName)
 			.map((tag) => tag[1])
 			.filter((id) => !this.#eventStore.hasEvent(id));
-		if (limit !== undefined) {
-			ids = ids.slice(0, limit);
-		}
 		if (ids.length > 0) {
 			const lastOne: string | undefined = ids.at(-1);
 			if (onlyLastOne && lastOne !== undefined) {

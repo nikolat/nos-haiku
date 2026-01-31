@@ -421,7 +421,7 @@ export class RelayConnector {
 						this.#fetchDeletion(event);
 						this.#fetchReaction(event);
 						if (event.kind === 1) {
-							this.#fetchReply(event);
+							this.#fetchReply(event, 1);
 						}
 					}
 					if ([1, 42].includes(event.kind)) {
@@ -783,11 +783,11 @@ export class RelayConnector {
 		this.#rxReqBRg.emit(filter, options);
 	};
 
-	#fetchReply = (event: NostrEvent) => {
+	#fetchReply = (event: NostrEvent, limit: number = this.#limitComment) => {
 		const filter: LazyFilter = {
 			kinds: [1],
 			'#e': [event.id],
-			limit: this.#limitComment,
+			limit,
 			until: unixNow()
 		};
 		let options: { relays: string[] } | undefined;
@@ -795,8 +795,8 @@ export class RelayConnector {
 		if (event10002 !== undefined) {
 			const relays = getInboxes(event10002).filter(this.#relayFilter).slice(0, this.#limitRelay);
 			options = relays.length > 0 ? { relays } : undefined;
+			this.#rxReqBRg.emit(filter, options);
 		}
-		this.#rxReqBRg.emit(filter, options);
 	};
 
 	#fetchComment = (event: NostrEvent) => {

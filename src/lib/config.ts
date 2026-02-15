@@ -14,7 +14,8 @@ export const initialLocale: string =
 export const defaultRelays: string[] = [
 	'wss://nrelay.c-stellar.net/',
 	'wss://nostream.ocha.one/',
-	'wss://nostr.compile-error.net/'
+	'wss://nostr.compile-error.net/',
+	'wss://yabu.me/'
 ];
 export const indexerRelays = [
 	'wss://directory.yabu.me/',

@@ -18,7 +18,7 @@
 	import { isAddressableKind, isReplaceableKind } from 'nostr-tools/kinds';
 	import * as nip19 from 'nostr-tools/nip19';
 	import { getInboxes, unixNow } from 'applesauce-core/helpers';
-	import { decode } from 'light-bolt11-decoder';
+	import { getSatoshisAmountFromBolt11 } from 'nostr-tools/nip57';
 	import { _ } from 'svelte-i18n';
 
 	let {
@@ -522,13 +522,9 @@
 									{:else if [6, 16].includes(ev.kind)}
 										<a href={linkNevent}>🔁reposted</a>
 									{:else if ev.kind === 9735}
-										{@const invoice = decode(
+										{@const sats = getSatoshisAmountFromBolt11(
 											ev.tags.find((tag) => tag.length >= 2 && tag[0] === 'bolt11')?.at(1) ?? ''
 										)}
-										{@const sats =
-											parseInt(
-												invoice.sections.find((section) => section.name === 'amount')?.value ?? '-1'
-											) / 1000}
 										<a href={linkNevent}
 											>⚡{#if sats > 0}{sats}{/if} zapped</a
 										>

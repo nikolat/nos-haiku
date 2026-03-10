@@ -491,9 +491,14 @@
 			filesToUpload = undefined;
 			showForm = false;
 			isCustomEmojiEnabled = true;
-			if (isNeededShowEvent && event !== null) {
-				const nevent: string = nip19.neventEncode({ ...event, author: event.pubkey });
+			if (event === null) {
+				return;
+			}
+			const nevent: string = nip19.neventEncode({ ...event, author: event.pubkey });
+			if (isNeededShowEvent) {
 				goto(resolve(`/entry/${nevent}`));
+			} else {
+				contentToSend = `nostr:${nevent}`;
 			}
 		});
 		//8/19はハイクの日

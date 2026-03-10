@@ -237,7 +237,7 @@
 				}
 				const kinds: number[] = kindsSelected;
 				const kindsMentioned: number[] = [4, 8];
-				let tl: NostrEvent[] = [];
+				let tl: NostrEvent[];
 				if (up.isAntenna && loginPubkey !== undefined) {
 					const authors: string[] =
 						rc

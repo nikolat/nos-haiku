@@ -227,7 +227,7 @@ export function validateServerConfiguration(config: ServerConfiguration): boolea
  */
 export async function readServerConfig(serverUrl: string): Promise<ServerConfiguration> {
 	const HTTPROUTE = '/.well-known/nostr/nip96.json' as const;
-	let fetchUrl = '';
+	let fetchUrl: string;
 
 	try {
 		const { origin } = new URL(serverUrl);

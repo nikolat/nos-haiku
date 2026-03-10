@@ -413,7 +413,7 @@
 												disabled={loginPubkey === undefined}
 												checked={isSelected}
 												onchange={() => {
-													let newKindsSelected: number[] = [];
+													let newKindsSelected: number[];
 													if (kindsSelected.includes(kind)) {
 														newKindsSelected = kindsSelected.filter((k) => k !== kind);
 													} else {

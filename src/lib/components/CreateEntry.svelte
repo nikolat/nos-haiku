@@ -497,7 +497,7 @@
 			const nevent: string = nip19.neventEncode({ ...event, author: event.pubkey });
 			if (isNeededShowEvent) {
 				goto(resolve(`/entry/${nevent}`));
-			} else {
+			} else if (addPoll) {
 				contentToSend = `nostr:${nevent}`;
 			}
 		});

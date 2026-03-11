@@ -39,7 +39,7 @@
 
 	let isAllowedExpand: boolean = $state(false);
 
-	const emojiMap: Map<string, string> = $derived(getEmojiMap(eventsEmojiSet));
+	const emojiMap: Map<string, [string, string]> = $derived(getEmojiMap(eventsEmojiSet));
 
 	let emojiPickerContainer: HTMLElement | undefined = $state();
 	const callSendEmoji = () => {

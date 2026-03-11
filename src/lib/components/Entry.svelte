@@ -2550,6 +2550,9 @@
 								: [event]}
 						<aside class="Entry__json">
 							{#each events as event, i (event.id)}
+								{@const emojiTags: string[][] = event.tags.filter(
+									(tag) => tag.length >= 4 && tag[0] === 'emoji' && /^\w+$/.test(tag[1]) && URL.canParse(tag[2]) && getAddressPointerFromAId(tag[3]) !== null
+								)}
 								{#if i > 0}<hr />{/if}
 								<dl class="details">
 									<dt>User ID</dt>
@@ -2570,6 +2573,22 @@
 									</dd>
 									<dt>Event ID with relay hints</dt>
 									<dd><code>{getEncode(event, getSeenOn(event.id, false))}</code></dd>
+									{#if emojiTags.length > 0}
+										<dt>Custom Emojis</dt>
+										<dd>
+											{#each emojiTags as emojiTag}
+												{@const address = getAddressPointerFromAId(emojiTag[3])!}
+												<a href={resolve(`/entry/${nip19.naddrEncode(address)}`)}
+													><img
+														src={emojiTag[2]}
+														alt={`:${emojiTag[1]}:`}
+														title={`:${emojiTag[1]}:`}
+														class="emoji"
+													/></a
+												>
+											{/each}
+										</dd>
+									{/if}
 								</dl>
 							{/each}
 						</aside>

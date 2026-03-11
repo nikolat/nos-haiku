@@ -2576,7 +2576,7 @@
 									{#if emojiTags.length > 0}
 										<dt>Custom Emojis</dt>
 										<dd>
-											{#each emojiTags as emojiTag}
+											{#each emojiTags as emojiTag, i (i)}
 												{@const address = getAddressPointerFromAId(emojiTag[3])!}
 												<a href={resolve(`/entry/${nip19.naddrEncode(address)}`)}
 													><img

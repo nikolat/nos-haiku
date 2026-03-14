@@ -908,10 +908,12 @@ export const getEmoji = async (
 	autoClose: boolean,
 	onCallbackEmojiSelect: ({
 		emojiStr,
-		emojiUrl
+		emojiUrl,
+		emojiAddress
 	}: {
 		emojiStr: string;
 		emojiUrl: string | undefined;
+		emojiAddress: string | undefined;
 	}) => void
 ): Promise<void> => {
 	const { Picker } = await import('emoji-mart');
@@ -927,7 +929,8 @@ export const getEmoji = async (
 		const onEmojiSelect = (emoji: MyBaseEmoji) => {
 			const emojiStr = emoji.native ?? emoji.shortcodes;
 			const emojiUrl = emoji.src;
-			onCallbackEmojiSelect({ emojiStr, emojiUrl });
+			const emojiAddress = emojiMap.get(emojiStr.replaceAll(':', ''))?.at(1);
+			onCallbackEmojiSelect({ emojiStr, emojiUrl, emojiAddress });
 			if (autoClose) {
 				close();
 			}

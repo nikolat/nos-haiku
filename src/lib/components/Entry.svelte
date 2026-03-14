@@ -696,11 +696,16 @@
 						</h3>
 						{#if !isPreview}
 							<AddStar
-								sendReaction={async (content?: string, emojiurl?: string) => {
+								sendReaction={async (
+									content?: string,
+									emojiurl?: string,
+									emojiaddress?: string
+								) => {
 									await rc?.sendReaction(
 										event,
 										content ?? defaultReactionToAdd,
 										emojiurl,
+										emojiaddress,
 										clientTag
 									);
 								}}

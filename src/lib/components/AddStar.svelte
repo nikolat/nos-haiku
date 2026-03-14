@@ -16,7 +16,7 @@
 		mutedWords,
 		isEmojiPickerOpened = $bindable()
 	}: {
-		sendReaction: (content?: string, emojiurl?: string) => Promise<void>;
+		sendReaction: (content?: string, emojiurl?: string, emojiaddress?: string) => Promise<void>;
 		sendDeletion: (targetEvent: NostrEvent) => Promise<void>;
 		loginPubkey: string | undefined;
 		profileMap: Map<string, ProfileContent>;
@@ -51,9 +51,17 @@
 			emojiPickerContainer,
 			emojiMap,
 			true,
-			({ emojiStr, emojiUrl }: { emojiStr: string; emojiUrl: string | undefined }) => {
+			({
+				emojiStr,
+				emojiUrl,
+				emojiAddress
+			}: {
+				emojiStr: string;
+				emojiUrl: string | undefined;
+				emojiAddress: string | undefined;
+			}) => {
 				isEmojiPickerOpened = false;
-				sendReaction(emojiStr, emojiUrl);
+				sendReaction(emojiStr, emojiUrl, emojiAddress);
 				callConfetti(emojiStr, emojiUrl);
 			}
 		);

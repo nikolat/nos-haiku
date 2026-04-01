@@ -143,7 +143,12 @@
 		];
 		const emojiUrlMap: Map<string, string> = new Map<string, string>();
 		for (const tag of tags) {
-			if (tag.length >= 3 && tag[0] === 'emoji' && /\w+/.test(tag[1]) && URL.canParse(tag[2])) {
+			if (
+				tag.length >= 3 &&
+				tag[0] === 'emoji' &&
+				/^[\w-]+$/.test(tag[1]) &&
+				URL.canParse(tag[2])
+			) {
 				emojiUrlMap.set(`:${tag[1]}:`, tag[2]);
 			}
 		}

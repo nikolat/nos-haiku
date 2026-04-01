@@ -1880,7 +1880,7 @@
 										(tag) =>
 											tag.length >= 3 &&
 											tag[0] === 'emoji' &&
-											/^\w+$/.test(tag[1]) &&
+											/^[\w-]+$/.test(tag[1]) &&
 											URL.canParse(tag[2])
 									)}
 									{@const aTagStrs = eventsEmojiSet.map(
@@ -2556,7 +2556,7 @@
 						<aside class="Entry__json">
 							{#each events as event, i (event.id)}
 								{@const emojiTags: string[][] = event.tags.filter(
-									(tag) => tag.length >= 4 && tag[0] === 'emoji' && /^\w+$/.test(tag[1]) && URL.canParse(tag[2]) && getAddressPointerFromAId(tag[3]) !== null
+									(tag) => tag.length >= 4 && tag[0] === 'emoji' && /^[\w-]+$/.test(tag[1]) && URL.canParse(tag[2]) && getAddressPointerFromAId(tag[3]) !== null
 								)}
 								{#if i > 0}<hr />{/if}
 								<dl class="details">

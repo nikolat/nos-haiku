@@ -812,7 +812,7 @@ export const isCustomEmoji = (event: NostrEvent): boolean => {
 	const emojiTag = emojiTags[0];
 	return (
 		emojiTag.length >= 3 &&
-		/^\w+$/.test(emojiTag[1]) &&
+		/^[\w-]+$/.test(emojiTag[1]) &&
 		URL.canParse(emojiTag[2]) &&
 		event.content === `:${emojiTag[1]}:`
 	);
@@ -874,7 +874,8 @@ export const getEmojiMap = (eventsEmojiSet: NostrEvent[]): Map<string, [string, 
 		}
 		const address: string = getReplaceableAddressFromPointer(ap);
 		const emojiTags: string[][] = ev.tags.filter(
-			(tag) => tag.length >= 3 && tag[0] === 'emoji' && /^\w+$/.test(tag[1]) && URL.canParse(tag[2])
+			(tag) =>
+				tag.length >= 3 && tag[0] === 'emoji' && /^[\w-]+$/.test(tag[1]) && URL.canParse(tag[2])
 		);
 		for (const emojiTag of emojiTags) {
 			const shortcode = emojiTag[1];

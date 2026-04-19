@@ -630,6 +630,7 @@ export class RelayConnector {
 				this.#fetchEventsByATags(event, 'a');
 				break;
 			}
+			case 10008:
 			case 30008: {
 				const fetchAfter10002 = () => {
 					if (!this.#eventStore.hasReplaceable(0, event.pubkey)) {
@@ -1008,7 +1009,7 @@ export class RelayConnector {
 		};
 		const filter: LazyFilter = {
 			...filterBase,
-			kinds: [0, 3, 10000, 10002, 10005, 10006, 10030, 10063, 10096, 30008]
+			kinds: [0, 3, 10000, 10002, 10005, 10006, 10008, 10030, 10063, 10096]
 		};
 		const relays = this.#getRelays('write').filter(this.#relayFilter).slice(0, this.#limitRelay);
 		const options = relays.length > 0 ? { relays } : undefined;
@@ -1442,11 +1443,7 @@ export class RelayConnector {
 			currentProfilePointer?.pubkey ?? currentAddressPointer?.pubkey ?? currentEventPointer?.author;
 		if (currentPubkey !== undefined) {
 			const authors = [currentPubkey];
-			this.#rxReqBRp.emit({ kinds: [10001, 10005], authors, until: now }, options);
-			this.#rxReqBAd.emit(
-				{ kinds: [30008], authors, '#d': ['profile_badges'], until: now },
-				options
-			);
+			this.#rxReqBRp.emit({ kinds: [10001, 10005, 10008], authors, until: now }, options);
 		}
 		const since = now + 1;
 		const filtersF: LazyFilter[] = [];
@@ -1461,7 +1458,7 @@ export class RelayConnector {
 			filtersF.push({
 				kinds: [
 					0, 1, 3, 4, 5, 6, 7, 16, 40, 41, 42, 1018, 1068, 1111, 10000, 10001, 10002, 10005, 10006,
-					10030, 10063, 10096, 30008, 39701
+					10008, 10030, 10063, 10096, 39701
 				],
 				authors: [loginPubkey],
 				since
@@ -2294,7 +2291,7 @@ export class RelayConnector {
 		if (window.nostr === undefined) {
 			throw new Error('window.nostr is undefined');
 		}
-		const kind = 30008;
+		const kind = 10008;
 		let tags: string[][];
 		let content: string;
 		const aTagStrs = profileBadgesEvent?.tags
@@ -2318,8 +2315,7 @@ export class RelayConnector {
 			badgeAwardEvent.pubkey
 		];
 		if (profileBadgesEvent === undefined || aTagStrs === undefined) {
-			const dTag = ['d', 'profile_badges'];
-			tags = [dTag, aTag, eTag];
+			tags = [aTag, eTag];
 			content = '';
 		} else if (aTagStrs.includes(aTagStr)) {
 			throw new Error('already bookmarked');
@@ -2349,7 +2345,7 @@ export class RelayConnector {
 			.filter((tag) => tag.length >= 2 && tag[0] === 'a')
 			.map((tag) => tag[1]);
 		if (profileBadgesEvent === undefined || aTags === undefined) {
-			throw new Error('kind:30008 profile_badges event does not exist');
+			throw new Error('kind:10008 profile_badges event does not exist');
 		} else if (!aTags.includes(aTagStr)) {
 			throw new Error('not bookmarked yet');
 		}

@@ -227,7 +227,7 @@
 			case 20000:
 			case 39701: {
 				if (kind === 8) {
-					eventsBadge = sortEvents(rc.getEventsByFilter({ kinds: [8, 30008, 30009] }));
+					eventsBadge = sortEvents(rc.getEventsByFilter({ kinds: [8, 10008, 30008, 30009] }));
 				}
 				if (kind === 40) {
 					eventsChannel = rc.getEventsByFilter({ kinds: [kind] });
@@ -479,9 +479,10 @@
 				}
 				break;
 			}
+			case 10008:
 			case 30008:
 			case 30009: {
-				eventsBadge = sortEvents(rc.getEventsByFilter({ kinds: [8, 30008, 30009] }));
+				eventsBadge = sortEvents(rc.getEventsByFilter({ kinds: [8, 10008, 30008, 30009] }));
 				break;
 			}
 			case 30078: {

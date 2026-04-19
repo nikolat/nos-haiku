@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { getRoboHashURL, serviceIconImageUri, getUrlToLinkProfile } from '$lib/config';
 	import {
+		getAddressPointerFromAId,
 		getName,
 		loginWithNpub,
 		type ChannelContent,
@@ -87,11 +88,23 @@
 	};
 
 	const badgeEvent: NostrEvent | undefined = $derived(
-		getEventByAddressPointer(
-			{ kind: 30008, pubkey: currentPubkey, identifier: 'profile_badges' },
-			eventsBadge
-		)
+		getEventByAddressPointer({ kind: 10008, pubkey: currentPubkey, identifier: '' }, eventsBadge)
 	);
+	const linkedBadgeEvents: NostrEvent[] = $derived.by(() => {
+		if (badgeEvent === undefined) {
+			return [];
+		}
+		const aIds: string[] = badgeEvent.tags
+			.filter((tag) => tag.length >= 2 && tag[0] === 'a')
+			.map((tag) => tag[1]);
+		const aps: nip19.AddressPointer[] = aIds
+			.map((aId) => getAddressPointerFromAId(aId))
+			.filter((ap) => ap !== null);
+		const events30008: NostrEvent[] = aps
+			.map((ap) => getEventByAddressPointer(ap, eventsBadge))
+			.filter((ev) => ev !== undefined);
+		return events30008;
+	});
 
 	let showSetting: boolean = $state(false);
 	const handlerSetting = (ev: MouseEvent): void => {
@@ -273,6 +286,15 @@
 				{getEventById}
 				{getEventByAddressPointer}
 			/>
+			{#each linkedBadgeEvents as badgeEvent30008 (badgeEvent30008.id)}
+				<Badges
+					currentPubkey={badgeEvent30008.pubkey}
+					badgeEvent={badgeEvent30008}
+					{eventsBadge}
+					{getEventById}
+					{getEventByAddressPointer}
+				/>
+			{/each}
 			<h3 class="router-link-exact-active router-link-active">
 				<a href={resolve(`/${nip19.npubEncode(currentPubkey)}`)}>
 					<Content content={display_name} tags={prof?.event.tags ?? []} isAbout={true} />

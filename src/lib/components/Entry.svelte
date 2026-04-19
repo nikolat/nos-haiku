@@ -665,6 +665,8 @@
 								Bookmarks
 							{:else if event.kind === 10005}
 								Public chats list
+							{:else if event.kind === 10008}
+								Profile Badges
 							{:else if event.kind === 10030}
 								User emoji list
 							{:else if event.kind === 20000}
@@ -672,7 +674,7 @@
 							{:else if event.kind === 30003}
 								Bookmark sets
 							{:else if event.kind === 30008}
-								Profile Badges
+								Badge sets
 							{:else if event.kind === 30009}
 								Badge Definition
 							{:else if event.kind === 30023}
@@ -976,9 +978,9 @@
 										{#if loginPubkey !== undefined && ps.has(loginPubkey)}
 											{@const profileBadgesEvent = getEventByAddressPointer(
 												{
-													identifier: 'profile_badges',
+													identifier: '',
 													pubkey: loginPubkey,
-													kind: 30008
+													kind: 10008
 												},
 												eventsBadge
 											)}
@@ -1792,10 +1794,11 @@
 											bind:baseEventToEdit
 										/>
 									</p>
-								{:else if event.kind === 30008}
+								{:else if event.kind === 10008 || event.kind === 30008}
 									{@const badgeEvent = getEventByAddressPointer(
 										{
-											identifier: 'profile_badges',
+											identifier:
+												event.tags.find((tag) => tag.length >= 2 && tag[0] === 'd')?.at(1) ?? '',
 											pubkey: event.pubkey,
 											kind: event.kind
 										},
@@ -1808,6 +1811,37 @@
 										{getEventById}
 										{getEventByAddressPointer}
 									/>
+									{#if event.kind === 10008}
+										{@const aIds = event.tags
+											.filter((tag) => tag.length >= 2 && tag[0] === 'a')
+											.map((tag) => tag[1])}
+										{@const aps = aIds
+											.map((aId) => getAddressPointerFromAId(aId))
+											.filter((ap) => ap !== null)}
+										{@const events30008 = aps
+											.map((ap) => getEventByAddressPointer(ap, eventsBadge))
+											.filter((ev) => ev !== undefined)}
+										{#each events30008 as event30008 (event30008.id)}
+											{@const badgeEvent30008 = getEventByAddressPointer(
+												{
+													identifier:
+														event30008.tags
+															.find((tag) => tag.length >= 2 && tag[0] === 'd')
+															?.at(1) ?? '',
+													pubkey: event30008.pubkey,
+													kind: event30008.kind
+												},
+												eventsBadge
+											)}
+											<Badges
+												currentPubkey={event30008.pubkey}
+												badgeEvent={badgeEvent30008}
+												{eventsBadge}
+												{getEventById}
+												{getEventByAddressPointer}
+											/>
+										{/each}
+									{/if}
 								{:else if event.kind === 30009}
 									{@const tagMap = new Map<string, string>(
 										event.tags.map((tag) => [tag[0], tag[1]])

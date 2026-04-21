@@ -231,13 +231,7 @@ export const getAddressPointerFromAId = (aId: string): nip19.AddressPointer | nu
 	if (m === null) {
 		return null;
 	}
-	try {
-		const ap: nip19.AddressPointer = { identifier: m[3], pubkey: m[2], kind: parseInt(m[1]) };
-		return ap;
-	} catch (error) {
-		console.warn(error);
-		return null;
-	}
+	return { identifier: m[3], pubkey: m[2], kind: parseInt(m[1]) };
 };
 
 export const splitNip51ListPublic = (

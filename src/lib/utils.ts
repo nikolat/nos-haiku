@@ -90,6 +90,8 @@ const dtformat = new Intl.DateTimeFormat('ja-jp', {
 	second: '2-digit'
 });
 
+const segmeter = new Intl.Segmenter('ja-JP', { granularity: 'word' });
+
 export const getAbsoluteTime = (unixTime: number): string => {
 	return dtformat.format(new Date(unixTime * 1000)).replaceAll('/', '-');
 };
@@ -796,7 +798,6 @@ const getRequiredRelays = (relayUserMap: Map<string, Set<string>>): string[] => 
 
 const inputCount = (input: string): number => {
 	// simple check, not perfect
-	const segmeter = new Intl.Segmenter('ja-JP', { granularity: 'word' });
 	return Array.from(segmeter.segment(input)).length;
 };
 

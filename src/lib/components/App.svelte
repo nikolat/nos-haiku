@@ -202,7 +202,7 @@
 
 	let urlSearchParams: URLSearchParams = $state(page.url.searchParams);
 	let nowRealtime: number = $state(unixNow());
-	let intervalID: number;
+	let intervalID: NodeJS.Timeout;
 
 	const callback = (kind: number, event?: NostrEvent): void => {
 		if (rc === undefined) {
@@ -576,7 +576,7 @@
 		}
 	};
 
-	let timerEventsTimeline: number | undefined;
+	let timerEventsTimeline: NodeJS.Timeout;
 	const eventsForFetchNext: NostrEvent[] = [];
 	const setNewEventsTimeline = (events: NostrEvent[], event: NostrEvent | undefined) => {
 		if (event !== undefined && !eventsForFetchNext.map((ev) => ev.id).includes(event.id)) {
@@ -608,7 +608,7 @@
 			eventsForFetchNext.length = 0;
 		}, 100);
 	};
-	let timerEventsProfile: number | undefined;
+	let timerEventsProfile: NodeJS.Timeout;
 	const setNewEventsProfile = () => {
 		clearTimeout(timerEventsProfile);
 		timerEventsProfile = setTimeout(() => {
@@ -620,7 +620,7 @@
 			);
 		}, 100);
 	};
-	let timerEventsReaction: number | undefined;
+	let timerEventsReaction: NodeJS.Timeout;
 	const setNewEventsReaction = () => {
 		clearTimeout(timerEventsReaction);
 		timerEventsReaction = setTimeout(() => {

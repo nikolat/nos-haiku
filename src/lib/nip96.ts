@@ -1,7 +1,7 @@
-import { sha256 } from '@noble/hashes/sha256';
+import { sha256 } from '@noble/hashes/sha2.js';
 import type { EventTemplate } from 'nostr-tools/core';
 import { FileServerPreference } from 'nostr-tools/kinds';
-import { bytesToHex } from '@noble/hashes/utils';
+import { bytesToHex } from 'nostr-tools/utils';
 
 /**
  * Represents the configuration for a server compliant with NIP-96.

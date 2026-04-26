@@ -56,6 +56,7 @@ export type UrlParams = {
 };
 
 interface MyBaseEmoji extends BaseEmoji {
+	native: string;
 	shortcodes: string;
 	src: string | undefined;
 }

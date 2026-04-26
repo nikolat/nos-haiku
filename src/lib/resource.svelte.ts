@@ -1,10 +1,10 @@
 import type { RelayConnector } from '$lib/resource';
 import type { Subscription } from 'rxjs';
 
-let loginPubkey: string | undefined = $state();
-let rc: RelayConnector | undefined = $state();
-let sub: Subscription | undefined = $state();
-let deadRelays: string[] = $state([]);
+let loginPubkey: string | undefined;
+let rc: RelayConnector | undefined;
+let sub: Subscription | undefined;
+let deadRelays: string[] = [];
 
 export const getLoginPubkey = (): string | undefined => {
 	return loginPubkey;

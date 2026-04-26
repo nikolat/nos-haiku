@@ -70,7 +70,7 @@
 
 	let loginPubkey: string | undefined = $state(getLoginPubkey());
 	let isEnabledUseClientTag: boolean = $state(false);
-	let deadRelays: string[] = $derived(getDeadRelays());
+	let deadRelays: string[] = $state(getDeadRelays());
 	let rc: RelayConnector | undefined = $derived(getRelayConnector());
 	let sub: Subscription | undefined = $derived(getSubscription());
 	let eventsProfile: NostrEvent[] = $state([]);
@@ -587,7 +587,7 @@
 			eventsTimeline = events;
 			//TLに含まれるイベントのみ深くfetchする
 			const idsInTimeline: Set<string> = new Set<string>(
-				[...timelineSliced, ...eventsQuoted].map((ev) => ev.id)
+				[...$state.snapshot(timelineSliced), ...$state.snapshot(eventsQuoted)].map((ev) => ev.id)
 			);
 			for (const event of eventsForFetchNext) {
 				if (

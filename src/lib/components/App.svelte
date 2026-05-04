@@ -587,7 +587,7 @@
 			eventsTimeline = events;
 			//TLに含まれるイベントのみ深くfetchする
 			const idsInTimeline: Set<string> = new Set<string>(
-				[...$state.snapshot(timelineSliced), ...$state.snapshot(eventsQuoted)].map((ev) => ev.id)
+				[...timelineSliced, ...eventsQuoted].map((ev) => ev.id)
 			);
 			for (const event of eventsForFetchNext) {
 				if (

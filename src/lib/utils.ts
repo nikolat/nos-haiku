@@ -14,8 +14,6 @@ import {
 	type ProfileContent
 } from 'applesauce-core/helpers';
 import data from '@emoji-mart/data';
-// @ts-expect-error なんもわからんかも
-import type { BaseEmoji } from '@types/emoji-mart';
 import { _ } from 'svelte-i18n';
 import { get } from 'svelte/store';
 
@@ -55,11 +53,11 @@ export type UrlParams = {
 	isNIP05Fetching?: boolean;
 };
 
-interface MyBaseEmoji extends BaseEmoji {
+type MyBaseEmoji = {
 	native: string;
 	shortcodes: string;
 	src: string | undefined;
-}
+};
 
 export const kindsForParse: number[] = [1, 42, 1111, 30023, 39701];
 

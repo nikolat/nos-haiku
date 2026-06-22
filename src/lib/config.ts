@@ -57,7 +57,8 @@ export const defaultUploaderURLsBlossom = [
 ];
 export const getUrlToLinkProfile = (npub: string) => `https://yabu.me/${npub}`;
 export const getRoboHashURL = (str: string) => `https://robohash.org/${str}?set=set4`;
-export const getClientURL = (naddr: nip19.NAddr) => `https://nostrapp.link/a/${naddr}/reviews`;
+export const getClientURL = (naddr: nip19.NAddr) =>
+	`https://app-manager.nostter.app/a/${naddr}/reviews`;
 export const defaultAccountUri = getRoboHashURL(
 	nip19.npubEncode(getPublicKey(generateSecretKey()))
 );

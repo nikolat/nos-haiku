@@ -2047,7 +2047,7 @@
 													<a
 														href={getClientURL(naddrOfThisEvent)}
 														target="_blank"
-														rel="noopener noreferrer">open in nostrapp.link</a
+														rel="noopener noreferrer">open in Nostr App Manager</a
 													>
 												</p>
 											{/if}

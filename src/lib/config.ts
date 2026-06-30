@@ -38,7 +38,7 @@ export const clientTag = [
 	'client',
 	'Nos Haiku',
 	'31990:6b0a60cff3eca5a2b2505ccb3f7133d8422045cbef40f3d2c6189fb0b952e7d4:1735964023115',
-	'wss://nrelay.c-stellar.net/'
+	'wss://yabu.me/'
 ];
 export const zapRelays = ['wss://relay-jp.nostr.wirednet.jp/', 'wss://yabu.me/'];
 export const defaultUploaderURLsNip96 = [

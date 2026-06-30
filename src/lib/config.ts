@@ -12,7 +12,6 @@ export const initialLocale: string =
 	browser && languages.includes(currentLang) ? currentLang : defaultLocale;
 
 export const defaultRelays: string[] = [
-	'wss://r.ydg.works/',
 	'wss://nostream.ocha.one/',
 	'wss://nostr.compile-error.net/'
 ];

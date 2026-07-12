@@ -2826,7 +2826,7 @@ export class RelayConnector {
 			(tag) =>
 				!(
 					tag[0] === 'p' &&
-					(tag[1] === targetEventToReply?.pubkey ||
+					(tag[1] === pTagToReply?.at(1) ||
 						tags
 							.filter((tag2) => tag2.length >= 2 && tag2[0] === 'p')
 							.map((tag2) => tag2[1])

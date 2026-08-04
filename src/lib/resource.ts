@@ -2758,7 +2758,6 @@ export class RelayConnector {
 				}
 			}
 		} else {
-			const tags: string[][] = [];
 			const relayHintEvent: string | undefined = this.#getRelayHintEvent(targetEventToReply);
 			const relayHintAuthor: string | undefined = this.#getRelayHintAuhor(
 				targetEventToReply.pubkey

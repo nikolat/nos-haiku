@@ -459,7 +459,7 @@
 								tag[1] === event.id &&
 								(tag[3] === 'reply' || (tag[3] === 'root' && ev.kind === 1))
 						)) ||
-					(![1, 42].includes(event.kind) &&
+					(![42].includes(event.kind) &&
 						ev.kind === 1111 &&
 						ev.tags.some(
 							(tag) =>

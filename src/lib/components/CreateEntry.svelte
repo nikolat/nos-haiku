@@ -784,8 +784,7 @@
 							if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
 								callSendNote();
 							}
-						}}
-					></textarea>
+						}}></textarea>
 					<div class="ql-clipboard" contenteditable="true" tabindex="-1"></div>
 				</div>
 				<input type="file" style="display: none;" />

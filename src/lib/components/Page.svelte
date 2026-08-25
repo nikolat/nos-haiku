@@ -562,8 +562,7 @@
 												id="edit-channel-about"
 												class="RichTextEditor ql-editor"
 												placeholder="channel description"
-												bind:value={editChannelAbout}
-											></textarea>
+												bind:value={editChannelAbout}></textarea>
 										</dd>
 										<dt><label for="edit-channel-picture">Picture</label></dt>
 										<dd>

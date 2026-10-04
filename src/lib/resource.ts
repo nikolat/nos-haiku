@@ -2852,7 +2852,7 @@ export class RelayConnector {
 			tags.push(
 				contentWarningReason === null
 					? ['content-warning']
-					: ['content-warning', contentWarningReason]
+					: ['content-warning', contentWarningReason, content]
 			);
 		}
 		if (isEnabledEventProtection) {
@@ -2893,6 +2893,9 @@ export class RelayConnector {
 					}
 					return r;
 				});
+		}
+		if (contentWarningReason !== undefined) {
+			content = '';
 		}
 		const eventToSend: UnsignedEvent = {
 			content,

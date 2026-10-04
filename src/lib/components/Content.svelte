@@ -91,6 +91,12 @@
 		nowRealtime?: number;
 	} = $props();
 
+	const contentReal: string = $derived(
+		tags.some((tag) => tag.length >= 3 && tag[0] === 'content-warning')
+			? (tags.find((tag) => tag[0] === 'content-warning')?.at(2) ?? '')
+			: content
+	);
+
 	type Token =
 		| {
 				type: 'text';
@@ -252,7 +258,7 @@
 		}
 	};
 
-	const ats = $derived(getExpandTagsList(content, tags));
+	const ats = $derived(getExpandTagsList(contentReal, tags));
 
 	const appendRelay = (baseUrl: string, relayUrl: string): string => {
 		const url = new URL(baseUrl);
